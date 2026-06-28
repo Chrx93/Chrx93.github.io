@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, StatusBar, ScrollView, ActivityIndicator,
@@ -149,9 +149,10 @@ function AlertBadge() {
   );
 }
 
-function CardRow({ item, onPress, showAlert }) {
+function CardRow({ item, onPress, showAlert, moved }) {
   const isAlert = Math.abs(item.change7d) >= 10;
   const priceVal = toEur(item.prices);
+  const hasMoved = moved != null && Math.abs(moved) >= 3;
   return (
     <TouchableOpacity style={styles.row} onPress={() => onPress(item)} activeOpacity={0.75}>
       {item.image ? (
@@ -164,7 +165,13 @@ function CardRow({ item, onPress, showAlert }) {
       <View style={styles.rowLeft}>
         <View style={styles.rowHeader}>
           <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
-          {isAlert && showAlert && <AlertBadge />}
+          {hasMoved ? (
+            <View style={[styles.movedPill, { backgroundColor: moved > 0 ? '#13351f' : '#3a1514' }]}>
+              <Text style={[styles.movedText, { color: moved > 0 ? theme.up : theme.down }]}>
+                🔔 {pct(moved)}
+              </Text>
+            </View>
+          ) : (isAlert && showAlert && <AlertBadge />)}
         </View>
         <Text style={styles.rowSub} numberOfLines={1}>{item.set}{item.serial ? ` · ${item.serial}` : ` · ${item.rarity}`}</Text>
         <Text style={[styles.rowChange, { color: changeColor(item.change7d) }]}>
@@ -338,11 +345,19 @@ function WatchlistTab({ data, onPress, refreshing, onRefresh }) {
       </ScrollView>
     );
   }
+  const movers = data.filter(c => c.movedPct != null && Math.abs(c.movedPct) >= 3).length;
   return (
     <FlatList
       data={data}
       keyExtractor={i => i.ref}
-      renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert={false} />}
+      ListHeaderComponent={
+        <Text style={styles.watchBanner}>
+          {movers > 0
+            ? `🔔 ${movers} ${movers === 1 ? 'carta si è mossa' : 'carte si sono mosse'} dall'ultima visita`
+            : 'Nessun movimento dall’ultima visita · tira giù per aggiornare'}
+        </Text>
+      }
+      renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert moved={item.movedPct} />}
       contentContainerStyle={{ paddingBottom: 20 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
     />
@@ -563,11 +578,16 @@ export default function App() {
   const [detail, setDetail] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [saved, setSaved] = useState([]);
+  const [seen, setSeen] = useState({}); // ref -> ultimo prezzo visto in watchlist
   const [rotation, setRotation] = useState(0);
+  const prevTab = useRef(0);
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
       .then(s => { if (s) setSaved(JSON.parse(s)); })
+      .catch(() => {});
+    AsyncStorage.getItem('tcgradar.seen')
+      .then(s => { if (s) setSeen(JSON.parse(s)); })
       .catch(() => {});
   }, []);
 
@@ -578,7 +598,18 @@ export default function App() {
       AsyncStorage.setItem('tcgradar.saved', JSON.stringify(next)).catch(() => {});
       return next;
     });
-  }, []);
+    // quando aggiungo una carta, registro il prezzo attuale per non dare un falso avviso
+    if (!saved.some(s => s.ref === item.ref)) {
+      const p = toEur(item.prices);
+      if (p != null) {
+        setSeen(prev => {
+          const next = { ...prev, [item.ref]: p };
+          AsyncStorage.setItem('tcgradar.seen', JSON.stringify(next)).catch(() => {});
+          return next;
+        });
+      }
+    }
+  }, [saved]);
 
   const isSaved = useCallback((ref) => saved.some(s => s.ref === ref), [saved]);
 
@@ -600,6 +631,31 @@ export default function App() {
     await load();
     setRefreshing(false);
   }, [load]);
+
+  // Carte salvate arricchite coi dati live + variazione "dall'ultima visita".
+  const liveByRef = {};
+  (data && data.items ? data.items : []).forEach(i => { liveByRef[i.ref] = i; });
+  const savedLive = saved.map(s => {
+    const live = liveByRef[s.ref];
+    const merged = live
+      ? { ...s, prices: live.prices, change7d: live.change7d, tf: live.tf, chart: live.chart, history: live.history, image: live.image || s.image, inNews: live.inNews }
+      : s;
+    const cur = toEur(merged.prices);
+    const base = seen[s.ref];
+    merged.movedPct = (base && cur != null) ? Math.round(((cur - base) / base) * 1000) / 10 : null;
+    return merged;
+  });
+
+  // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
+  useEffect(() => {
+    if (prevTab.current === 1 && tab !== 1 && data) {
+      const next = { ...seen };
+      savedLive.forEach(c => { const p = toEur(c.prices); if (p != null) next[c.ref] = p; });
+      setSeen(next);
+      AsyncStorage.setItem('tcgradar.seen', JSON.stringify(next)).catch(() => {});
+    }
+    prevTab.current = tab;
+  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!data) {
     return (
@@ -639,7 +695,7 @@ export default function App() {
 
       <View style={styles.content}>
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 1 && <WatchlistTab data={saved} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 1 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 3 && <SearchTab onPress={setDetail} />}
       </View>
@@ -688,6 +744,9 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: font.xs, fontWeight: '700' },
   alertBadge: { backgroundColor: theme.accentDim, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   alertText: { color: theme.alert, fontSize: font.xs, fontWeight: '700' },
+  movedPill: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+  movedText: { fontSize: font.xs, fontWeight: '700' },
+  watchBanner: { color: theme.text, fontSize: font.sm, fontWeight: '600', textAlign: 'center', paddingVertical: 12, paddingHorizontal: 16 },
 
   detail: { flex: 1, backgroundColor: theme.bg, paddingHorizontal: 16 },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 52, paddingBottom: 16 },
