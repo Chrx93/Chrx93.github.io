@@ -28,12 +28,14 @@ import pathlib
 import random
 import statistics
 import sys
+import time
 import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).parent
 WATCHLIST = ROOT / "watchlist.json"
 HISTORY = ROOT / "history.json"
+TRANSLATIONS = ROOT / "translations.json"
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -320,6 +322,31 @@ def card_key(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Traduzione titoli notizie -> italiano (Google translate gtx, gratis, no key)
+# ---------------------------------------------------------------------------
+def translate_it(text: str, cache: dict):
+    """Traduce in italiano. Usa la cache per non ritradurre titoli gia' visti."""
+    if not text:
+        return None
+    if text in cache:
+        return cache[text]
+    try:
+        url = ("https://translate.googleapis.com/translate_a/single?client=gtx"
+               "&sl=auto&tl=it&dt=t&q=" + urllib.parse.quote(text))
+        data = _get_json(url, timeout=15)
+        segs = data[0] if isinstance(data, list) and data else None
+        if not segs:
+            return None
+        out = "".join(s[0] for s in segs if isinstance(s, list) and s and s[0]).strip()
+        if out:
+            cache[text] = out
+            return out
+    except Exception as exc:  # noqa: BLE001
+        print(f"    traduzione errore: {exc}")
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Storico (serie temporale [[iso, prezzo], ...])
 # ---------------------------------------------------------------------------
 def load_history() -> dict:
@@ -420,6 +447,26 @@ def main() -> None:
     watchlist = json.loads(WATCHLIST.read_text(encoding="utf-8"))
     cards = watchlist.get("cards", [])
     news = fetch_news() or watchlist.get("news", [])
+
+    # Traduci in italiano i titoli delle notizie USA e Giappone (Europa e' gia' IT)
+    translations = {}
+    if TRANSLATIONS.exists():
+        try:
+            translations = json.loads(TRANSLATIONS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            translations = {}
+    tcount = 0
+    for n in news:
+        if n.get("region") in ("US", "JP") and n.get("title"):
+            was_cached = n["title"] in translations
+            it = translate_it(n["title"], translations)
+            if it and it.lower() != n["title"].lower():
+                n["titleIt"] = it
+                tcount += 1
+            if not was_cached:
+                time.sleep(0.12)  # gentile con l'endpoint
+    TRANSLATIONS.write_text(json.dumps(translations, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[TCG Radar] Titoli tradotti in IT: {tcount}/{sum(1 for n in news if n.get('region') in ('US','JP'))}")
 
     print(f"[TCG Radar] {len(cards)} carte | eBay: {'ON' if HAVE_EBAY else 'OFF'} | "
           f"cambio USD->EUR {USD_EUR:.4f} | {'DEMO' if FORCE_DEMO else 'reale dove possibile'}")

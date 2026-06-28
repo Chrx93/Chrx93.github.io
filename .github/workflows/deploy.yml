@@ -33,7 +33,9 @@ jobs:
       - name: Restore price history
         uses: actions/cache@v4
         with:
-          path: pipeline/history.json
+          path: |
+            pipeline/history.json
+            pipeline/translations.json
           key: tcg-history-${{ github.run_id }}
           restore-keys: |
             tcg-history-

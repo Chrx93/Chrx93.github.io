@@ -417,7 +417,8 @@ function NewsTab({ news, lastUpdate, refreshing, onRefresh }) {
               <Text style={styles.newsSource} numberOfLines={1}>{item.source}</Text>
               <Text style={styles.newsDate}>{item.date}{item.time ? ' · ' + item.time : ''}</Text>
             </View>
-            <Text style={styles.newsTitle}>{item.title}</Text>
+            <Text style={styles.newsTitle}>{item.titleIt || item.title}</Text>
+            {item.titleIt ? <Text style={styles.newsOrig} numberOfLines={1}>originale: {item.title}</Text> : null}
             {item.url ? (
               <View style={styles.newsDir}>
                 <Ionicons name="open-outline" size={14} color={theme.textDim} />
@@ -771,7 +772,8 @@ const styles = StyleSheet.create({
   newsTag: { fontSize: font.sm },
   newsSource: { color: theme.textDim, fontSize: font.xs, flex: 1 },
   newsDate: { color: theme.textDim, fontSize: font.xs },
-  newsTitle: { color: theme.text, fontSize: font.md, fontWeight: '700', marginBottom: 6 },
+  newsTitle: { color: theme.text, fontSize: font.md, fontWeight: '700', marginBottom: 4 },
+  newsOrig: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginBottom: 6 },
   newsDir: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   newsDirText: { fontSize: font.xs, fontWeight: '600' },
   chipRow: { gap: 8, paddingHorizontal: 12, paddingVertical: 8 },

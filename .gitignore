@@ -38,6 +38,7 @@ yarn-error.*
 # pipeline (Python)
 **/__pycache__/
 pipeline/history.json
+pipeline/translations.json
 
 # typescript
 *.tsbuildinfo
