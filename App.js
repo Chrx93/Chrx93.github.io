@@ -16,6 +16,7 @@ const USD_EUR = 0.92; // cambio indicativo per stime in-app (le carte del motore
 
 const TAB_META = [
   { label: 'Home', icon: 'home', iconOutline: 'home-outline' },
+  { label: 'Portfolio', icon: 'briefcase', iconOutline: 'briefcase-outline' },
   { label: 'Watchlist', icon: 'star', iconOutline: 'star-outline' },
   { label: 'Notizie', icon: 'newspaper', iconOutline: 'newspaper-outline' },
   { label: 'Cerca', icon: 'search', iconOutline: 'search-outline' },
@@ -245,7 +246,48 @@ function PriceFinder({ item }) {
   );
 }
 
-function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
+function AddToPortfolio({ item, onAdd }) {
+  const [open, setOpen] = useState(false);
+  const [done, setDone] = useState(false);
+  const cur = toEur(item.prices);
+  const [price, setPrice] = useState(cur != null ? String(cur) : '');
+  const [qty, setQty] = useState('1');
+  const confirm = () => {
+    const p = parseFloat(String(price).replace(',', '.'));
+    const q = parseInt(qty, 10) || 1;
+    if (!isNaN(p) && p > 0) { onAdd(item, p, q); setDone(true); setOpen(false); }
+  };
+  if (done) {
+    return (
+      <View style={styles.portfolioDone}>
+        <Ionicons name="checkmark-circle" size={18} color={theme.up} />
+        <Text style={styles.portfolioDoneText}>Aggiunta al portfolio — la trovi nella tab Portfolio</Text>
+      </View>
+    );
+  }
+  if (!open) {
+    return (
+      <TouchableOpacity style={styles.portfolioBtn} onPress={() => setOpen(true)} activeOpacity={0.85}>
+        <Ionicons name="briefcase-outline" size={18} color={theme.bg} />
+        <Text style={styles.portfolioBtnText}>Ho comprato questa carta</Text>
+      </TouchableOpacity>
+    );
+  }
+  return (
+    <View style={styles.buyForm}>
+      <Text style={styles.buyFormLabel}>Prezzo pagato (€) e quantità</Text>
+      <View style={styles.buyFormRow}>
+        <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={price} onChangeText={setPrice} placeholder="€ pagato" placeholderTextColor={theme.textDim} />
+        <TextInput style={[styles.buyInput, { flex: 0.5 }]} keyboardType="number-pad" value={qty} onChangeText={setQty} placeholder="qtà" placeholderTextColor={theme.textDim} />
+        <TouchableOpacity style={styles.buyConfirm} onPress={confirm} activeOpacity={0.85}>
+          <Text style={styles.buyConfirmText}>Salva</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
   const priceVal = toEur(item.prices);
   return (
     <ScrollView style={styles.detail} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -297,6 +339,9 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
         <Text style={styles.saveText}>{isSaved ? 'Nella watchlist — tocca per rimuovere' : 'Aggiungi alla watchlist'}</Text>
       </TouchableOpacity>
 
+      <Text style={styles.sectionTitle}>💼 Compravendita</Text>
+      <AddToPortfolio item={item} onAdd={onAddPortfolio} />
+
       <PriceFinder item={item} />
     </ScrollView>
   );
@@ -335,9 +380,40 @@ function RadarSection({ cards, onPress }) {
   );
 }
 
+function RampSection({ cards, onPress }) {
+  if (!cards || !cards.length) return null;
+  return (
+    <View style={styles.rampBox}>
+      <View style={styles.radarHeader}>
+        <Text style={styles.rampTitle}>🚀 IN RAMPA · economiche in salita</Text>
+      </View>
+      {cards.map(item => (
+        <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
+          {item.image ? (
+            <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
+          ) : <View style={[styles.radarThumb, styles.thumbEmpty]} />}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.radarName} numberOfLines={1}>{item.name}</Text>
+            <Text style={styles.rampReason} numberOfLines={1}>{pct(item.change7d)} 7g · ancora sotto {fmt(25)}</Text>
+          </View>
+          <Text style={styles.radarPrice}>{fmt(toEur(item.prices))}</Text>
+        </TouchableOpacity>
+      ))}
+      <Text style={styles.radarNote}>In salita e ancora economiche: da valutare prima che salgano. Non è una garanzia.</Text>
+    </View>
+  );
+}
+
 function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
   const movers = useMemo(
     () => [...(data.items || [])].sort((a, b) => Math.abs(b.change7d) - Math.abs(a.change7d)),
+    [data]
+  );
+  const ramp = useMemo(
+    () => (data.items || [])
+      .filter(i => i.change7d >= 5 && (toEur(i.prices) ?? 999) <= 25)
+      .sort((a, b) => b.change7d - a.change7d)
+      .slice(0, 5),
     [data]
   );
   const radarCards = useMemo(() => {
@@ -354,6 +430,7 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
       keyExtractor={i => i.ref}
       ListHeaderComponent={
         <>
+          <RampSection cards={ramp} onPress={onPress} />
           <RadarSection cards={radarCards} onPress={onPress} />
           <Text style={styles.listLabel}>Tutte le carte · variazione 7g</Text>
         </>
@@ -501,10 +578,13 @@ function SearchTab({ onPress }) {
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState(null);
   const [searched, setSearched] = useState(false);
+  const [src, setSrc] = useState('all'); // 'all' | 'op' | 'pkm'
+  const [refreshing, setRefreshing] = useState(false);
+  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     const term = q.trim();
-    if (term.length < 2) { setResults([]); setSearched(false); setError(null); setLoading(false); return; }
+    if (term.length < 2) { setResults([]); setSearched(false); setError(null); setLoading(false); setRefreshing(false); return; }
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -517,7 +597,7 @@ function SearchTab({ onPress }) {
       const longest = words.reduce((a, b) => (b.length > a.length ? b : a), '');
       const tasks = [];
 
-      if (isNum) {
+      if (src !== 'op' && isNum) {
         tasks.push(fetch('https://api.tcgdex.net/v2/en/cards?localId=' + term)
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : []).slice(0, 20).map(c => ({
@@ -525,7 +605,7 @@ function SearchTab({ onPress }) {
             sub: 'Pokémon · #' + (c.localId || ''),
             thumb: c.image ? c.image + '/low.png' : null,
           }))).catch(() => []));
-      } else if (longest) {
+      } else if (src !== 'op' && longest) {
         tasks.push(fetch('https://api.tcgdex.net/v2/en/cards?name=' + encodeURIComponent(longest))
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : [])
@@ -537,14 +617,14 @@ function SearchTab({ onPress }) {
             }))).catch(() => []));
       }
 
-      if (opCode) {
+      if (src !== 'pkm' && opCode) {
         tasks.push(fetch('https://optcgapi.com/api/sets/card/' + opCode + '/')
           .then(r => r.json())
           .then(d => (Array.isArray(d) ? d : [d]).filter(Boolean).map((c, i) => ({
             key: 'op' + c.card_set_id + i, src: 'op', raw: c, name: c.card_name,
             sub: 'One Piece · ' + c.card_set_id, thumb: c.card_image || null,
           }))).catch(() => []));
-      } else if (longest) {
+      } else if (src !== 'pkm' && longest) {
         tasks.push(fetch('https://optcgapi.com/api/sets/filtered/?card_name=' + encodeURIComponent(longest))
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : [])
@@ -561,10 +641,10 @@ function SearchTab({ onPress }) {
       } catch (e) {
         if (!cancelled) { setError('Errore di rete, riprova.'); setResults([]); }
       }
-      if (!cancelled) setLoading(false);
+      if (!cancelled) { setLoading(false); setRefreshing(false); }
     }, 280);
     return () => { cancelled = true; clearTimeout(handle); };
-  }, [q]);
+  }, [q, src, nonce]);
 
   const openCard = async (s) => {
     setOpening(true);
@@ -582,8 +662,18 @@ function SearchTab({ onPress }) {
     setOpening(false);
   };
 
+  const SRC_CHIPS = [
+    { key: 'all', label: 'Tutti' },
+    { key: 'op', label: '🏴‍☠️ One Piece' },
+    { key: 'pkm', label: '⚡ Pokémon' },
+  ];
+
   return (
-    <ScrollView style={{ paddingHorizontal: 12, paddingTop: 12 }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={{ paddingHorizontal: 12, paddingTop: 12 }}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); setNonce(n => n + 1); }} tintColor={theme.accent} />}
+    >
       <View style={styles.searchBar}>
         <Ionicons name="search" size={16} color={theme.textDim} />
         <TextInput
@@ -600,6 +690,17 @@ function SearchTab({ onPress }) {
             <Ionicons name="close-circle" size={18} color={theme.textDim} />
           </TouchableOpacity>
         ) : null}
+      </View>
+
+      <View style={styles.srcChips}>
+        {SRC_CHIPS.map(c => {
+          const on = c.key === src;
+          return (
+            <TouchableOpacity key={c.key} style={[styles.chip, on && styles.chipOn]} onPress={() => setSrc(c.key)} activeOpacity={0.7}>
+              <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{c.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {!error && !searched && (
@@ -632,6 +733,117 @@ function SearchTab({ onPress }) {
   );
 }
 
+function PortfolioTab({ holdings, data, onPress, onRemove, refreshing, onRefresh }) {
+  const [extra, setExtra] = useState({}); // prezzi live per carte non tracciate dal motore
+  const liveByRef = useMemo(() => {
+    const m = {};
+    (data && data.items ? data.items : []).forEach(i => { m[i.ref] = i; });
+    return m;
+  }, [data]);
+
+  // Recupera il prezzo attuale per le carte non presenti nel motore (aggiunte dalla ricerca).
+  useEffect(() => {
+    let cancelled = false;
+    const need = holdings.filter(h => !liveByRef[h.ref] && extra[h.ref] === undefined);
+    if (!need.length) return;
+    (async () => {
+      const updates = {};
+      for (const h of need) {
+        try {
+          if (h.game === 'onepiece') {
+            const code = h.serial || h.ref;
+            const r = await fetch('https://optcgapi.com/api/sets/card/' + encodeURIComponent(code) + '/');
+            const d = await r.json();
+            const c = Array.isArray(d) ? d[0] : d;
+            const n = c ? parseFloat(String(c.market_price || '').replace(/[^0-9.]/g, '')) : NaN;
+            updates[h.ref] = isNaN(n) ? null : Math.round(n * USD_EUR * 100) / 100;
+          } else {
+            const r = await fetch('https://api.tcgdex.net/v2/en/cards/' + encodeURIComponent(h.ref));
+            const c = await r.json();
+            updates[h.ref] = toEur(mapTcgdexCard(c).prices);
+          }
+        } catch { updates[h.ref] = null; }
+      }
+      if (!cancelled) setExtra(prev => ({ ...prev, ...updates }));
+    })();
+    return () => { cancelled = true; };
+  }, [holdings, liveByRef]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currentOf = (h) => {
+    const live = liveByRef[h.ref];
+    if (live) return toEur(live.prices);
+    return extra[h.ref] != null ? extra[h.ref] : null;
+  };
+
+  let invested = 0, value = 0;
+  holdings.forEach(h => {
+    invested += h.buyPrice * h.qty;
+    const c = currentOf(h);
+    value += (c != null ? c : h.buyPrice) * h.qty;
+  });
+  const pl = value - invested;
+  const plPct = invested > 0 ? (pl / invested) * 100 : 0;
+
+  if (!holdings.length) {
+    return (
+      <ScrollView contentContainerStyle={styles.emptyBox}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}>
+        <Ionicons name="briefcase-outline" size={40} color={theme.textDim} />
+        <Text style={styles.searchHint}>
+          Il tuo portfolio è vuoto. Apri una carta e tocca “Ho comprato questa carta” per tracciare prezzo d'acquisto, valore attuale e guadagno.
+        </Text>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <FlatList
+      data={holdings}
+      keyExtractor={h => h.id}
+      ListHeaderComponent={
+        <View style={styles.pfSummary}>
+          <View style={styles.pfSumRow}>
+            <View><Text style={styles.pfSumLabel}>Investito</Text><Text style={styles.pfSumVal}>{fmt(invested)}</Text></View>
+            <View><Text style={styles.pfSumLabel}>Valore ora</Text><Text style={styles.pfSumVal}>{fmt(value)}</Text></View>
+            <View>
+              <Text style={styles.pfSumLabel}>Profitto/Perdita</Text>
+              <Text style={[styles.pfSumVal, { color: changeColor(pl) }]}>{pl >= 0 ? '+' : ''}{fmt(pl)} ({pct(plPct)})</Text>
+            </View>
+          </View>
+        </View>
+      }
+      renderItem={({ item: h }) => {
+        const cur = currentOf(h);
+        const hpl = cur != null ? (cur - h.buyPrice) * h.qty : null;
+        const hpct = (cur != null && h.buyPrice > 0) ? ((cur - h.buyPrice) / h.buyPrice) * 100 : null;
+        const hint = (hpct == null) ? null : hpct >= 20 ? '📈 buon momento per vendere' : hpct <= -15 ? '📉 in perdita' : null;
+        return (
+          <View style={styles.pfRow}>
+            <TouchableOpacity style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }} onPress={() => onPress({ ...(liveByRef[h.ref] || h) })} activeOpacity={0.75}>
+              {h.image ? <Image source={{ uri: h.image }} style={styles.thumb} resizeMode="contain" />
+                : <View style={[styles.thumb, styles.thumbEmpty]}><Ionicons name="image-outline" size={20} color={theme.textDim} /></View>}
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={styles.rowName} numberOfLines={1}>{h.name}{h.qty > 1 ? ` ×${h.qty}` : ''}</Text>
+                <Text style={styles.rowSub} numberOfLines={1}>pagata {fmt(h.buyPrice)} · ora {cur != null ? fmt(cur) : '—'}</Text>
+                {hint ? <Text style={[styles.pfHint, { color: hpct >= 0 ? theme.up : theme.down }]}>{hint}</Text> : null}
+              </View>
+            </TouchableOpacity>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={[styles.pfPl, { color: changeColor(hpl) }]}>{hpl == null ? '—' : (hpl >= 0 ? '+' : '') + fmt(hpl)}</Text>
+              <Text style={[styles.rowSub, { color: changeColor(hpct) }]}>{hpct == null ? '' : pct(hpct)}</Text>
+              <TouchableOpacity onPress={() => onRemove(h.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="trash-outline" size={16} color={theme.textDim} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+      }}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
+    />
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState(0);
   const [data, setData] = useState(null);
@@ -641,6 +853,7 @@ export default function App() {
   const [seen, setSeen] = useState({}); // ref -> ultimo prezzo visto in watchlist
   const [rotation, setRotation] = useState(0);
   const [notifOn, setNotifOn] = useState(false);
+  const [portfolio, setPortfolio] = useState([]);
   const prevTab = useRef(0);
   const notifiedRef = useRef(new Set());
 
@@ -654,6 +867,30 @@ export default function App() {
     AsyncStorage.getItem('tcgradar.notif')
       .then(s => { if (s === '1' && canNotify() && Notification.permission === 'granted') setNotifOn(true); })
       .catch(() => {});
+    AsyncStorage.getItem('tcgradar.portfolio')
+      .then(s => { if (s) setPortfolio(JSON.parse(s)); })
+      .catch(() => {});
+  }, []);
+
+  const addToPortfolio = useCallback((item, buyPrice, qty) => {
+    const holding = {
+      id: item.ref + '-' + Date.now(),
+      ref: item.ref, name: item.name, game: item.game, image: item.image, serial: item.serial,
+      buyPrice: Number(buyPrice) || 0, qty: Number(qty) || 1, ts: Date.now(),
+    };
+    setPortfolio(prev => {
+      const next = [holding, ...prev];
+      AsyncStorage.setItem('tcgradar.portfolio', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const removeFromPortfolio = useCallback((id) => {
+    setPortfolio(prev => {
+      const next = prev.filter(h => h.id !== id);
+      AsyncStorage.setItem('tcgradar.portfolio', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
   }, []);
 
   const onToggleNotif = useCallback(async () => {
@@ -707,6 +944,18 @@ export default function App() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Auto-aggiornamento mentre l'app è aperta (ogni 5 min) e al rientro sull'app.
+  useEffect(() => {
+    const id = setInterval(() => { load(); }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [load]);
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const onVis = () => { if (!document.hidden) load(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [load]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await load();
@@ -750,7 +999,7 @@ export default function App() {
 
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
-    if (prevTab.current === 1 && tab !== 1 && data) {
+    if (prevTab.current === 2 && tab !== 2 && data) {
       const next = { ...seen };
       savedLive.forEach(c => { const p = toEur(c.prices); if (p != null) next[c.ref] = p; });
       setSeen(next);
@@ -776,6 +1025,7 @@ export default function App() {
           onBack={() => setDetail(null)}
           isSaved={isSaved(detail.ref)}
           onToggleSave={toggleSave}
+          onAddPortfolio={addToPortfolio}
         />
       </View>
     );
@@ -787,19 +1037,25 @@ export default function App() {
 
       <View style={styles.header}>
         <Text style={styles.logo}>⚓ TCG Radar</Text>
-        <View style={styles.pulse}>
-          <Text style={styles.pulseLabel}>Mercato </Text>
-          <Text style={[styles.pulseValue, { color: changeColor(data.marketPulse) }]}>
-            {pct(data.marketPulse)}
-          </Text>
+        <View style={styles.headerRight}>
+          <View style={styles.pulse}>
+            <Text style={styles.pulseLabel}>Mercato </Text>
+            <Text style={[styles.pulseValue, { color: changeColor(data.marketPulse) }]}>
+              {pct(data.marketPulse)}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh} disabled={refreshing} activeOpacity={0.6}>
+            {refreshing ? <ActivityIndicator size="small" color={theme.accent} /> : <Ionicons name="refresh" size={20} color={theme.accent} />}
+          </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.content}>
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 1 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
-        {tab === 2 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 3 && <SearchTab onPress={setDetail} />}
+        {tab === 1 && <PortfolioTab holdings={portfolio} data={data} onPress={setDetail} onRemove={removeFromPortfolio} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
+        {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 4 && <SearchTab onPress={setDetail} />}
       </View>
 
       <View style={styles.tabbar}>
@@ -975,4 +1231,43 @@ const styles = StyleSheet.create({
   tfVal: { fontSize: font.md, fontWeight: '700' },
   tfNote: { color: theme.textDim, fontSize: font.xs, textAlign: 'center', marginBottom: 12 },
   newsUpdated: { color: theme.textDim, fontSize: font.xs, textAlign: 'center', paddingVertical: 8 },
+
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  refreshBtn: { padding: 4, minWidth: 28, alignItems: 'center', justifyContent: 'center' },
+
+  rampBox: {
+    marginHorizontal: 12, marginTop: 12, padding: 12,
+    backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.up,
+  },
+  rampTitle: { color: theme.up, fontSize: font.sm, fontWeight: '700', letterSpacing: 0.5 },
+  rampReason: { color: theme.up, fontSize: font.xs, marginTop: 1 },
+
+  portfolioBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: theme.accent, borderRadius: 10, paddingVertical: 13,
+  },
+  portfolioBtnText: { color: theme.bg, fontSize: font.md, fontWeight: '700' },
+  portfolioDone: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
+  portfolioDoneText: { color: theme.up, fontSize: font.sm, fontWeight: '600', flex: 1 },
+  buyForm: { backgroundColor: theme.card, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.accent },
+  buyFormLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 8 },
+  buyFormRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  buyInput: {
+    flex: 1, color: theme.text, fontSize: font.md, backgroundColor: theme.bg,
+    borderWidth: 1, borderColor: theme.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9,
+  },
+  buyConfirm: { backgroundColor: theme.accent, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 11 },
+  buyConfirmText: { color: theme.bg, fontSize: font.sm, fontWeight: '700' },
+
+  pfSummary: { margin: 12, padding: 14, backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.accentDim },
+  pfSumRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  pfSumLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 3 },
+  pfSumVal: { color: theme.text, fontSize: font.md, fontWeight: '700' },
+  pfRow: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.card,
+    marginHorizontal: 12, marginTop: 10, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border,
+  },
+  pfPl: { fontSize: font.md, fontWeight: '700' },
+  pfHint: { fontSize: font.xs, fontWeight: '600', marginTop: 2 },
+  srcChips: { flexDirection: 'row', gap: 8, marginTop: 10 },
 });
