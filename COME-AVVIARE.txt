@@ -1,0 +1,38 @@
+========================================
+  TCG RADAR  -  come avviare l'app
+========================================
+
+MODO FACILE
+-----------
+1) Doppio-click su:  AVVIA-TCG-Radar.bat
+2) Si apre una finestra nera: aspetta il QR code.
+3) Sul telefono apri l'app "Expo Go".
+4) Scansiona il QR code.
+   -> L'app TCG Radar si apre sul telefono.
+
+IMPORTANTE
+----------
+- Telefono e PC devono essere sulla STESSA rete Wi-Fi.
+- La prima volta Windows puo' chiedere il permesso del
+  Firewall: spunta "Reti private" e clicca "Consenti accesso".
+- Per fermare il server: clicca sulla finestra nera e premi Ctrl+C.
+
+SE IL QR NON FUNZIONA (URL manuale)
+-----------------------------------
+In Expo Go scegli "Enter URL manually" e scrivi:
+   exp://192.168.178.199:8081
+(Questo IP vale finche' il PC resta sulla stessa rete.
+ Se cambia, lo leggi in cima all'output della finestra nera.)
+
+DATI REALI invece dei dati demo
+-------------------------------
+Nel file App.js, in alto, c'e':
+   const DATA_URL = null;
+Mettendoci l'URL di un file data.json pubblicato online,
+l'app carica quei dati al posto del sample.json di esempio.
+
+File del progetto:
+  App.js         -> schermate e logica
+  theme.js       -> colori
+  Sparkline.js   -> mini-grafici
+  sample.json    -> dati di esempio (One Piece TCG)

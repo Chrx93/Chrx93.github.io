@@ -1,0 +1,238 @@
+{
+  "cards": [
+    {
+      "ref": "OP01-024-LUFFY",
+      "name": "Monkey D. Luffy",
+      "set": "OP-01",
+      "rarity": "Leader",
+      "game": "onepiece",
+      "ebay_query": "Monkey D Luffy OP01-024 leader",
+      "ebay_code": "OP01-024",
+      "demo_base": 7,
+      "signal": "FATTO",
+      "note": "Leader iconico, prezzo accessibile"
+    },
+    {
+      "ref": "OP01-121-YAMATO",
+      "name": "Yamato",
+      "set": "OP-01",
+      "rarity": "SEC",
+      "game": "onepiece",
+      "ebay_query": "Yamato OP01-121",
+      "ebay_code": "OP01-121",
+      "demo_base": 9,
+      "signal": "FATTO",
+      "note": "Personaggio molto amato, SEC sotto i $10"
+    },
+    {
+      "ref": "EB04-007-ZORO",
+      "name": "Roronoa Zoro",
+      "set": "EB-04",
+      "rarity": "SR",
+      "game": "onepiece",
+      "ebay_query": "Roronoa Zoro EB04-007",
+      "ebay_code": "EB04-007",
+      "demo_base": 15,
+      "signal": "FATTO",
+      "note": "Fan-favorite, SR recente accessibile"
+    },
+    {
+      "ref": "OP01-067-CROCODILE",
+      "name": "Crocodile",
+      "set": "OP-01",
+      "rarity": "SR",
+      "game": "onepiece",
+      "ebay_query": "Crocodile OP01-067",
+      "ebay_code": "OP01-067",
+      "demo_base": 12,
+      "signal": "FATTO",
+      "note": "Leader giocato, versione accessibile"
+    },
+    {
+      "ref": "OP11-067-KATAKURI",
+      "name": "Charlotte Katakuri",
+      "set": "OP-11",
+      "rarity": "SR",
+      "game": "onepiece",
+      "ebay_query": "Charlotte Katakuri OP11-067",
+      "ebay_code": "OP11-067",
+      "demo_base": 4,
+      "signal": "FATTO",
+      "note": "Personaggio popolare, prezzo basso"
+    },
+    {
+      "ref": "OP01-047-LAW",
+      "name": "Trafalgar Law",
+      "set": "OP-01",
+      "rarity": "SR",
+      "game": "onepiece",
+      "ebay_query": "Trafalgar Law OP01-047",
+      "ebay_code": "OP01-047",
+      "demo_base": 20,
+      "signal": "FATTO",
+      "note": "Fan-favorite, domanda costante"
+    },
+    {
+      "ref": "OP01-013-SANJI",
+      "name": "Sanji",
+      "set": "OP-01",
+      "rarity": "SR",
+      "game": "onepiece",
+      "ebay_query": "Sanji OP01-013",
+      "ebay_code": "OP01-013",
+      "demo_base": 10,
+      "signal": "FATTO",
+      "note": "Fan-favorite, versione accessibile"
+    },
+    {
+      "ref": "OP07-019-BONNEY",
+      "name": "Jewelry Bonney",
+      "set": "OP-07",
+      "rarity": "Leader",
+      "game": "onepiece",
+      "ebay_query": "Jewelry Bonney OP07-019 leader",
+      "ebay_code": "OP07-019",
+      "demo_base": 25,
+      "signal": "FATTO",
+      "note": "Leader competitivo"
+    },
+    {
+      "ref": "OP09-001-SHANKS",
+      "name": "Shanks",
+      "set": "OP-09",
+      "rarity": "Leader",
+      "game": "onepiece",
+      "ebay_query": "Shanks OP09-001 leader",
+      "ebay_code": "OP09-001",
+      "demo_base": 30,
+      "signal": "FATTO",
+      "note": "Personaggio top, leader popolare"
+    },
+    {
+      "ref": "OP09-062-ROBIN",
+      "name": "Nico Robin",
+      "set": "OP-09",
+      "rarity": "Leader",
+      "game": "onepiece",
+      "ebay_query": "Nico Robin OP09-062 leader",
+      "ebay_code": "OP09-062",
+      "demo_base": 28,
+      "signal": "FATTO",
+      "note": "Leader giocata, fan-favorite"
+    },
+    {
+      "ref": "OP10-030-SMOKER",
+      "name": "Smoker",
+      "set": "OP-10",
+      "rarity": "SR",
+      "game": "onepiece",
+      "ebay_query": "Smoker OP10-030",
+      "ebay_code": "OP10-030",
+      "demo_base": 22,
+      "signal": "FATTO",
+      "note": "SR recente, prezzo contenuto"
+    },
+    {
+      "ref": "PKM-GRENINJA-GX",
+      "name": "Greninja GX",
+      "set": "Forbidden Light",
+      "rarity": "Ultra Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "sm6-24",
+      "signal": "FATTO",
+      "note": "Personaggio popolarissimo, GX accessibile"
+    },
+    {
+      "ref": "PKM-SYLVEON-PROMO",
+      "name": "Sylveon",
+      "set": "XY Promo",
+      "rarity": "Promo",
+      "game": "pokemon",
+      "pokemontcg_id": "tk-xy-sy-30",
+      "signal": "FATTO",
+      "note": "Eeveelution amata, sotto $25"
+    },
+    {
+      "ref": "PKM-PIKACHU-PROMO",
+      "name": "Pikachu",
+      "set": "XY Promo",
+      "rarity": "Promo",
+      "game": "pokemon",
+      "pokemontcg_id": "2014xy-5",
+      "signal": "FATTO",
+      "note": "Mascotte, sempre richiesto"
+    },
+    {
+      "ref": "PKM-GARDEVOIR-DP3",
+      "name": "Gardevoir",
+      "set": "Secret Wonders",
+      "rarity": "Holo Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "dp3-7",
+      "signal": "FATTO",
+      "note": "Vintage holo molto amata"
+    },
+    {
+      "ref": "PKM-TYRANITAR-EX7",
+      "name": "Dark Tyranitar",
+      "set": "Team Rocket Returns",
+      "rarity": "Holo Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "ex7-19",
+      "signal": "FATTO",
+      "note": "Vintage e-series, domanda da collezione"
+    },
+    {
+      "ref": "PKM-LUCARIO-DP1",
+      "name": "Lucario",
+      "set": "Diamond & Pearl",
+      "rarity": "Holo Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "dp1-6",
+      "signal": "FATTO",
+      "note": "Personaggio popolare, holo vintage"
+    },
+    {
+      "ref": "PKM-SNORLAX-JUNGLE",
+      "name": "Snorlax",
+      "set": "Jungle",
+      "rarity": "Holo Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "base2-27",
+      "signal": "FATTO",
+      "note": "Classico vintage, molto amato"
+    },
+    {
+      "ref": "PKM-MEWTWO-BASE",
+      "name": "Mewtwo",
+      "set": "Base Set",
+      "rarity": "Holo Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "base1-10",
+      "signal": "FATTO",
+      "note": "Base Set iconico, sotto $100"
+    },
+    {
+      "ref": "PKM-RAYQUAZA-POP1",
+      "name": "Rayquaza",
+      "set": "POP Series 1",
+      "rarity": "Holo Rare",
+      "game": "pokemon",
+      "pokemontcg_id": "pop1-3",
+      "signal": "FATTO",
+      "note": "Promo POP raro, fan-favorite"
+    }
+  ],
+  "news": [
+    {
+      "id": "fallback1",
+      "title": "Notizie in caricamento dai subreddit TCG",
+      "source": "TCG Radar",
+      "date": "2026-06-27",
+      "signal": "FATTO",
+      "dir": null,
+      "cards": [],
+      "summary": "Se vedi questo, le notizie live non sono state raggiunte: riprova ad aggiornare."
+    }
+  ]
+}
