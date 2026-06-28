@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, StatusBar, ScrollView, ActivityIndicator,
-  Image, Linking, TextInput,
+  Image, Linking, TextInput, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -48,6 +48,10 @@ const changeColor = (n) => {
   return n > 0 ? theme.up : theme.down;
 };
 
+// Le notifiche del browser esistono solo sul web (e su iPhone solo se l'app è
+// installata in Home, iOS 16.4+). Su Expo Go nativo non esiste -> guardia.
+const canNotify = () => typeof window !== 'undefined' && 'Notification' in window;
+
 const buyLinksFor = (item) => {
   if (item.buyLinks) return item.buyLinks;
   const nm = item.name || '';
@@ -55,10 +59,18 @@ const buyLinksFor = (item) => {
   const cm = item.game === 'onepiece'
     ? 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(nm)
     : 'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=' + encodeURIComponent(nm);
-  const ebay = item.buyUrl || ('https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`));
-  const vinted = 'https://www.vinted.it/catalog?search_text=' + encodeURIComponent(`${nm} ${serial}`);
-  return { cardmarket: cm, ebay, vinted };
+  const ebay = 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`) + '&_sop=15';
+  const cardtrader = 'https://www.cardtrader.com/en/search?q=' + encodeURIComponent(nm);
+  const vinted = 'https://www.vinted.it/catalog?order=price_low_to_high&search_text=' + encodeURIComponent(`${nm} ${serial}`);
+  return { cardmarket: cm, ebay, cardtrader, vinted };
 };
+
+const MARKETS = [
+  { key: 'ebay', label: 'eBay.it', icon: 'cart-outline' },
+  { key: 'cardmarket', label: 'Cardmarket', icon: 'pricetag-outline' },
+  { key: 'cardtrader', label: 'Cardtrader', icon: 'albums-outline' },
+  { key: 'vinted', label: 'Vinted', icon: 'shirt-outline' },
+];
 
 // Converte una carta TCGdex (completa) nel formato "item" dell'app
 function mapTcgdexCard(c) {
@@ -149,7 +161,7 @@ function AlertBadge() {
   );
 }
 
-function CardRow({ item, onPress, showAlert, moved }) {
+const CardRow = React.memo(function CardRow({ item, onPress, showAlert, moved }) {
   const isAlert = Math.abs(item.change7d) >= 10;
   const priceVal = toEur(item.prices);
   const hasMoved = moved != null && Math.abs(moved) >= 3;
@@ -189,29 +201,47 @@ function CardRow({ item, onPress, showAlert, moved }) {
       </View>
     </TouchableOpacity>
   );
-}
+});
 
-function BuyButtons({ item }) {
+function PriceFinder({ item }) {
   const links = buyLinksFor(item);
-  const opts = [
-    { key: 'cardmarket', label: 'Cardmarket', icon: 'pricetag-outline', primary: true },
-    { key: 'ebay', label: 'eBay', icon: 'cart-outline' },
-    { key: 'vinted', label: 'Vinted', icon: 'shirt-outline' },
-  ].filter(o => links[o.key]);
+  const bo = item.bestOffer;
   return (
-    <View style={styles.buyRow}>
-      {opts.map(o => (
-        <TouchableOpacity
-          key={o.key}
-          style={[styles.buy3, o.primary && styles.buy3Primary]}
-          onPress={() => Linking.openURL(links[o.key])}
-          activeOpacity={0.85}
-        >
-          <Ionicons name={o.icon} size={16} color={o.primary ? theme.bg : theme.accent} />
-          <Text style={[styles.buy3Text, { color: o.primary ? theme.bg : theme.accent }]}>{o.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+    <>
+      <Text style={styles.sectionTitle}>💰 Miglior prezzo</Text>
+      {bo && bo.url ? (
+        <View style={styles.bestBox}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bestPrice}>{fmt(bo.total)}</Text>
+            <Text style={styles.bestSub} numberOfLines={1}>
+              eBay.it · {bo.seller || 'venditore'}{bo.ship ? ` · sped. ${fmt(bo.ship)} incl.` : ' · sped. inclusa'}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.bestBtn} onPress={() => Linking.openURL(bo.url)} activeOpacity={0.85}>
+            <Ionicons name="open-outline" size={15} color={theme.bg} />
+            <Text style={styles.bestBtnText}>Annuncio</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Text style={styles.tfNote}>Prezzo più basso eBay non disponibile ora — apri le ricerche qui sotto.</Text>
+      )}
+
+      <Text style={styles.sectionTitle}>Cerca al minor prezzo su</Text>
+      <View style={styles.marketGrid}>
+        {MARKETS.filter(m => links[m.key]).map(m => (
+          <TouchableOpacity key={m.key} style={styles.marketBtn} onPress={() => Linking.openURL(links[m.key])} activeOpacity={0.85}>
+            <Ionicons name={m.icon} size={16} color={theme.accent} />
+            <Text style={styles.marketBtnText}>{m.label}</Text>
+            <Ionicons name="chevron-forward" size={14} color={theme.textDim} />
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={styles.disclaimer}>
+        Solo eBay mostra automaticamente il prezzo più basso reale. Cardmarket, Cardtrader e Vinted
+        aprono la ricerca ordinata dal più economico (non permettono la lettura automatica del prezzo;
+        Vinted vieta lo scraping).
+      </Text>
+    </>
   );
 }
 
@@ -267,8 +297,7 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
         <Text style={styles.saveText}>{isSaved ? 'Nella watchlist — tocca per rimuovere' : 'Aggiungi alla watchlist'}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>Compra / confronta</Text>
-      <BuyButtons item={item} />
+      <PriceFinder item={item} />
     </ScrollView>
   );
 }
@@ -307,13 +336,18 @@ function RadarSection({ cards, onPress }) {
 }
 
 function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
-  const items = data.items || [];
-  const byRef = {};
-  items.forEach(i => { byRef[i.ref] = i; });
-  const pool = (data.radar || []).map(r => byRef[r]).filter(Boolean);
-  const k = pool.length ? rotation % pool.length : 0;
-  const radarCards = pool.length ? pool.slice(k).concat(pool.slice(0, k)).slice(0, 6) : [];
-  const movers = [...items].sort((a, b) => Math.abs(b.change7d) - Math.abs(a.change7d));
+  const movers = useMemo(
+    () => [...(data.items || [])].sort((a, b) => Math.abs(b.change7d) - Math.abs(a.change7d)),
+    [data]
+  );
+  const radarCards = useMemo(() => {
+    const byRef = {};
+    (data.items || []).forEach(i => { byRef[i.ref] = i; });
+    const pool = (data.radar || []).map(r => byRef[r]).filter(Boolean);
+    if (!pool.length) return [];
+    const k = rotation % pool.length;
+    return pool.slice(k).concat(pool.slice(0, k)).slice(0, 6);
+  }, [data, rotation]);
   return (
     <FlatList
       data={movers}
@@ -326,12 +360,28 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
       }
       renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert />}
       contentContainerStyle={{ paddingBottom: 20 }}
+      initialNumToRender={8}
+      maxToRenderPerBatch={8}
+      windowSize={11}
+      removeClippedSubviews={Platform.OS !== 'web'}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
     />
   );
 }
 
-function WatchlistTab({ data, onPress, refreshing, onRefresh }) {
+function NotifToggle({ notifOn, onToggleNotif }) {
+  if (!canNotify()) return null;
+  return (
+    <TouchableOpacity style={[styles.notifBtn, notifOn && styles.notifBtnOn]} onPress={onToggleNotif} activeOpacity={0.8}>
+      <Ionicons name={notifOn ? 'notifications' : 'notifications-outline'} size={15} color={notifOn ? theme.bg : theme.accent} />
+      <Text style={[styles.notifText, { color: notifOn ? theme.bg : theme.accent }]}>
+        {notifOn ? 'Notifiche attive' : 'Attiva notifiche'}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function WatchlistTab({ data, onPress, refreshing, onRefresh, notifOn, onToggleNotif }) {
   if (!data || data.length === 0) {
     return (
       <ScrollView
@@ -351,14 +401,23 @@ function WatchlistTab({ data, onPress, refreshing, onRefresh }) {
       data={data}
       keyExtractor={i => i.ref}
       ListHeaderComponent={
-        <Text style={styles.watchBanner}>
-          {movers > 0
-            ? `🔔 ${movers} ${movers === 1 ? 'carta si è mossa' : 'carte si sono mosse'} dall'ultima visita`
-            : 'Nessun movimento dall’ultima visita · tira giù per aggiornare'}
-        </Text>
+        <View>
+          <Text style={styles.watchBanner}>
+            {movers > 0
+              ? `🔔 ${movers} ${movers === 1 ? 'carta si è mossa' : 'carte si sono mosse'} dall'ultima visita`
+              : 'Nessun movimento dall’ultima visita · tira giù per aggiornare'}
+          </Text>
+          <View style={{ alignItems: 'center', marginBottom: 6 }}>
+            <NotifToggle notifOn={notifOn} onToggleNotif={onToggleNotif} />
+          </View>
+        </View>
       }
       renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert moved={item.movedPct} />}
       contentContainerStyle={{ paddingBottom: 20 }}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={11}
+      removeClippedSubviews={Platform.OS !== 'web'}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
     />
   );
@@ -581,7 +640,9 @@ export default function App() {
   const [saved, setSaved] = useState([]);
   const [seen, setSeen] = useState({}); // ref -> ultimo prezzo visto in watchlist
   const [rotation, setRotation] = useState(0);
+  const [notifOn, setNotifOn] = useState(false);
   const prevTab = useRef(0);
+  const notifiedRef = useRef(new Set());
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
@@ -590,7 +651,26 @@ export default function App() {
     AsyncStorage.getItem('tcgradar.seen')
       .then(s => { if (s) setSeen(JSON.parse(s)); })
       .catch(() => {});
+    AsyncStorage.getItem('tcgradar.notif')
+      .then(s => { if (s === '1' && canNotify() && Notification.permission === 'granted') setNotifOn(true); })
+      .catch(() => {});
   }, []);
+
+  const onToggleNotif = useCallback(async () => {
+    if (!canNotify()) return;
+    if (notifOn) {
+      setNotifOn(false);
+      AsyncStorage.setItem('tcgradar.notif', '0').catch(() => {});
+      return;
+    }
+    let perm = Notification.permission;
+    if (perm === 'default') { try { perm = await Notification.requestPermission(); } catch {} }
+    if (perm === 'granted') {
+      setNotifOn(true);
+      AsyncStorage.setItem('tcgradar.notif', '1').catch(() => {});
+      try { new Notification('TCG Radar', { body: 'Notifiche attive: ti avviso quando una carta della watchlist si muove.', icon: '/icon.png' }); } catch {}
+    }
+  }, [notifOn]);
 
   const toggleSave = useCallback((item) => {
     setSaved(prev => {
@@ -634,18 +714,39 @@ export default function App() {
   }, [load]);
 
   // Carte salvate arricchite coi dati live + variazione "dall'ultima visita".
-  const liveByRef = {};
-  (data && data.items ? data.items : []).forEach(i => { liveByRef[i.ref] = i; });
-  const savedLive = saved.map(s => {
-    const live = liveByRef[s.ref];
-    const merged = live
-      ? { ...s, prices: live.prices, change7d: live.change7d, tf: live.tf, chart: live.chart, history: live.history, image: live.image || s.image, inNews: live.inNews }
-      : s;
-    const cur = toEur(merged.prices);
-    const base = seen[s.ref];
-    merged.movedPct = (base && cur != null) ? Math.round(((cur - base) / base) * 1000) / 10 : null;
-    return merged;
-  });
+  const savedLive = useMemo(() => {
+    const liveByRef = {};
+    (data && data.items ? data.items : []).forEach(i => { liveByRef[i.ref] = i; });
+    return saved.map(s => {
+      const live = liveByRef[s.ref];
+      const merged = live
+        ? { ...s, prices: live.prices, change7d: live.change7d, tf: live.tf, chart: live.chart, history: live.history, image: live.image || s.image, inNews: live.inNews, bestOffer: live.bestOffer, buyLinks: live.buyLinks || s.buyLinks }
+        : s;
+      const cur = toEur(merged.prices);
+      const base = seen[s.ref];
+      merged.movedPct = (base && cur != null) ? Math.round(((cur - base) / base) * 1000) / 10 : null;
+      return merged;
+    });
+  }, [saved, data, seen]);
+
+  // Notifiche: avvisa quando una carta della watchlist si muove (app aperta/in background).
+  useEffect(() => {
+    if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data) return;
+    const fresh = savedLive.filter(c => {
+      const moved = c.movedPct != null && Math.abs(c.movedPct) >= 5;
+      const big = Math.abs(c.change7d) >= 10;
+      return (moved || big) && !notifiedRef.current.has(c.ref);
+    });
+    if (!fresh.length) return;
+    fresh.forEach(c => notifiedRef.current.add(c.ref));
+    const names = fresh.slice(0, 3).map(c => c.name).join(', ');
+    try {
+      new Notification('TCG Radar — movimento', {
+        body: `${fresh.length === 1 ? 'Si è mossa' : fresh.length + ' carte si sono mosse'}: ${names}`,
+        icon: '/icon.png',
+      });
+    } catch {}
+  }, [savedLive, notifOn, data]);
 
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
@@ -696,7 +797,7 @@ export default function App() {
 
       <View style={styles.content}>
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 1 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 1 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 2 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 3 && <SearchTab onPress={setDetail} />}
       </View>
@@ -792,6 +893,33 @@ const styles = StyleSheet.create({
   },
   buy3Primary: { backgroundColor: theme.accent },
   buy3Text: { fontSize: font.sm, fontWeight: '700' },
+
+  bestBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: theme.card, borderRadius: 10, padding: 14,
+    borderWidth: 1, borderColor: theme.up,
+  },
+  bestPrice: { color: theme.up, fontSize: font.xl, fontWeight: '800' },
+  bestSub: { color: theme.textDim, fontSize: font.xs, marginTop: 3 },
+  bestBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: theme.up, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
+  },
+  bestBtnText: { color: theme.bg, fontSize: font.sm, fontWeight: '700' },
+  marketGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  marketBtn: {
+    width: '48%', flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: 1, borderColor: theme.border, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 12,
+    backgroundColor: theme.card,
+  },
+  marketBtnText: { color: theme.text, fontSize: font.sm, fontWeight: '600', flex: 1 },
+  disclaimer: { color: theme.textDim, fontSize: font.xs, lineHeight: 16, marginTop: 12, fontStyle: 'italic' },
+  notifBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: 1, borderColor: theme.accent, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7,
+  },
+  notifBtnOn: { backgroundColor: theme.accent },
+  notifText: { fontSize: font.sm, fontWeight: '700' },
 
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

@@ -1,20 +1,20 @@
 {
-  "lastUpdate": "2026-06-28T18:17:30.464820+00:00",
-  "marketPulse": 7.0,
+  "lastUpdate": "2026-06-28T18:51:04.531418+00:00",
+  "marketPulse": 6.9,
   "fxUsdEur": 0.87712,
   "radar": [
     "PKM-RAYQUAZA-POP1",
-    "PKM-PIKACHU-PROMO",
     "PKM-GRENINJA-GX",
     "PKM-SNORLAX-JUNGLE",
+    "PKM-PIKACHU-PROMO",
     "PKM-GARDEVOIR-DP3",
-    "PKM-SYLVEON-PROMO",
     "OP01-067-CROCODILE",
-    "OP01-013-SANJI",
     "OP01-121-YAMATO",
+    "OP01-013-SANJI",
+    "PKM-SYLVEON-PROMO",
     "OP11-067-KATAKURI",
-    "PKM-LUCARIO-DP1",
-    "EB04-007-ZORO"
+    "EB04-007-ZORO",
+    "PKM-MEWTWO-BASE"
   ],
   "items": [
     {
@@ -25,24 +25,24 @@
       "rarity": "Leader",
       "serial": "OP01-024",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-024.jpg",
-      "change7d": -16.9,
+      "change7d": -6.1,
       "tf": {
-        "d1": -12.4,
-        "d7": -16.9,
-        "d30": -4.1
+        "d1": -1.0,
+        "d7": -6.1,
+        "d30": 8.4
       },
       "prices": {
-        "eu": 10.08
+        "eu": 11.39
       },
       "history": [
-        11.92,
         11.57,
         11.68,
         11.38,
         11.45,
         11.51,
         11.39,
-        10.08
+        10.08,
+        11.39
       ],
       "chart": [
         [
@@ -104,16 +104,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           10.08
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          11.39
         ]
       ],
       "note": "Leader iconico, prezzo accessibile",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Monkey%20D%20Luffy%20OP01-024%20leader",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Monkey%20D%20Luffy%20OP01-024%20leader&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Monkey%20D.%20Luffy",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Monkey%20D%20Luffy%20OP01-024%20leader",
-        "vinted": "https://www.vinted.it/catalog?search_text=Monkey%20D.%20Luffy%20OP01-024"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Monkey%20D%20Luffy%20OP01-024%20leader&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Monkey%20D.%20Luffy",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Monkey%20D.%20Luffy%20OP01-024"
       },
+      "bestOffer": null,
       "inNews": false,
       "radarReason": "da tenere d'occhio"
     },
@@ -125,24 +131,24 @@
       "rarity": "SEC",
       "serial": "OP01-121",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-121.jpg",
-      "change7d": 11.5,
+      "change7d": 11.6,
       "tf": {
         "d1": 5.2,
-        "d7": 11.5,
+        "d7": 11.6,
         "d30": 12.1
       },
       "prices": {
-        "eu": 17.53
+        "eu": 17.54
       },
       "history": [
-        15.46,
         16.17,
         16.84,
         16.54,
         16.22,
         16.67,
         16.88,
-        17.53
+        17.53,
+        17.54
       ],
       "chart": [
         [
@@ -204,15 +210,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           17.53
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          17.54
         ]
       ],
       "note": "Personaggio molto amato, SEC sotto i $10",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Yamato%20OP01-121",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Yamato%20OP01-121&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Yamato",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Yamato%20OP01-121",
-        "vinted": "https://www.vinted.it/catalog?search_text=Yamato%20OP01-121"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Yamato%20OP01-121&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Yamato",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Yamato%20OP01-121"
+      },
+      "bestOffer": {
+        "price": 3.09,
+        "ship": 0.0,
+        "total": 3.09,
+        "seller": "ru_toyhobbyjapan",
+        "url": "https://www.ebay.it/itm/397863550939?_skw=Yamato+OP01-121&hash=item5ca283ffdb:g:yfQAAeSwnflp5xSl"
       },
       "inNews": false,
       "radarReason": "+12% 7g"
@@ -235,13 +253,13 @@
         "eu": 13.15
       },
       "history": [
-        12.58,
         12.5,
         12.49,
         12.2,
         12.54,
         12.6,
         13.16,
+        13.15,
         13.15
       ],
       "chart": [
@@ -304,15 +322,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           13.15
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          13.15
         ]
       ],
       "note": "Fan-favorite, SR recente accessibile",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Roronoa%20Zoro%20EB04-007",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Roronoa%20Zoro%20EB04-007&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Roronoa%20Zoro",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Roronoa%20Zoro%20EB04-007",
-        "vinted": "https://www.vinted.it/catalog?search_text=Roronoa%20Zoro%20EB04-007"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Roronoa%20Zoro%20EB04-007&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Roronoa%20Zoro",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Roronoa%20Zoro%20EB04-007"
+      },
+      "bestOffer": {
+        "price": 7.75,
+        "ship": 3.0,
+        "total": 10.75,
+        "seller": "jimmycollectibles",
+        "url": "https://www.ebay.it/itm/358667631507?_skw=Roronoa+Zoro+EB04-007&hash=item538241bb93:g:zzEAAeSwZwtqKwOD"
       },
       "inNews": false,
       "radarReason": "+9% 7g"
@@ -335,12 +365,12 @@
         "eu": 2.63
       },
       "history": [
-        2.32,
         2.42,
         2.44,
         2.5,
         2.61,
         2.6,
+        2.63,
         2.63,
         2.63
       ],
@@ -404,15 +434,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           2.63
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          2.63
         ]
       ],
       "note": "Leader giocato, versione accessibile",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Crocodile%20OP01-067",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Crocodile%20OP01-067&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Crocodile",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Crocodile%20OP01-067",
-        "vinted": "https://www.vinted.it/catalog?search_text=Crocodile%20OP01-067"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Crocodile%20OP01-067&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Crocodile",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Crocodile%20OP01-067"
+      },
+      "bestOffer": {
+        "price": 2.16,
+        "ship": 0.0,
+        "total": 2.16,
+        "seller": "cardster_tokyo",
+        "url": "https://www.ebay.it/itm/234727114090?_skw=Crocodile+OP01-067&hash=item36a6d3856a:g:ZoYAAOSwU8FjQkZb"
       },
       "inNews": false,
       "radarReason": "+14% 7g"
@@ -435,12 +477,12 @@
         "eu": 4.27
       },
       "history": [
-        4.04,
         4.1,
         4.24,
         4.27,
         4.27,
         4.4,
+        4.27,
         4.27,
         4.27
       ],
@@ -504,15 +546,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           4.27
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          4.27
         ]
       ],
       "note": "Personaggio popolare, prezzo basso",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Charlotte%20Katakuri%20OP11-067",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Charlotte%20Katakuri%20OP11-067&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Charlotte%20Katakuri",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Charlotte%20Katakuri%20OP11-067",
-        "vinted": "https://www.vinted.it/catalog?search_text=Charlotte%20Katakuri%20OP11-067"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Charlotte%20Katakuri%20OP11-067&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Charlotte%20Katakuri",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Charlotte%20Katakuri%20OP11-067"
+      },
+      "bestOffer": {
+        "price": 5.25,
+        "ship": 0.0,
+        "total": 5.25,
+        "seller": "shibacam_japan",
+        "url": "https://www.ebay.it/itm/198109834750?_skw=Charlotte+Katakuri+OP11-067&hash=item2e20442dfe:g:mhEAAeSwNiFpkgcY"
       },
       "inNews": false,
       "radarReason": "+9% 7g"
@@ -535,12 +589,12 @@
         "eu": 3.03
       },
       "history": [
-        2.81,
         2.92,
         3.0,
         2.93,
         3.0,
         2.91,
+        3.03,
         3.03,
         3.03
       ],
@@ -604,15 +658,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           3.03
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          3.03
         ]
       ],
       "note": "Fan-favorite, domanda costante",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Trafalgar%20Law%20OP01-047",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Trafalgar%20Law%20OP01-047&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Trafalgar%20Law",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Trafalgar%20Law%20OP01-047",
-        "vinted": "https://www.vinted.it/catalog?search_text=Trafalgar%20Law%20OP01-047"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Trafalgar%20Law%20OP01-047&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Trafalgar%20Law",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Trafalgar%20Law%20OP01-047"
+      },
+      "bestOffer": {
+        "price": 2.01,
+        "ship": 0.0,
+        "total": 2.01,
+        "seller": "jfh-collectibles",
+        "url": "https://www.ebay.it/itm/147113511883?_skw=Trafalgar+Law+OP01-047&hash=item2240a60bcb:g:EuMAAeSwaytpdRYV"
       },
       "inNews": false,
       "radarReason": "+7% 7g"
@@ -625,24 +691,24 @@
       "rarity": "SR",
       "serial": "OP01-013",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-013.jpg",
-      "change7d": 12.2,
+      "change7d": 11.4,
       "tf": {
-        "d1": 2.4,
-        "d7": 12.2,
-        "d30": 20.7
+        "d1": 1.6,
+        "d7": 11.4,
+        "d30": 19.8
       },
       "prices": {
-        "eu": 18.68
+        "eu": 18.54
       },
       "history": [
-        16.97,
         17.38,
         18.16,
         18.88,
         18.44,
         18.25,
         18.75,
-        18.68
+        18.68,
+        18.54
       ],
       "chart": [
         [
@@ -704,18 +770,30 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           18.68
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          18.54
         ]
       ],
       "note": "Fan-favorite, versione accessibile",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Sanji%20OP01-013",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Sanji%20OP01-013&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Sanji",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Sanji%20OP01-013",
-        "vinted": "https://www.vinted.it/catalog?search_text=Sanji%20OP01-013"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Sanji%20OP01-013&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Sanji",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Sanji%20OP01-013"
+      },
+      "bestOffer": {
+        "price": 2.4,
+        "ship": 0.0,
+        "total": 2.4,
+        "seller": "cardster_tokyo",
+        "url": "https://www.ebay.it/itm/234695470240?_skw=Sanji+OP01-013&hash=item36a4f0aca0:g:MPYAAOSwo5ljIgkz"
       },
       "inNews": false,
-      "radarReason": "+12% 7g"
+      "radarReason": "+11% 7g"
     },
     {
       "ref": "OP07-019-BONNEY",
@@ -735,13 +813,13 @@
         "eu": 3.7
       },
       "history": [
-        3.8,
         3.74,
         3.77,
         3.86,
         3.91,
         4.08,
         4.14,
+        3.7,
         3.7
       ],
       "chart": [
@@ -804,15 +882,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           3.7
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          3.7
         ]
       ],
       "note": "Leader competitivo",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Jewelry%20Bonney%20OP07-019%20leader",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Jewelry%20Bonney%20OP07-019%20leader&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Jewelry%20Bonney",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Jewelry%20Bonney%20OP07-019%20leader",
-        "vinted": "https://www.vinted.it/catalog?search_text=Jewelry%20Bonney%20OP07-019"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Jewelry%20Bonney%20OP07-019%20leader&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Jewelry%20Bonney",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Jewelry%20Bonney%20OP07-019"
+      },
+      "bestOffer": {
+        "price": 2.25,
+        "ship": 0.0,
+        "total": 2.25,
+        "seller": "sakura_shipping",
+        "url": "https://www.ebay.it/itm/136819767975?_skw=Jewelry+Bonney+OP07-019+leader&hash=item1fdb17faa7:g:6K8AAOSwoWBl2saw"
       },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
@@ -835,12 +925,12 @@
         "eu": 4.38
       },
       "history": [
-        4.48,
         4.46,
         4.44,
         4.42,
         4.3,
         4.51,
+        4.38,
         4.38,
         4.38
       ],
@@ -904,15 +994,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           4.38
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          4.38
         ]
       ],
       "note": "Personaggio top, leader popolare",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Shanks%20OP09-001%20leader",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Shanks%20OP09-001%20leader&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Shanks",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Shanks%20OP09-001%20leader",
-        "vinted": "https://www.vinted.it/catalog?search_text=Shanks%20OP09-001"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Shanks%20OP09-001%20leader&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Shanks",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Shanks%20OP09-001"
+      },
+      "bestOffer": {
+        "price": 1.99,
+        "ship": 0.0,
+        "total": 1.99,
+        "seller": "phoenix_entreprise",
+        "url": "https://www.ebay.it/itm/157361170598?_skw=Shanks+OP09-001+leader&hash=item24a374e8a6:g:0wAAAOSwublnpBRz"
       },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
@@ -935,12 +1037,12 @@
         "eu": 1.75
       },
       "history": [
-        1.7,
         1.71,
         1.7,
         1.68,
         1.64,
         1.73,
+        1.75,
         1.75,
         1.75
       ],
@@ -1004,15 +1106,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           1.75
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          1.75
         ]
       ],
       "note": "Leader giocata, fan-favorite",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Nico%20Robin%20OP09-062%20leader",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Nico%20Robin%20OP09-062%20leader&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Nico%20Robin",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Nico%20Robin%20OP09-062%20leader",
-        "vinted": "https://www.vinted.it/catalog?search_text=Nico%20Robin%20OP09-062"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Nico%20Robin%20OP09-062%20leader&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Nico%20Robin",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Nico%20Robin%20OP09-062"
+      },
+      "bestOffer": {
+        "price": 2.39,
+        "ship": 0.0,
+        "total": 2.39,
+        "seller": "phoenix_entreprise",
+        "url": "https://www.ebay.it/itm/127020235534?_skw=Nico+Robin+OP09-062+leader&hash=item1d92fefb0e:g:XYkAAOSwPwVnpBVx"
       },
       "inNews": false,
       "radarReason": "+7% 7g"
@@ -1035,13 +1149,13 @@
         "eu": 3.48
       },
       "history": [
-        3.34,
         3.48,
         3.43,
         3.52,
         3.49,
         3.51,
         3.5,
+        3.48,
         3.48
       ],
       "chart": [
@@ -1104,15 +1218,27 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           3.48
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          3.48
         ]
       ],
       "note": "SR recente, prezzo contenuto",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Smoker%20OP10-030",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Smoker%20OP10-030&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Smoker",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Smoker%20OP10-030",
-        "vinted": "https://www.vinted.it/catalog?search_text=Smoker%20OP10-030"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Smoker%20OP10-030&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Smoker",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Smoker%20OP10-030"
+      },
+      "bestOffer": {
+        "price": 1.28,
+        "ship": 1.06,
+        "total": 2.34,
+        "seller": "ripnrare",
+        "url": "https://www.ebay.it/itm/397717209027?_skw=Smoker+OP10-030&hash=item5c99caffc3:g:LiQAAeSwZYpptrI5"
       },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
@@ -1135,12 +1261,12 @@
         "eu": 8.32
       },
       "history": [
-        8.02,
         8.0,
         8.36,
         8.27,
         8.22,
         8.5,
+        8.32,
         8.32,
         8.32
       ],
@@ -1204,16 +1330,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           8.32
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          8.32
         ]
       ],
       "note": "Personaggio popolarissimo, GX accessibile",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Greninja%20GX%2024/131%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Greninja%20GX%2024/131%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Greninja%20GX",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Greninja%20GX%2024/131%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Greninja%20GX%20pokemon%2024/131"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Greninja%20GX%2024/131%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Greninja%20GX",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Greninja%20GX%20pokemon%2024/131"
       },
+      "bestOffer": null,
       "inNews": false,
       "radarReason": "+20% 7g"
     },
@@ -1225,7 +1357,7 @@
       "rarity": "Promo",
       "serial": "30/30",
       "image": null,
-      "change7d": 14.5,
+      "change7d": 9.8,
       "tf": {
         "d1": null,
         "d7": null,
@@ -1235,12 +1367,12 @@
         "eu": 17.48
       },
       "history": [
-        15.26,
         15.92,
         15.71,
         16.37,
         16.32,
         16.83,
+        17.48,
         17.48,
         17.48
       ],
@@ -1304,18 +1436,24 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           17.48
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          17.48
         ]
       ],
       "note": "Eeveelution amata, sotto $25",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Sylveon%2030/30%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Sylveon%2030/30%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Sylveon",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Sylveon%2030/30%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Sylveon%20pokemon%2030/30"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Sylveon%2030/30%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Sylveon",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Sylveon%20pokemon%2030/30"
       },
+      "bestOffer": null,
       "inNews": false,
-      "radarReason": "+14% 7g"
+      "radarReason": "+10% 7g"
     },
     {
       "ref": "PKM-PIKACHU-PROMO",
@@ -1325,7 +1463,7 @@
       "rarity": "Promo",
       "serial": "5/12",
       "image": null,
-      "change7d": 6.2,
+      "change7d": 3.0,
       "tf": {
         "d1": null,
         "d7": null,
@@ -1335,12 +1473,12 @@
         "eu": 34.79
       },
       "history": [
-        32.76,
         33.78,
         33.89,
         35.13,
         34.93,
         34.09,
+        34.79,
         34.79,
         34.79
       ],
@@ -1404,18 +1542,24 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           34.79
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          34.79
         ]
       ],
       "note": "Mascotte, sempre richiesto",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Pikachu%205/12%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Pikachu%205/12%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Pikachu",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Pikachu%205/12%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Pikachu%20pokemon%205/12"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Pikachu%205/12%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Pikachu",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Pikachu%20pokemon%205/12"
       },
+      "bestOffer": null,
       "inNews": true,
-      "radarReason": "+6% 7g · nelle notizie"
+      "radarReason": "nelle notizie"
     },
     {
       "ref": "PKM-GARDEVOIR-DP3",
@@ -1435,12 +1579,12 @@
         "eu": 14.53
       },
       "history": [
-        12.91,
         12.97,
         13.45,
         13.67,
         14.25,
         13.9,
+        14.53,
         14.53,
         14.53
       ],
@@ -1504,16 +1648,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           14.53
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          14.53
         ]
       ],
       "note": "Vintage holo molto amata",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Gardevoir%207/132%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Gardevoir%207/132%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Gardevoir",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Gardevoir%207/132%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Gardevoir%20pokemon%207/132"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Gardevoir%207/132%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Gardevoir",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Gardevoir%20pokemon%207/132"
       },
+      "bestOffer": null,
       "inNews": false,
       "radarReason": "+17% 7g"
     },
@@ -1535,12 +1685,12 @@
         "eu": 21.59
       },
       "history": [
-        20.85,
         21.82,
         21.48,
         21.63,
         21.42,
         21.75,
+        21.59,
         21.59,
         21.59
       ],
@@ -1604,16 +1754,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           21.59
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          21.59
         ]
       ],
       "note": "Vintage e-series, domanda da collezione",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Dark%20Tyranitar%2019/109%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Dark%20Tyranitar%2019/109%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Dark%20Tyranitar",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Dark%20Tyranitar%2019/109%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Dark%20Tyranitar%20pokemon%2019/109"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Dark%20Tyranitar%2019/109%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Dark%20Tyranitar",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Dark%20Tyranitar%20pokemon%2019/109"
       },
+      "bestOffer": null,
       "inNews": false,
       "radarReason": "da tenere d'occhio"
     },
@@ -1625,7 +1781,7 @@
       "rarity": "Holo Rare",
       "serial": "6/130",
       "image": "https://assets.tcgdex.net/en/dp/dp1/6/high.png",
-      "change7d": 8.7,
+      "change7d": 3.6,
       "tf": {
         "d1": null,
         "d7": null,
@@ -1635,12 +1791,12 @@
         "eu": 53.38
       },
       "history": [
-        49.11,
         51.51,
         52.29,
         53.68,
         52.38,
         54.59,
+        53.38,
         53.38,
         53.38
       ],
@@ -1704,18 +1860,24 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           53.38
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          53.38
         ]
       ],
       "note": "Personaggio popolare, holo vintage",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Lucario%206/130%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Lucario%206/130%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Lucario",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Lucario%206/130%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Lucario%20pokemon%206/130"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Lucario%206/130%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Lucario",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Lucario%20pokemon%206/130"
       },
+      "bestOffer": null,
       "inNews": false,
-      "radarReason": "+9% 7g"
+      "radarReason": "da tenere d'occhio"
     },
     {
       "ref": "PKM-SNORLAX-JUNGLE",
@@ -1735,12 +1897,12 @@
         "eu": 115.69
       },
       "history": [
-        111.59,
         114.87,
         116.73,
         113.41,
         115.93,
         116.0,
+        115.69,
         115.69,
         115.69
       ],
@@ -1804,16 +1966,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           115.69
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          115.69
         ]
       ],
       "note": "Classico vintage, molto amato",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Snorlax%2027/64%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Snorlax%2027/64%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Snorlax",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Snorlax%2027/64%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Snorlax%20pokemon%2027/64"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Snorlax%2027/64%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Snorlax",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Snorlax%20pokemon%2027/64"
       },
+      "bestOffer": null,
       "inNews": false,
       "radarReason": "+18% 7g"
     },
@@ -1835,12 +2003,12 @@
         "eu": 117.93
       },
       "history": [
-        116.84,
         119.63,
         117.18,
         121.3,
         120.11,
         116.98,
+        117.93,
         117.93,
         117.93
       ],
@@ -1904,16 +2072,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           117.93
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          117.93
         ]
       ],
       "note": "Base Set iconico, sotto $100",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Mewtwo%2010/102%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Mewtwo%2010/102%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Mewtwo",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Mewtwo%2010/102%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Mewtwo%20pokemon%2010/102"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Mewtwo%2010/102%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Mewtwo",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Mewtwo%20pokemon%2010/102"
       },
+      "bestOffer": null,
       "inNews": false,
       "radarReason": "+8% 7g"
     },
@@ -1935,12 +2109,12 @@
         "eu": 87.45
       },
       "history": [
-        79.87,
         78.87,
         82.78,
         84.3,
         84.71,
         85.75,
+        87.45,
         87.45,
         87.45
       ],
@@ -2004,16 +2178,22 @@
         [
           "2026-06-28T18:17:30.464820+00:00",
           87.45
+        ],
+        [
+          "2026-06-28T18:51:04.531418+00:00",
+          87.45
         ]
       ],
       "note": "Promo POP raro, fan-favorite",
       "signal": "FATTO",
-      "buyUrl": "https://www.ebay.com/sch/i.html?_nkw=Rayquaza%203/17%20pokemon%20card",
+      "buyUrl": "https://www.ebay.it/sch/i.html?_nkw=Rayquaza%203/17%20pokemon%20card&_sop=15",
       "buyLinks": {
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Rayquaza",
-        "ebay": "https://www.ebay.com/sch/i.html?_nkw=Rayquaza%203/17%20pokemon%20card",
-        "vinted": "https://www.vinted.it/catalog?search_text=Rayquaza%20pokemon%203/17"
+        "ebay": "https://www.ebay.it/sch/i.html?_nkw=Rayquaza%203/17%20pokemon%20card&_sop=15",
+        "cardtrader": "https://www.cardtrader.com/en/search?q=Rayquaza",
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Rayquaza%20pokemon%203/17"
       },
+      "bestOffer": null,
       "inNews": true,
       "radarReason": "+25% 7g · nelle notizie"
     }
@@ -2084,22 +2264,20 @@
       "titleIt": "Deoxys è il pezzo mancante del Metagross di Steven?"
     },
     {
-      "id": "US9-The Pokémon TCG's new Delta Reign Rayqua",
-      "title": "The Pokémon TCG's new Delta Reign Rayquaza card has officially been revealed",
-      "source": "wargamer.com",
+      "id": "US2-10 Best Pokémon TCG Chase Cards in Chaos",
+      "title": "10 Best Pokémon TCG Chase Cards in Chaos Rising",
+      "source": "Comic Book Resources",
       "region": "US",
       "kind": "news",
-      "date": "2026-06-27",
-      "time": "23:27",
-      "iso": "2026-06-27T23:27:53+00:00",
+      "date": "2026-06-28",
+      "time": "00:31",
+      "iso": "2026-06-28T00:31:00+00:00",
       "signal": "HYPE",
       "dir": null,
-      "cards": [
-        "PKM-RAYQUAZA-POP1"
-      ],
+      "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxQY2YxMkM0dzY0dDI4WDVFT1Rma3dra3J0eGZRemRBcE9wc1V5MmJ1VjJGandFUWoxMm1vQXRZR3pZVlY3UUNSc2dyaXAwV3N3aHdYNXRUREwwak9WOXY5V2dGNENwUFRld1dPWURBR0xJZDFjejk1aEZta2J1ZG9ud0VveXg?oc=5",
-      "titleIt": "La nuova carta Rayquaza Delta Reign del GCC Pokémon è stata ufficialmente rivelata"
+      "url": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFBpVjg2dUswYW5XUmpQblJtY1NUdmNaRzRZSnQ0N2t6UVJoemJ1T3F0bmNPbHNTaEVCRGRyeEtrekNESVhnN3RoRVZSNXdSa0RBdDN6RE5zVzZOMzNuYmZ3dEtR?oc=5",
+      "titleIt": "Le 10 migliori carte Inseguimento del GCC Pokémon in Chaos Rising"
     },
     {
       "id": "US3-ST30 Luffy & Ace Is GOOD?! Top 8 Peoria ",
@@ -2281,7 +2459,7 @@
       "titleIt": "[Pokéka 30° anniversario] Il 25° pacchetto promozionale sta attirando l'attenzione! Spiegazione del tasso di aumento del prezzo di mercato delle carte vincenti e motivo della loro popolarità [Promo Card Pack 25th ANNIVERSARY edition]"
     },
     {
-      "id": "US8-Pokémon TCG Pocket: Everyday Wonders Exp",
+      "id": "US9-Pokémon TCG Pocket: Everyday Wonders Exp",
       "title": "Pokémon TCG Pocket: Everyday Wonders Expansion Coming Soon",
       "source": "Pokemon.com",
       "region": "US",
@@ -2535,7 +2713,7 @@
       "titleIt": "[Pokeka] Pikachu ex FUR specifica [131/M-P] previsione del prezzo di acquisto e aumento dei prezzi dopo il rilascio | SCATOLA FUTURISTICA DEL 30° CELEBRATION"
     },
     {
-      "id": "US2-Get Ready for Pokémon TCG: 30th Celebrat",
+      "id": "US3-Get Ready for Pokémon TCG: 30th Celebrat",
       "title": "Get Ready for Pokémon TCG: 30th Celebration",
       "source": "Pokemon.com",
       "region": "US",
@@ -2583,7 +2761,7 @@
       "titleIt": "Una carta Pokémon da $ 100.000 sta per cambiare la vita di un collezionista"
     },
     {
-      "id": "US3-Pokemon TCG Printed 10 Billion Cards in ",
+      "id": "US4-Pokemon TCG Printed 10 Billion Cards in ",
       "title": "Pokemon TCG Printed 10 Billion Cards in 2025 as Overwhelming Demand Outpaced Production Capacity",
       "source": "PokeBeach",
       "region": "US",
@@ -2648,7 +2826,7 @@
       "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxNMHpCS2VBTmp6U28wZHAzN1RwQjd5azg4QWVab2ZFUnFzUnFrdVl4U2lBd1doZTFUQ3NxSkw1LXZlZE1lRTU3NkhvOVNuMnZxSkxPQXk1NjVXQjluRk93U09LbjF2b093XzVjaXdBNjB1NVJwWGM0ZzkzaklvNGxUb0pIX0JnVDc0NUtDUHc4TzRQcWpkY3FCQUlmRmZCNHliOTF0NUZIcE1Hcks2UWRiWWxib0paQ3RCUVE?oc=5"
     },
     {
-      "id": "US5-The Pokémon TCG: Mega Evolution—Pitch Bl",
+      "id": "US6-The Pokémon TCG: Mega Evolution—Pitch Bl",
       "title": "The Pokémon TCG: Mega Evolution—Pitch Black Expansion Arrives July 17, 2026",
       "source": "Pokemon.com",
       "region": "US",
@@ -2679,7 +2857,7 @@
       "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOQ2JaT2htZjRNaFNaY3c1RWdZelFNNUpkQTcyV0hxYzN0c1NqUU9EcG5mUEhPS1lEaEhiSF9rSlR3ZmFCRmhKLTdGaU4yVG85Q0ZTYVF4OUVGNDV6OUdqNmhMclk1V21vUTZFbm5WTFdmV1BBcFBkclhSc1lNNEhmWVFCR3dNS1c1V2pBYXNQcU11MTJ4RkxRRklZZUN1TmNOWngzeDMteUtUZUtZX0dsSw?oc=5"
     },
     {
-      "id": "US7-Pokémon TCG Pocket: Pulsing Aura Expansi",
+      "id": "US8-Pokémon TCG Pocket: Pulsing Aura Expansi",
       "title": "Pokémon TCG Pocket: Pulsing Aura Expansion Coming Soon",
       "source": "Pokemon.com",
       "region": "US",
@@ -2805,7 +2983,7 @@
       "titleIt": "Da collezionabili a investibili: l’ascesa delle carte collezionabili Pokémon come la nuova classe di asset in Asia"
     },
     {
-      "id": "US6-The Pokémon TCG Is Celebrating 30 Years ",
+      "id": "US7-The Pokémon TCG Is Celebrating 30 Years ",
       "title": "The Pokémon TCG Is Celebrating 30 Years with Special Worldwide Releases",
       "source": "Pokemon.com",
       "region": "US",
@@ -2962,7 +3140,7 @@
       "url": "https://news.google.com/rss/articles/CBMiV0FVX3lxTE9ORy02cWRJT25mY1lmMEhnS3RaSjRBZEZlMW9VR3lMS2cyYVVsanhUemQ1ckdFVnhQLWlpLUJ0MU91aEVUb1B0cWNrcXRjM09sYzZKZmxaTQ?oc=5"
     },
     {
-      "id": "US4-2026 Pokémon TCG Standard Format Rotatio",
+      "id": "US5-2026 Pokémon TCG Standard Format Rotatio",
       "title": "2026 Pokémon TCG Standard Format Rotation Announcement",
       "source": "Pokemon.com",
       "region": "US",

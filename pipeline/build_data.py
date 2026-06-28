@@ -228,8 +228,60 @@ def ebay_price_usd(token: str, query: str, code: str = None):
     return round(statistics.median(core or prices), 2)
 
 
+def ebay_best_offer(token: str, query: str, code: str = None):
+    """Annuncio ATTIVO piu' economico su eBay.it (EUR): prezzo, venditore, link."""
+    import requests
+
+    code_norm = _alnum(code) if code else None
+    try:
+        resp = requests.get(
+            "https://api.ebay.com/buy/browse/v1/item_summary/search",
+            headers={"Authorization": f"Bearer {token}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_IT"},
+            params={"q": query, "limit": 50, "sort": "price",
+                    "filter": "buyingOptions:{FIXED_PRICE}"},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        items = resp.json().get("itemSummaries", []) or []
+    except Exception as exc:  # noqa: BLE001
+        print(f"    eBay best offer errore: {exc}")
+        return None
+    best = None
+    for it in items:
+        title = (it.get("title") or "").lower()
+        if any(j in (" " + title + " ") for j in EBAY_JUNK):
+            continue
+        if code_norm and code_norm not in _alnum(title):
+            continue
+        price = it.get("price", {})
+        if price.get("currency") != "EUR":
+            continue
+        try:
+            val = float(price["value"])
+        except (KeyError, ValueError, TypeError):
+            continue
+        ship = 0.0
+        opts = it.get("shippingOptions") or []
+        if opts:
+            try:
+                ship = float((opts[0].get("shippingCost") or {}).get("value") or 0)
+            except (ValueError, TypeError):
+                ship = 0.0
+        total = round(val + ship, 2)
+        if best is None or total < best["total"]:
+            best = {
+                "price": round(val, 2),
+                "ship": round(ship, 2),
+                "total": total,
+                "seller": (it.get("seller") or {}).get("username"),
+                "url": it.get("itemWebUrl"),
+            }
+    return best
+
+
 def ebay_search_url(query: str) -> str:
-    return "https://www.ebay.com/sch/i.html?_nkw=" + urllib.parse.quote(query)
+    # eBay.it, ordinato dal piu' economico (prezzo + spedizione)
+    return "https://www.ebay.it/sch/i.html?_nkw=" + urllib.parse.quote(query) + "&_sop=15"
 
 
 # ---------------------------------------------------------------------------
@@ -493,6 +545,7 @@ def main() -> None:
         serial = card.get("serial") or ref
         source = "demo"
         cm_tf = None  # variazioni Cardmarket reali (Pokemon)
+        best_offer = None  # annuncio piu' economico su eBay.it
 
         # --- Pokemon: TCGdex (Cardmarket EUR) ---
         if game == "pokemon" and card.get("pokemontcg_id") and not FORCE_DEMO:
@@ -522,6 +575,7 @@ def main() -> None:
             if usd is not None:
                 eur = to_eur(usd)
                 source = "eBay->EUR"
+            best_offer = ebay_best_offer(token, card.get("ebay_query", card["name"]), card.get("ebay_code"))
 
         # immagine + seriale One Piece da optcgapi
         if game == "onepiece":
@@ -563,16 +617,20 @@ def main() -> None:
         spark = [round(v, 2) for _, v in series[-SPARK_LEN:]]
         chart = downsample(series, CHART_LEN)
 
-        # link d'acquisto
+        # link d'acquisto (ricerca ordinata dal piu' economico dove possibile)
         nm = card["name"]
+        ct_url = "https://www.cardtrader.com/en/search?q=" + urllib.parse.quote(nm)
         if game == "onepiece":
+            q = card.get("ebay_query", nm)
             cm_url = "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=" + urllib.parse.quote(nm)
-            ebay_url = ebay_search_url(card.get("ebay_query", nm))
-            vinted_url = "https://www.vinted.it/catalog?search_text=" + urllib.parse.quote(f"{nm} {card.get('ebay_code','')}")
+            ebay_url = ebay_search_url(q)
+            vinted_url = ("https://www.vinted.it/catalog?order=price_low_to_high&search_text="
+                          + urllib.parse.quote(f"{nm} {card.get('ebay_code','')}"))
         else:
             cm_url = "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=" + urllib.parse.quote(nm)
             ebay_url = ebay_search_url(f"{nm} {serial} pokemon card")
-            vinted_url = "https://www.vinted.it/catalog?search_text=" + urllib.parse.quote(f"{nm} pokemon {serial}")
+            vinted_url = ("https://www.vinted.it/catalog?order=price_low_to_high&search_text="
+                          + urllib.parse.quote(f"{nm} pokemon {serial}"))
 
         items.append({
             "ref": ref,
@@ -590,7 +648,8 @@ def main() -> None:
             "note": card.get("note", ""),
             "signal": card.get("signal", "FATTO"),
             "buyUrl": ebay_url,
-            "buyLinks": {"cardmarket": cm_url, "ebay": ebay_url, "vinted": vinted_url},
+            "buyLinks": {"cardmarket": cm_url, "ebay": ebay_url, "cardtrader": ct_url, "vinted": vinted_url},
+            "bestOffer": best_offer,
         })
         print(f"  - {ref:24} {('EUR '+format(eur,'.2f')) if eur is not None else '--':>12} ({source:11}) {ch:+.1f}% 7g")
 

@@ -58,6 +58,9 @@ jobs:
       - name: Export web app
         run: npx expo export --platform web
 
+      - name: PWA (manifest + service worker + icone)
+        run: python tools/pwa_inject.py dist
+
       - name: Copy data.json into site
         run: cp pipeline/data.json dist/data.json
 
