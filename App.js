@@ -7,10 +7,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Sparkline from './Sparkline';
+import Chart from './Chart';
 import { theme, font } from './theme';
 import sampleData from './sample.json';
 
 const DATA_URL = 'https://chrx93.github.io/data.json'; // dati live pubblicati
+const USD_EUR = 0.92; // cambio indicativo per stime in-app (le carte del motore sono gia' in EUR)
 
 const TAB_META = [
   { label: 'Home', icon: 'home', iconOutline: 'home-outline' },
@@ -19,15 +21,24 @@ const TAB_META = [
   { label: 'Cerca', icon: 'search', iconOutline: 'search-outline' },
 ];
 
-const fmt = (n, currency) => {
+// Tutto in EURO.
+const fmt = (n) => {
   if (n == null) return '—';
-  if (currency === 'jp') return `¥${(n / 1000).toFixed(0)}k`;
-  if (currency === 'us') return `$${n}`;
-  return `€${n}`;
+  const v = Number(n);
+  return v >= 100 ? `€${Math.round(v)}` : `€${v.toFixed(2)}`;
+};
+
+// Valore in EUR: usa eu se c'e', altrimenti converte us con un cambio indicativo.
+const toEur = (prices) => {
+  if (!prices) return null;
+  if (prices.eu != null) return prices.eu;
+  if (prices.us != null) return Math.round(prices.us * USD_EUR * 100) / 100;
+  return null;
 };
 
 const pct = (n) => {
-  if (n == null || n === 0) return '—';
+  if (n == null) return '—';
+  if (n === 0) return '0%';
   const sign = n > 0 ? '+' : '';
   return `${sign}${n.toFixed(1)}%`;
 };
@@ -37,56 +48,17 @@ const changeColor = (n) => {
   return n > 0 ? theme.up : theme.down;
 };
 
-// Mostra il primo prezzo disponibile, in ordine: US -> EU -> JP
-const primaryPrice = (prices) => {
-  if (!prices) return [null, 'eu'];
-  if (prices.us != null) return [prices.us, 'us'];
-  if (prices.eu != null) return [prices.eu, 'eu'];
-  if (prices.jp != null) return [prices.jp, 'jp'];
-  return [null, 'eu'];
+const buyLinksFor = (item) => {
+  if (item.buyLinks) return item.buyLinks;
+  const nm = item.name || '';
+  const serial = item.serial || '';
+  const cm = item.game === 'onepiece'
+    ? 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(nm)
+    : 'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=' + encodeURIComponent(nm);
+  const ebay = item.buyUrl || ('https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`));
+  const vinted = 'https://www.vinted.it/catalog?search_text=' + encodeURIComponent(`${nm} ${serial}`);
+  return { cardmarket: cm, ebay, vinted };
 };
-
-// Converte una carta di pokemontcg.io nel formato "item" dell'app
-function mapPokeCard(c) {
-  const tp = (c.tcgplayer && c.tcgplayer.prices) || {};
-  let usd = null;
-  for (const v of ['holofoil', 'normal', 'reverseHolofoil', 'unlimitedHolofoil', '1stEditionHolofoil']) {
-    if (tp[v] && tp[v].market != null) { usd = tp[v].market; break; }
-  }
-  if (usd == null) {
-    for (const k of Object.keys(tp)) {
-      if (tp[k] && tp[k].market != null) { usd = tp[k].market; break; }
-    }
-  }
-  const cm = (c.cardmarket && c.cardmarket.prices) || {};
-  const eur = cm.trendPrice != null ? cm.trendPrice : null;
-  let tf = null;
-  let history = [];
-  if (eur != null && eur >= 2) {
-    const chg = (avg) => (avg ? Math.round(((eur - avg) / avg) * 1000) / 10 : null);
-    tf = { d1: chg(cm.avg1), d7: chg(cm.avg7), d30: chg(cm.avg30) };
-    history = [cm.avg30, cm.avg7, eur].filter(x => x != null);
-  }
-  const setObj = c.set || {};
-  const number = c.number || '';
-  const printed = setObj.printedTotal || '';
-  const images = c.images || {};
-  return {
-    ref: c.id,
-    name: c.name,
-    set: setObj.name || '',
-    rarity: c.rarity || '—',
-    serial: printed ? `${number}/${printed}` : String(number),
-    image: images.small || images.large || null,
-    change7d: (tf && tf.d7 != null) ? tf.d7 : 0,
-    tf,
-    prices: { jp: null, us: usd, eu: eur },
-    history,
-    note: `${setObj.name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
-    signal: 'FATTO',
-    buyUrl: (c.tcgplayer && c.tcgplayer.url) || (c.cardmarket && c.cardmarket.url) || null,
-  };
-}
 
 // Converte una carta TCGdex (completa) nel formato "item" dell'app
 function mapTcgdexCard(c) {
@@ -103,11 +75,16 @@ function mapTcgdexCard(c) {
     }
   }
   const cm = (c.pricing && c.pricing.cardmarket) || null;
-  const eur = (cm && cm.trend != null) ? cm.trend : null;
+  let eur = (cm && cm.trend != null) ? cm.trend : null;
+  if (usd && eur && (eur > usd * 5 || usd > eur * 5)) eur = null;
   let tf = null;
   let history = [];
   if (cm && eur != null && eur >= 2) {
-    const chg = (avg) => (avg ? Math.round(((eur - avg) / avg) * 1000) / 10 : null);
+    const chg = (avg) => {
+      if (!avg) return null;
+      const v = Math.round(((eur - avg) / avg) * 1000) / 10;
+      return Math.abs(v) <= 60 ? v : null;
+    };
     tf = { d1: chg(cm.avg1), d7: chg(cm.avg7), d30: chg(cm.avg30) };
     history = [cm.avg30, cm.avg7, eur].filter(x => x != null);
   }
@@ -115,22 +92,41 @@ function mapTcgdexCard(c) {
   const total = (setObj.cardCount && setObj.cardCount.official) || '';
   const serial = total ? `${c.localId}/${total}` : String(c.localId || '');
   const image = c.image ? c.image + '/high.png' : null;
-  const buyUrl = 'https://www.ebay.com/sch/i.html?_nkw=' +
-    encodeURIComponent(`${c.name} ${c.localId || ''} pokemon card`);
   return {
     ref: c.id,
     name: c.name,
+    game: 'pokemon',
     set: setObj.name || '',
     rarity: c.rarity || '—',
     serial,
     image,
     change7d: (tf && tf.d7 != null) ? tf.d7 : 0,
     tf,
-    prices: { jp: null, us: usd, eu: eur },
+    prices: { eu: eur, us: usd },
     history,
     note: `${setObj.name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
     signal: 'FATTO',
-    buyUrl,
+  };
+}
+
+// Converte una carta One Piece (optcgapi.com) nel formato "item" dell'app
+function mapOptcgCard(c) {
+  const num = parseFloat(String(c.market_price || '').replace(/[^0-9.]/g, ''));
+  const usd = isNaN(num) ? null : num;
+  return {
+    ref: c.card_set_id,
+    name: c.card_name,
+    game: 'onepiece',
+    set: c.set_name || '',
+    rarity: c.rarity || '—',
+    serial: c.card_set_id,
+    image: c.card_image || null,
+    change7d: 0,
+    tf: null,
+    prices: { eu: usd != null ? Math.round(usd * USD_EUR * 100) / 100 : null, us: usd },
+    history: [],
+    note: `${c.set_name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
+    signal: 'FATTO',
   };
 }
 
@@ -155,7 +151,7 @@ function AlertBadge() {
 
 function CardRow({ item, onPress, showAlert }) {
   const isAlert = Math.abs(item.change7d) >= 10;
-  const [priceVal, priceCur] = primaryPrice(item.prices);
+  const priceVal = toEur(item.prices);
   return (
     <TouchableOpacity style={styles.row} onPress={() => onPress(item)} activeOpacity={0.75}>
       {item.image ? (
@@ -172,7 +168,7 @@ function CardRow({ item, onPress, showAlert }) {
         </View>
         <Text style={styles.rowSub} numberOfLines={1}>{item.set}{item.serial ? ` · ${item.serial}` : ` · ${item.rarity}`}</Text>
         <Text style={[styles.rowChange, { color: changeColor(item.change7d) }]}>
-          {pct(item.change7d)} <Text style={styles.rowSub}>7d</Text>
+          {pct(item.change7d)} <Text style={styles.rowSub}>7g</Text>
         </Text>
       </View>
       <View style={styles.rowRight}>
@@ -182,14 +178,38 @@ function CardRow({ item, onPress, showAlert }) {
           width={72}
           height={30}
         />
-        <Text style={styles.rowPrice}>{fmt(priceVal, priceCur)}</Text>
+        <Text style={styles.rowPrice}>{fmt(priceVal)}</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
+function BuyButtons({ item }) {
+  const links = buyLinksFor(item);
+  const opts = [
+    { key: 'cardmarket', label: 'Cardmarket', icon: 'pricetag-outline', primary: true },
+    { key: 'ebay', label: 'eBay', icon: 'cart-outline' },
+    { key: 'vinted', label: 'Vinted', icon: 'shirt-outline' },
+  ].filter(o => links[o.key]);
+  return (
+    <View style={styles.buyRow}>
+      {opts.map(o => (
+        <TouchableOpacity
+          key={o.key}
+          style={[styles.buy3, o.primary && styles.buy3Primary]}
+          onPress={() => Linking.openURL(links[o.key])}
+          activeOpacity={0.85}
+        >
+          <Ionicons name={o.icon} size={16} color={o.primary ? theme.bg : theme.accent} />
+          <Text style={[styles.buy3Text, { color: o.primary ? theme.bg : theme.accent }]}>{o.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
-  const marketConfirm = item.change7d >= 10 && item.signal === 'FATTO';
+  const priceVal = toEur(item.prices);
   return (
     <ScrollView style={styles.detail} contentContainerStyle={{ paddingBottom: 40 }}>
       <TouchableOpacity style={styles.backBtn} onPress={onBack}>
@@ -204,17 +224,10 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
         <Image source={{ uri: item.image }} style={styles.detailImage} resizeMode="contain" />
       )}
 
-      <View style={styles.detailChart}>
-        <Sparkline
-          data={item.history}
-          color={item.change7d >= 0 ? theme.up : theme.down}
-          width={280}
-          height={80}
-          showDot
-        />
-      </View>
+      <Text style={styles.sectionTitle}>Andamento prezzo</Text>
+      <Chart series={item.chart || item.history} />
 
-      {item.tf ? (
+      {item.tf && (
         <>
           <View style={styles.tfRow}>
             {[['1G', 'd1'], ['7G', 'd7'], ['30G', 'd30']].map(([label, key]) => (
@@ -224,22 +237,16 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
               </View>
             ))}
           </View>
-          <Text style={styles.tfNote}>variazioni in EUR (Cardmarket)</Text>
+          <Text style={styles.tfNote}>variazioni in EUR</Text>
         </>
-      ) : (
-        <Text style={[styles.detailChange, { color: changeColor(item.change7d) }]}>
-          {pct(item.change7d)} negli ultimi 7 giorni
-        </Text>
       )}
 
-      <Text style={styles.sectionTitle}>Prezzi (reali)</Text>
-      <View style={styles.markets}>
-        {['us', 'eu'].map(m => (
-          <View key={m} style={styles.marketBox}>
-            <Text style={styles.marketLabel}>{m === 'us' ? 'USD $' : 'EUR €'}</Text>
-            <Text style={styles.marketPrice}>{fmt(item.prices[m], m)}</Text>
-          </View>
-        ))}
+      <Text style={styles.sectionTitle}>Valore di mercato</Text>
+      <View style={styles.priceBig}>
+        <Text style={styles.priceBigVal}>{fmt(priceVal)}</Text>
+        <Text style={styles.priceBigNote}>
+          {item.game === 'onepiece' ? 'prezzo indicativo da annunci (eBay), convertito in €' : 'prezzo di tendenza Cardmarket (€)'}
+        </Text>
       </View>
 
       <Text style={styles.sectionTitle}>Segnale</Text>
@@ -248,55 +255,87 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave }) {
         <Text style={styles.noteText}>{item.note}</Text>
       </View>
 
-      <View style={[styles.confirmBox, { borderColor: marketConfirm ? theme.up : theme.border }]}>
-        <Ionicons
-          name={marketConfirm ? 'checkmark-circle' : 'time-outline'}
-          size={18}
-          color={marketConfirm ? theme.up : theme.neutral}
-        />
-        <Text style={[styles.confirmText, { color: marketConfirm ? theme.up : theme.neutral }]}>
-          {marketConfirm
-            ? 'Il mercato conferma la notizia'
-            : 'In attesa di conferma dal mercato'}
-        </Text>
-      </View>
-
       <TouchableOpacity style={styles.saveBtn} onPress={() => onToggleSave(item)} activeOpacity={0.8}>
         <Ionicons name={isSaved ? 'checkmark-circle' : 'add-circle-outline'} size={18} color={theme.accent} />
         <Text style={styles.saveText}>{isSaved ? 'Nella watchlist — tocca per rimuovere' : 'Aggiungi alla watchlist'}</Text>
       </TouchableOpacity>
 
-      {item.buyUrl && (
-        <TouchableOpacity style={styles.buyBtn} onPress={() => Linking.openURL(item.buyUrl)} activeOpacity={0.85}>
-          <Ionicons name="cart-outline" size={18} color={theme.bg} />
-          <Text style={styles.buyText}>Cerca per comprare</Text>
-        </TouchableOpacity>
-      )}
+      <Text style={styles.sectionTitle}>Compra / confronta</Text>
+      <BuyButtons item={item} />
     </ScrollView>
   );
 }
 
-function MoversTab({ data, onPress }) {
-  const sorted = [...data].sort((a, b) => Math.abs(b.change7d) - Math.abs(a.change7d));
+function RadarSection({ cards, onPress }) {
+  if (!cards || !cards.length) return null;
+  return (
+    <View style={styles.radarBox}>
+      <View style={styles.radarHeader}>
+        <Ionicons name="speedometer-outline" size={16} color={theme.accent} />
+        <Text style={styles.radarTitle}>RADAR · opportunità</Text>
+      </View>
+      {cards.map(item => {
+        const pv = toEur(item.prices);
+        return (
+          <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
+            {item.image ? (
+              <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
+            ) : (
+              <View style={[styles.radarThumb, styles.thumbEmpty]} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.radarName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.radarReason} numberOfLines={1}>{item.radarReason}</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end', gap: 2 }}>
+              <Text style={styles.radarPrice}>{fmt(pv)}</Text>
+              <Ionicons name={item.inNews ? 'newspaper-outline' : 'trending-up'} size={14} color={item.inNews ? theme.accent : theme.up} />
+            </View>
+          </TouchableOpacity>
+        );
+      })}
+      <Text style={styles.radarNote}>Segnale automatico (momentum + notizie), non una previsione. Ruota a ogni aggiornamento.</Text>
+    </View>
+  );
+}
+
+function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
+  const items = data.items || [];
+  const byRef = {};
+  items.forEach(i => { byRef[i.ref] = i; });
+  const pool = (data.radar || []).map(r => byRef[r]).filter(Boolean);
+  const k = pool.length ? rotation % pool.length : 0;
+  const radarCards = pool.length ? pool.slice(k).concat(pool.slice(0, k)).slice(0, 6) : [];
+  const movers = [...items].sort((a, b) => Math.abs(b.change7d) - Math.abs(a.change7d));
   return (
     <FlatList
-      data={sorted}
+      data={movers}
       keyExtractor={i => i.ref}
+      ListHeaderComponent={
+        <>
+          <RadarSection cards={radarCards} onPress={onPress} />
+          <Text style={styles.listLabel}>Tutte le carte · variazione 7g</Text>
+        </>
+      }
       renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert />}
       contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
     />
   );
 }
 
-function WatchlistTab({ data, onPress }) {
+function WatchlistTab({ data, onPress, refreshing, onRefresh }) {
   if (!data || data.length === 0) {
     return (
-      <View style={styles.emptyBox}>
+      <ScrollView
+        contentContainerStyle={styles.emptyBox}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
+      >
         <Ionicons name="star-outline" size={40} color={theme.textDim} />
         <Text style={styles.searchHint}>
           La tua watchlist è vuota. Vai su “Cerca”, apri una carta e tocca “Aggiungi alla watchlist”.
         </Text>
-      </View>
+      </ScrollView>
     );
   }
   return (
@@ -305,29 +344,79 @@ function WatchlistTab({ data, onPress }) {
       keyExtractor={i => i.ref}
       renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert={false} />}
       contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
     />
   );
 }
 
-// Converte una carta One Piece (optcgapi.com) nel formato "item" dell'app
-function mapOptcgCard(c) {
-  const num = parseFloat(String(c.market_price || '').replace(/[^0-9.]/g, ''));
-  const price = isNaN(num) ? null : num;
-  return {
-    ref: c.card_set_id,
-    name: c.card_name,
-    set: c.set_name || '',
-    rarity: c.rarity || '—',
-    serial: c.card_set_id,
-    image: c.card_image || null,
-    change7d: 0,
-    tf: null,
-    prices: { jp: null, us: price, eu: null },
-    history: [],
-    note: `${c.set_name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
-    signal: 'FATTO',
-    buyUrl: 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(`${c.card_name} ${c.card_set_id} one piece card`),
-  };
+const REGION = { US: { flag: '🇺🇸', label: 'USA' }, EU: { flag: '🇪🇺', label: 'Europa' }, JP: { flag: '🇯🇵', label: 'Giappone' } };
+const KIND = { video: '🎥', forum: '💬', market: '📈', news: '📰' };
+
+const NEWS_FILTERS = [
+  { key: 'all', label: 'Tutte', test: () => true },
+  { key: 'US', label: '🇺🇸 USA', test: n => n.region === 'US' },
+  { key: 'EU', label: '🇪🇺 Europa', test: n => n.region === 'EU' },
+  { key: 'JP', label: '🇯🇵 Giappone', test: n => n.region === 'JP' },
+  { key: 'video', label: '🎥 Video', test: n => n.kind === 'video' },
+  { key: 'market', label: '📈 Mercato', test: n => n.kind === 'market' },
+  { key: 'forum', label: '💬 Community', test: n => n.kind === 'forum' },
+];
+
+function NewsTab({ news, lastUpdate, refreshing, onRefresh }) {
+  const [active, setActive] = useState('all');
+  const all = news || [];
+  const chips = NEWS_FILTERS.filter(f => f.key === 'all' || all.some(f.test));
+  const filtered = all.filter((NEWS_FILTERS.find(f => f.key === active) || NEWS_FILTERS[0]).test);
+
+  return (
+    <FlatList
+      data={filtered}
+      keyExtractor={i => i.id}
+      ListHeaderComponent={
+        <View>
+          <Text style={styles.newsUpdated}>
+            {all.length} notizie · agg. {lastUpdate ? new Date(lastUpdate).toLocaleString('it-IT') : '—'} · tira giù per aggiornare
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            {chips.map(f => {
+              const on = f.key === active;
+              return (
+                <TouchableOpacity key={f.key} style={[styles.chip, on && styles.chipOn]} onPress={() => setActive(f.key)} activeOpacity={0.7}>
+                  <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{f.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      }
+      renderItem={({ item }) => {
+        const reg = REGION[item.region];
+        return (
+          <TouchableOpacity
+            style={styles.newsCard}
+            activeOpacity={item.url ? 0.7 : 1}
+            onPress={() => item.url && Linking.openURL(item.url)}
+          >
+            <View style={styles.newsHeader}>
+              <Text style={styles.newsTag}>{(reg ? reg.flag + ' ' : '')}{KIND[item.kind] || ''}</Text>
+              <Text style={styles.newsSource} numberOfLines={1}>{item.source}</Text>
+              <Text style={styles.newsDate}>{item.date}{item.time ? ' · ' + item.time : ''}</Text>
+            </View>
+            <Text style={styles.newsTitle}>{item.title}</Text>
+            {item.url ? (
+              <View style={styles.newsDir}>
+                <Ionicons name="open-outline" size={14} color={theme.textDim} />
+                <Text style={[styles.newsDirText, { color: theme.textDim }]}>Tocca per leggere</Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        );
+      }}
+      ListEmptyComponent={<Text style={styles.searchHint}>Nessuna notizia in questa categoria.</Text>}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
+    />
+  );
 }
 
 function SearchTab({ onPress }) {
@@ -353,7 +442,6 @@ function SearchTab({ onPress }) {
       const longest = words.reduce((a, b) => (b.length > a.length ? b : a), '');
       const tasks = [];
 
-      // --- Pokémon (TCGdex) ---
       if (isNum) {
         tasks.push(fetch('https://api.tcgdex.net/v2/en/cards?localId=' + term)
           .then(r => r.json())
@@ -374,7 +462,6 @@ function SearchTab({ onPress }) {
             }))).catch(() => []));
       }
 
-      // --- One Piece (optcgapi) ---
       if (opCode) {
         tasks.push(fetch('https://optcgapi.com/api/sets/card/' + opCode + '/')
           .then(r => r.json())
@@ -421,7 +508,7 @@ function SearchTab({ onPress }) {
   };
 
   return (
-    <View style={{ paddingHorizontal: 12, paddingTop: 12 }}>
+    <ScrollView style={{ paddingHorizontal: 12, paddingTop: 12 }} keyboardShouldPersistTaps="handled">
       <View style={styles.searchBar}>
         <Ionicons name="search" size={16} color={theme.textDim} />
         <TextInput
@@ -466,90 +553,7 @@ function SearchTab({ onPress }) {
           <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
         </TouchableOpacity>
       ))}
-    </View>
-  );
-}
-
-function NewsTab({ news, lastUpdate }) {
-  return (
-    <FlatList
-      data={news}
-      keyExtractor={i => i.id}
-      ListHeaderComponent={
-        <Text style={styles.newsUpdated}>
-          Aggiornato: {lastUpdate ? new Date(lastUpdate).toLocaleString('it-IT') : '—'} · tira giù per aggiornare
-        </Text>
-      }
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.newsCard}
-          activeOpacity={item.url ? 0.7 : 1}
-          onPress={() => item.url && Linking.openURL(item.url)}
-        >
-          <View style={styles.newsHeader}>
-            <SignalBadge signal={item.signal} />
-            <Text style={styles.newsSource}>{item.source}</Text>
-            <Text style={styles.newsDate}>{item.date}{item.time ? ' · ' + item.time : ''}</Text>
-          </View>
-          <Text style={styles.newsTitle}>{item.title}</Text>
-          {item.summary ? <Text style={styles.newsSummary}>{item.summary}</Text> : null}
-          <View style={styles.newsDir}>
-            {item.dir === 'up' || item.dir === 'down' ? (
-              <>
-                <Ionicons name={item.dir === 'up' ? 'trending-up' : 'trending-down'} size={14} color={item.dir === 'up' ? theme.up : theme.down} />
-                <Text style={[styles.newsDirText, { color: item.dir === 'up' ? theme.up : theme.down }]}>
-                  {item.dir === 'up' ? 'Segnale rialzista' : 'Segnale ribassista'}
-                </Text>
-              </>
-            ) : item.url ? (
-              <>
-                <Ionicons name="open-outline" size={14} color={theme.textDim} />
-                <Text style={[styles.newsDirText, { color: theme.textDim }]}>Tocca per leggere</Text>
-              </>
-            ) : null}
-          </View>
-        </TouchableOpacity>
-      )}
-      contentContainerStyle={{ paddingBottom: 20 }}
-    />
-  );
-}
-
-function RadarSection({ data, onPress }) {
-  const refs = data.radar || [];
-  if (!refs.length) return null;
-  const byRef = {};
-  (data.items || []).forEach(i => { byRef[i.ref] = i; });
-  const cards = refs.map(r => byRef[r]).filter(Boolean);
-  if (!cards.length) return null;
-  return (
-    <View style={styles.radarBox}>
-      <View style={styles.radarHeader}>
-        <Ionicons name="speedometer-outline" size={16} color={theme.accent} />
-        <Text style={styles.radarTitle}>RADAR · opportunità</Text>
-      </View>
-      {cards.map(item => {
-        const [pv, pc] = primaryPrice(item.prices);
-        return (
-          <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
-            {item.image ? (
-              <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
-            ) : (
-              <View style={[styles.radarThumb, styles.thumbEmpty]} />
-            )}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.radarName} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.radarReason} numberOfLines={1}>{item.radarReason}</Text>
-            </View>
-            <View style={{ alignItems: 'flex-end', gap: 2 }}>
-              <Text style={styles.radarPrice}>{fmt(pv, pc)}</Text>
-              <Ionicons name={item.inNews ? 'newspaper-outline' : 'trending-up'} size={14} color={item.inNews ? theme.accent : theme.up} />
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-      <Text style={styles.radarNote}>Segnale automatico (momentum + notizie), non una previsione.</Text>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -559,6 +563,7 @@ export default function App() {
   const [detail, setDetail] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [saved, setSaved] = useState([]);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
@@ -579,16 +584,13 @@ export default function App() {
 
   const load = useCallback(async () => {
     try {
-      if (DATA_URL) {
-        const res = await fetch(DATA_URL);
-        const json = await res.json();
-        setData(json);
-      } else {
-        setData(sampleData);
-      }
+      const res = await fetch(DATA_URL + '?t=' + Date.now());
+      const json = await res.json();
+      setData(json);
     } catch {
       setData(sampleData);
     }
+    setRotation(r => r + 1);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -635,17 +637,12 @@ export default function App() {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
-      >
-        {tab === 0 && <RadarSection data={data} onPress={setDetail} />}
-        {tab === 0 && <MoversTab data={data.items} onPress={setDetail} />}
-        {tab === 1 && <WatchlistTab data={saved} onPress={setDetail} />}
-        {tab === 2 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} />}
+      <View style={styles.content}>
+        {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 1 && <WatchlistTab data={saved} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 2 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 3 && <SearchTab onPress={setDetail} />}
-      </ScrollView>
+      </View>
 
       <View style={styles.tabbar}>
         {TAB_META.map((t, i) => (
@@ -671,18 +668,8 @@ const styles = StyleSheet.create({
   pulse: { flexDirection: 'row', alignItems: 'center' },
   pulseLabel: { color: theme.textDim, fontSize: font.sm },
   pulseValue: { fontSize: font.sm, fontWeight: '700' },
-  tabs: {
-    flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.border,
-  },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: theme.accent },
-  tabText: { color: theme.textDim, fontSize: font.sm },
-  tabTextActive: { color: theme.accent, fontWeight: '700' },
   content: { flex: 1 },
-  footer: {
-    textAlign: 'center', color: theme.textDim, fontSize: font.xs,
-    paddingVertical: 6, borderTopWidth: 1, borderTopColor: theme.border,
-  },
+  listLabel: { color: theme.textDim, fontSize: font.xs, fontWeight: '600', marginTop: 14, marginBottom: 2, marginLeft: 14, letterSpacing: 0.3 },
 
   row: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -707,44 +694,43 @@ const styles = StyleSheet.create({
   backText: { color: theme.accent, fontSize: font.md },
   detailName: { color: theme.text, fontSize: font.xxl, fontWeight: '800' },
   detailSub: { color: theme.textDim, fontSize: font.sm, marginTop: 4 },
-  detailChart: { alignItems: 'center', marginVertical: 20 },
-  detailChange: { fontSize: font.lg, fontWeight: '700', textAlign: 'center', marginBottom: 20 },
-  sectionTitle: { color: theme.textDim, fontSize: font.sm, fontWeight: '600', marginBottom: 8, marginTop: 16 },
-  markets: { flexDirection: 'row', gap: 10 },
-  marketBox: {
-    flex: 1, backgroundColor: theme.card, borderRadius: 8, padding: 12,
-    alignItems: 'center', borderWidth: 1, borderColor: theme.border,
-  },
-  marketLabel: { color: theme.textDim, fontSize: font.xs, fontWeight: '600' },
-  marketPrice: { color: theme.text, fontSize: font.md, fontWeight: '700', marginTop: 4 },
+  detailImage: { width: 200, height: 280, alignSelf: 'center', marginTop: 16, marginBottom: 8 },
+  sectionTitle: { color: theme.textDim, fontSize: font.sm, fontWeight: '600', marginBottom: 8, marginTop: 18 },
+
+  priceBig: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border },
+  priceBigVal: { color: theme.accent, fontSize: font.xl, fontWeight: '800' },
+  priceBigNote: { color: theme.textDim, fontSize: font.xs, marginTop: 4 },
+
   signalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 4 },
   noteText: { color: theme.text, fontSize: font.sm, flex: 1, lineHeight: 20 },
-  confirmBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    borderWidth: 1, borderRadius: 8, padding: 12, marginTop: 16,
-  },
-  confirmText: { fontSize: font.sm, fontWeight: '600' },
 
   newsCard: {
     backgroundColor: theme.card, marginHorizontal: 12, marginTop: 10,
     borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border,
   },
   newsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  newsTag: { fontSize: font.sm },
   newsSource: { color: theme.textDim, fontSize: font.xs, flex: 1 },
   newsDate: { color: theme.textDim, fontSize: font.xs },
   newsTitle: { color: theme.text, fontSize: font.md, fontWeight: '700', marginBottom: 6 },
-  newsSummary: { color: theme.textDim, fontSize: font.sm, lineHeight: 18, marginBottom: 8 },
   newsDir: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   newsDirText: { fontSize: font.xs, fontWeight: '600' },
+  chipRow: { gap: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card },
+  chipOn: { backgroundColor: theme.accentDim, borderColor: theme.accent },
+  chipTxt: { color: theme.textDim, fontSize: font.sm, fontWeight: '600' },
+  chipTxtOn: { color: theme.text },
 
   thumb: { width: 44, height: 60, borderRadius: 4, marginRight: 10, backgroundColor: theme.bg },
   thumbEmpty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border },
-  detailImage: { width: 200, height: 280, alignSelf: 'center', marginTop: 16 },
-  buyBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: theme.accent, borderRadius: 10, paddingVertical: 14, marginTop: 24,
+
+  buyRow: { flexDirection: 'row', gap: 8 },
+  buy3: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+    borderWidth: 1, borderColor: theme.accent, borderRadius: 10, paddingVertical: 12,
   },
-  buyText: { color: theme.bg, fontSize: font.md, fontWeight: '700' },
+  buy3Primary: { backgroundColor: theme.accent },
+  buy3Text: { fontSize: font.sm, fontWeight: '700' },
 
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -753,7 +739,7 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, color: theme.text, fontSize: font.md, paddingVertical: 10 },
   searchHint: { color: theme.textDim, fontSize: font.sm, textAlign: 'center', marginTop: 24, paddingHorizontal: 24, lineHeight: 20 },
-  emptyBox: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 10 },
+  emptyBox: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 10, flexGrow: 1 },
   sugg: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.border,
@@ -761,6 +747,7 @@ const styles = StyleSheet.create({
   suggThumb: { width: 30, height: 42, borderRadius: 3, backgroundColor: theme.bg },
   suggName: { color: theme.text, fontSize: font.md, fontWeight: '600' },
   suggSub: { color: theme.textDim, fontSize: font.xs, marginTop: 1 },
+
   radarBox: {
     marginHorizontal: 12, marginTop: 12, padding: 12,
     backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.accentDim,
@@ -776,6 +763,7 @@ const styles = StyleSheet.create({
   radarReason: { color: theme.up, fontSize: font.xs, marginTop: 1 },
   radarPrice: { color: theme.accent, fontSize: font.sm, fontWeight: '600' },
   radarNote: { color: theme.textDim, fontSize: font.xs, marginTop: 8, fontStyle: 'italic' },
+
   saveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 1, borderColor: theme.accent, borderRadius: 10, paddingVertical: 13, marginTop: 16,
@@ -789,7 +777,7 @@ const styles = StyleSheet.create({
   tabItem: { flex: 1, alignItems: 'center', gap: 3 },
   tabItemLabel: { fontSize: font.xs },
 
-  tfRow: { flexDirection: 'row', gap: 8, marginBottom: 6 },
+  tfRow: { flexDirection: 'row', gap: 8, marginBottom: 6, marginTop: 4 },
   tfChip: {
     flex: 1, backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
     borderRadius: 8, paddingVertical: 8, alignItems: 'center',

@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """TCG Radar - generatore di data.json
 
-Fonti prezzi:
-  - Pokemon  -> pokemontcg.io (GRATIS, nessuna chiave): prezzo USD, immagine,
-                numero di serie e link d'acquisto.
-  - One Piece -> eBay USA (se ci sono le chiavi in .env), altrimenti DEMO.
-                Link d'acquisto = ricerca eBay.
+Fonti prezzi (tutto convertito/mostrato in EURO):
+  - Pokemon  -> TCGdex (Cardmarket EUR + TCGplayer USD), gratis, nessuna chiave.
+  - One Piece -> eBay USA (se ci sono le chiavi in .env), convertito in EUR
+                 al cambio BCE live; immagine/seriale da optcgapi.com.
 
-Aggiorna lo storico in history.json e scrive data.json nel formato dell'app.
+Storico:
+  - history.json tiene una serie temporale [[iso, prezzo], ...] per carta.
+    Nel cloud viene mantenuta tra un run e l'altro tramite cache di GitHub
+    Actions, cosi' i grafici crescono nel tempo (stile Collectr).
+
+Notizie:
+  - Google News RSS su piu' regioni (USA, Europa/IT, Giappone) e piu' tipi
+    (news, YouTube/video, Reddit/community), con tag regione e tipo.
 
 Uso:
-    py build_data.py            # dati reali dove possibile (Pokemon subito)
+    py build_data.py            # dati reali dove possibile
     py build_data.py --demo     # forza tutto in modalita' demo
 """
 
@@ -30,8 +36,18 @@ WATCHLIST = ROOT / "watchlist.json"
 HISTORY = ROOT / "history.json"
 OUTPUT = ROOT / "data.json"
 
-HISTORY_LEN = 30   # punti di storico tenuti per carta
-SPARK_LEN = 7      # punti mostrati nel mini-grafico
+HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
+SPARK_LEN = 8        # punti mostrati nel mini-grafico delle righe
+CHART_LEN = 90       # punti massimi messi nel grafico grande (downsample)
+
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TCG-Radar/2.0"
+NOW = datetime.datetime.now(datetime.timezone.utc)
+
+
+def _get_json(url, timeout=20):
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8", "ignore"))
 
 
 # ---------------------------------------------------------------------------
@@ -58,30 +74,41 @@ HAVE_EBAY = bool(EBAY_CLIENT_ID and EBAY_CLIENT_SECRET) and not FORCE_DEMO
 
 
 # ---------------------------------------------------------------------------
-# Fonte: pokemontcg.io  (Pokemon) - gratis, nessuna chiave
+# Cambio USD -> EUR (BCE via frankfurter.app, gratis, nessuna chiave)
+# ---------------------------------------------------------------------------
+def fetch_usd_eur() -> float:
+    try:
+        d = _get_json("https://api.frankfurter.app/latest?from=USD&to=EUR", timeout=15)
+        rate = float(d["rates"]["EUR"])
+        if 0.5 < rate < 1.5:
+            return rate
+    except Exception as exc:  # noqa: BLE001
+        print(f"[TCG Radar] cambio non disponibile ({exc}), uso 0.92")
+    return 0.92
+
+
+USD_EUR = fetch_usd_eur()
+
+
+def to_eur(usd):
+    return round(usd * USD_EUR, 2) if usd is not None else None
+
+
+# ---------------------------------------------------------------------------
+# Fonte: TCGdex (Pokemon) - gratis, nessuna chiave
 # ---------------------------------------------------------------------------
 def tcgdex_fetch(card_id: str):
-    """Prezzo USD/EUR, medie 1/7/30g, immagine e seriale per una carta Pokemon (TCGdex)."""
+    """Prezzo EUR/USD, medie 1/7/30g, immagine e seriale per una carta Pokemon."""
     if not card_id:
         return None
-    req = urllib.request.Request(
-        f"https://api.tcgdex.net/v2/en/cards/{card_id}",
-        headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TCG-Radar/1.0",
-            "Accept": "application/json",
-        },
-    )
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            c = json.loads(resp.read().decode("utf-8"))
+        c = _get_json(f"https://api.tcgdex.net/v2/en/cards/{card_id}")
     except Exception as exc:  # noqa: BLE001
         print(f"    tcgdex errore per {card_id}: {exc}")
         return None
-
     if not isinstance(c, dict) or not c.get("id"):
         return None
 
-    # Prezzo USD = marketPrice di TCGplayer
     usd = None
     tp = (c.get("pricing") or {}).get("tcgplayer") or {}
     for variant in ("holofoil", "normal", "reverse-holofoil", "1st-edition-holofoil"):
@@ -95,7 +122,6 @@ def tcgdex_fetch(card_id: str):
                 usd = round(v["marketPrice"], 2)
                 break
 
-    # EUR di Cardmarket + medie 1/7/30 giorni
     cm = (c.get("pricing") or {}).get("cardmarket") or {}
 
     def _eur(key):
@@ -110,8 +136,6 @@ def tcgdex_fetch(card_id: str):
     serial = f"{local}/{total}" if total else str(local)
     image = c.get("image")
     image = (image + "/high.png") if image else None
-    buy_url = ("https://www.tcgplayer.com/search/pokemon/product?q="
-               + urllib.parse.quote(c.get("name", "")))
 
     return {
         "usd": usd,
@@ -121,7 +145,6 @@ def tcgdex_fetch(card_id: str):
         "cm_avg30": _eur("avg30"),
         "image": image,
         "serial": serial,
-        "buy_url": buy_url,
     }
 
 
@@ -129,16 +152,8 @@ def optcg_fetch(code: str):
     """Immagine + dati carta One Piece da optcgapi.com (gratis, nessuna chiave)."""
     if not code:
         return None
-    req = urllib.request.Request(
-        f"https://optcgapi.com/api/sets/card/{code}/",
-        headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TCG-Radar/1.0",
-            "Accept": "application/json",
-        },
-    )
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        data = _get_json(f"https://optcgapi.com/api/sets/card/{code}/")
     except Exception as exc:  # noqa: BLE001
         print(f"    optcgapi errore per {code}: {exc}")
         return None
@@ -149,31 +164,22 @@ def optcg_fetch(code: str):
 
 
 # ---------------------------------------------------------------------------
-# Fonte: eBay USA (One Piece e altro) - serve chiave in .env
+# Fonte: eBay USA (One Piece) - serve chiave in .env -> prezzo convertito in EUR
 # ---------------------------------------------------------------------------
 def ebay_token() -> str:
     import requests
 
-    creds = base64.b64encode(
-        f"{EBAY_CLIENT_ID}:{EBAY_CLIENT_SECRET}".encode()
-    ).decode()
+    creds = base64.b64encode(f"{EBAY_CLIENT_ID}:{EBAY_CLIENT_SECRET}".encode()).decode()
     resp = requests.post(
         "https://api.ebay.com/identity/v1/oauth2/token",
-        headers={
-            "Authorization": f"Basic {creds}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        data={
-            "grant_type": "client_credentials",
-            "scope": "https://api.ebay.com/oauth/api_scope",
-        },
+        headers={"Authorization": f"Basic {creds}", "Content-Type": "application/x-www-form-urlencoded"},
+        data={"grant_type": "client_credentials", "scope": "https://api.ebay.com/oauth/api_scope"},
         timeout=30,
     )
     resp.raise_for_status()
     return resp.json()["access_token"]
 
 
-# Parole che indicano annunci da scartare (gradate, lotti, accessori, falsi)
 EBAY_JUNK = (
     "proxy", "fake", "replica", "custom", "orica", " metal ", "bundle",
     "playset", "sleeve", "toploader", "sticker", "poster", "psa", "bgs",
@@ -185,31 +191,16 @@ def _alnum(s: str) -> str:
     return "".join(ch for ch in s.lower() if ch.isalnum())
 
 
-def ebay_price(token: str, query: str, code: str = None):
-    """Stima prezzo USD da eBay (annunci attivi, asking).
-
-    - categoria 'CCG Individual Cards' (carte singole)
-    - tiene SOLO gli annunci il cui titolo contiene davvero il codice carta
-      (es. OP16-073, in qualsiasi formato) -> niente altre carte mescolate
-    - scarta gradate/lotti/accessori per parola chiave
-    - mediana 'trimmed' (scarta 20% sotto e 20% sopra) per robustezza agli outlier
-    """
+def ebay_price_usd(token: str, query: str, code: str = None):
+    """Stima prezzo USD da eBay (annunci attivi). Mediana 'trimmed'."""
     import requests
 
     code_norm = _alnum(code) if code else None
-
     resp = requests.get(
         "https://api.ebay.com/buy/browse/v1/item_summary/search",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
-        },
-        params={
-            "q": query,
-            "category_ids": "183454",  # CCG Individual Cards
-            "limit": 100,
-            "filter": "buyingOptions:{FIXED_PRICE}",
-        },
+        headers={"Authorization": f"Bearer {token}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"},
+        params={"q": query, "category_ids": "183454", "limit": 100,
+                "filter": "buyingOptions:{FIXED_PRICE}"},
         timeout=30,
     )
     resp.raise_for_status()
@@ -240,33 +231,45 @@ def ebay_search_url(query: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Motore notizie: Google News RSS (gratis, affidabile, multi-fonte)
+# Motore notizie: Google News RSS multi-regione + multi-tipo
 # ---------------------------------------------------------------------------
-GOOGLE_NEWS_QUERIES = [
-    ("One Piece TCG", "One Piece card game TCG"),
-    ("Pokemon TCG", "Pokemon TCG card"),
-    ("Mercato carte", "trading card game prices investing"),
+# (etichetta, query, regione, tipo, hl, gl, ceid)
+NEWS_FEEDS = [
+    ("One Piece US", '"One Piece" card game TCG', "US", "news", "en-US", "US", "US:en"),
+    ("Pokemon US", "Pokemon TCG card", "US", "news", "en-US", "US", "US:en"),
+    ("Mercato IT", "carte Pokemon One Piece prezzo mercato collezione", "EU", "news", "it-IT", "IT", "IT:it"),
+    ("One Piece IT", "One Piece card game carte", "EU", "news", "it-IT", "IT", "IT:it"),
+    ("Pokemon JP", "ポケモンカード 高騰 相場", "JP", "news", "ja-JP", "JP", "JP:ja"),
+    ("One Piece JP", "ワンピースカード 高騰 相場", "JP", "news", "ja-JP", "JP", "JP:ja"),
+    ("YouTube", 'Pokemon OR "One Piece" TCG site:youtube.com', "US", "video", "en-US", "US", "US:en"),
+    ("Reddit", 'Pokemon OR "One Piece" TCG site:reddit.com', "US", "forum", "en-US", "US", "US:en"),
+    ("eBay trend", 'Pokemon "One Piece" card sold price record', "US", "market", "en-US", "US", "US:en"),
 ]
+
+PER_FEED = 9
 
 
 def fetch_news():
-    """Notizie reali via Google News RSS (aggrega tanti siti, nessuna chiave)."""
+    """Notizie reali via Google News RSS (aggrega tanti siti), con regione e tipo."""
     import email.utils
     import xml.etree.ElementTree as ET
 
     seen = set()
     news = []
-    for label, query in GOOGLE_NEWS_QUERIES:
+    for label, query, region, kind, hl, gl, ceid in NEWS_FEEDS:
         url = ("https://news.google.com/rss/search?q="
-               + urllib.parse.quote(query) + "&hl=en-US&gl=US&ceid=US:en")
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 TCG-Radar/1.0"})
+               + urllib.parse.quote(query) + f"&hl={hl}&gl={gl}&ceid={ceid}")
         try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=20) as resp:
                 root = ET.fromstring(resp.read().decode("utf-8", "ignore"))
         except Exception as exc:  # noqa: BLE001
             print(f"    news '{label}' errore: {exc}")
             continue
-        for item in root.findall(".//item")[:8]:
+        count = 0
+        for item in root.findall(".//item"):
+            if count >= PER_FEED:
+                break
             title_el = item.find("title")
             link_el = item.find("link")
             date_el = item.find("pubDate")
@@ -275,77 +278,49 @@ def fetch_news():
                 continue
             title = title_el.text.strip()
             source = src_el.text.strip() if src_el is not None and src_el.text else "Google News"
-            if title.endswith(" - " + source):  # il titolo Google News e' "Headline - Fonte"
+            if title.endswith(" - " + source):
                 title = title[: -(len(source) + 3)].strip()
-            if title in seen:
+            keyt = title.lower()
+            if keyt in seen:
                 continue
-            seen.add(title)
-            date, time = "", ""
+            seen.add(keyt)
+            count += 1
+            date, time, iso = "", "", None
             if date_el is not None and date_el.text:
                 try:
                     dt = email.utils.parsedate_to_datetime(date_el.text)
                     date, time = dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M")
+                    iso = dt.astimezone(datetime.timezone.utc).isoformat()
                 except Exception:  # noqa: BLE001
                     pass
             news.append({
-                "id": title[:48] or f"n{len(news)}",
+                "id": f"{region}{count}-" + (title[:40] or str(len(news))),
                 "title": title,
                 "source": source,
+                "region": region,
+                "kind": kind,
                 "date": date,
                 "time": time,
+                "iso": iso,
                 "signal": "HYPE",
                 "dir": None,
                 "cards": [],
                 "summary": "",
                 "url": link_el.text if link_el is not None and link_el.text else None,
             })
-    news.sort(key=lambda n: (n["date"], n["time"]), reverse=True)
-    print(f"[TCG Radar] Notizie: {len(news)} da Google News")
-    return news[:25]
+    news.sort(key=lambda n: (n["iso"] or "", n["date"], n["time"]), reverse=True)
+    print(f"[TCG Radar] Notizie: {len(news)} (US/EU/JP, news+video+forum)")
+    return news
 
 
 def card_key(name: str) -> str:
-    """Parola piu' distintiva del nome carta (per cercarla nei titoli delle notizie)."""
     cleaned = "".join(ch if (ch.isalpha() or ch == " ") else " " for ch in name)
     words = [w for w in cleaned.split() if len(w) >= 4]
     return (max(words, key=len) if words else name).lower()
 
 
 # ---------------------------------------------------------------------------
-# DEMO
-# ---------------------------------------------------------------------------
-def demo_seed_history(ref: str, base: float) -> list:
-    random.seed(ref)
-    price = base * random.uniform(0.9, 1.0)
-    walk = []
-    for _ in range(SPARK_LEN):
-        price *= random.uniform(0.97, 1.05)
-        walk.append(round(price, 2))
-    return walk
-
-
-def demo_next(prev: float) -> float:
-    return round(prev * random.uniform(0.96, 1.05), 2)
-
-
-def seed_history_to(target: float, n: int = SPARK_LEN) -> list:
-    """Storico di 'rodaggio': n punti che TERMINANO sul prezzo reale di oggi.
-
-    Serve solo finche' non si accumula lo storico vero, giorno per giorno.
-    L'ultimo punto e' sempre il prezzo reale; quelli prima sono stime.
-    """
-    random.seed(str(target))
-    pts = [round(target, 2)]
-    p = target
-    for _ in range(n - 1):
-        p = p / random.uniform(0.97, 1.05)
-        pts.append(round(p, 2))
-    pts.reverse()
-    return pts
-
-
-# ---------------------------------------------------------------------------
-# Storico
+# Storico (serie temporale [[iso, prezzo], ...])
 # ---------------------------------------------------------------------------
 def load_history() -> dict:
     if HISTORY.exists():
@@ -356,14 +331,86 @@ def load_history() -> dict:
     return {}
 
 
-def change_7d(series: list) -> float:
+def normalize_series(raw):
+    """Accetta sia il vecchio formato [num, num] sia il nuovo [[iso, num]]."""
+    out = []
+    for p in raw or []:
+        if isinstance(p, list) and len(p) == 2:
+            out.append([p[0], float(p[1])])
+        elif isinstance(p, (int, float)):
+            out.append([None, float(p)])
+    return out
+
+
+def seed_series(target: float, days: int = 14):
+    """Storico di 'rodaggio' timestampato: termina sul prezzo reale di oggi."""
+    random.seed(str(target))
+    prices = [round(target, 2)]
+    p = target
+    for _ in range(days - 1):
+        p = p / random.uniform(0.97, 1.05)
+        prices.append(round(p, 2))
+    prices.reverse()
+    out = []
+    n = len(prices)
+    for i, pr in enumerate(prices):
+        t = NOW - datetime.timedelta(days=(n - 1 - i))
+        out.append([t.isoformat(), pr])
+    return out
+
+
+def parse_ts(s):
+    if not s:
+        return None
+    try:
+        return datetime.datetime.fromisoformat(s)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def change_over(series, days):
+    """Variazione % sugli ultimi `days` giorni, dai timestamp della serie."""
+    pts = [(parse_ts(t), v) for t, v in series if t]
+    if len(pts) < 2:
+        return None
+    last_t, last_v = pts[-1]
+    target = last_t - datetime.timedelta(days=days)
+    base = None
+    for t, v in pts:
+        if t <= target:
+            base = v
+        else:
+            break
+    if base is None:
+        base = pts[0][1]
+    if not base:
+        return None
+    return round((last_v - base) / base * 100, 1)
+
+
+def change_simple(series):
     if len(series) < 2:
         return 0.0
-    old = series[-8] if len(series) >= 8 else series[0]
-    new = series[-1]
-    if not old:
-        return 0.0
-    return round((new - old) / old * 100, 1)
+    old = series[0][1]
+    new = series[-1][1]
+    return round((new - old) / old * 100, 1) if old else 0.0
+
+
+def downsample(series, n=CHART_LEN):
+    if len(series) <= n:
+        return series
+    step = len(series) / n
+    out = [series[int(i * step)] for i in range(n)]
+    out[-1] = series[-1]
+    return out
+
+
+# ---------------------------------------------------------------------------
+# DEMO
+# ---------------------------------------------------------------------------
+def demo_base_series(ref, base):
+    random.seed(ref)
+    return seed_series(round(base * random.uniform(0.9, 1.1), 2))
 
 
 # ---------------------------------------------------------------------------
@@ -375,7 +422,7 @@ def main() -> None:
     news = fetch_news() or watchlist.get("news", [])
 
     print(f"[TCG Radar] {len(cards)} carte | eBay: {'ON' if HAVE_EBAY else 'OFF'} | "
-          f"{'DEMO forzato' if FORCE_DEMO else 'reale dove possibile'}")
+          f"cambio USD->EUR {USD_EUR:.4f} | {'DEMO' if FORCE_DEMO else 'reale dove possibile'}")
 
     token = None
     if HAVE_EBAY:
@@ -391,116 +438,118 @@ def main() -> None:
 
     for card in cards:
         ref = card["ref"]
-        series = history.get(ref, [])
         game = card.get("game")
+        series = normalize_series(history.get(ref, []))
 
-        prices = {"jp": None, "us": None, "eu": None}
+        eur = None
         image = card.get("image")
         serial = card.get("serial") or ref
-        buy_url = card.get("buy_url")
         source = "demo"
-        tf = None        # variazioni 1g/7g/30g (in EUR, da Cardmarket)
-        coarse = None    # storico reale "coarse" per i Pokemon
+        cm_tf = None  # variazioni Cardmarket reali (Pokemon)
 
-        # --- Pokemon: pokemontcg.io ---
+        # --- Pokemon: TCGdex (Cardmarket EUR) ---
         if game == "pokemon" and card.get("pokemontcg_id") and not FORCE_DEMO:
             info = tcgdex_fetch(card["pokemontcg_id"])
             if info and (info["usd"] is not None or info["eur"] is not None):
-                usd, eur = info["usd"], info["eur"]
-                # Se EUR (Cardmarket) e USD (TCGplayer) divergono oltre 5x, l'EUR
-                # e' rumoroso (tipico delle comuni economiche) -> lo scarto.
-                if usd and eur and (eur > usd * 5 or usd > eur * 5):
-                    eur = None
-                prices["us"] = usd
-                prices["eu"] = eur
+                usd, e = info["usd"], info["eur"]
+                if usd and e and (e > usd * 5 or usd > e * 5):
+                    e = None  # Cardmarket rumoroso sulle comuni economiche
+                eur = e if e is not None else to_eur(usd)
                 image = info["image"] or image
                 serial = info["serial"] or serial
-                buy_url = info["buy_url"] or buy_url
                 source = "tcgdex"
-                trend = eur
-                # le medie Cardmarket sono affidabili solo sopra qualche euro
-                if trend and trend >= 2:
-                    def _chg(avg, t=trend):
-                        return round((t - avg) / avg * 100, 1) if avg else None
-                    tf = {
-                        "d1": _chg(info["cm_avg1"]),
-                        "d7": _chg(info["cm_avg7"]),
-                        "d30": _chg(info["cm_avg30"]),
-                    }
-                    # storico coarse ma REALE (escludo avg1, troppo rumoroso): avg30 -> avg7 -> oggi
-                    coarse = [x for x in (info["cm_avg30"], info["cm_avg7"], trend) if x is not None]
+                if eur and eur >= 2:
+                    def _chg(avg, t=eur):
+                        if not avg:
+                            return None
+                        v = round((t - avg) / avg * 100, 1)
+                        # le medie Cardmarket su carte poco scambiate danno valori
+                        # assurdi (+400%): oltre il 60% e' quasi sempre rumore.
+                        return v if abs(v) <= 60 else None
+                    cm_tf = {"d1": _chg(info["cm_avg1"]), "d7": _chg(info["cm_avg7"]),
+                             "d30": _chg(info["cm_avg30"])}
 
-        # --- One Piece (e altri): eBay ---
+        # --- One Piece: eBay USA -> EUR ---
         elif game == "onepiece" and token is not None:
-            p = ebay_price(token, card.get("ebay_query", card["name"]), card.get("ebay_code"))
-            if p is not None:
-                prices["us"] = p
-                source = "eBay"
+            usd = ebay_price_usd(token, card.get("ebay_query", card["name"]), card.get("ebay_code"))
+            if usd is not None:
+                eur = to_eur(usd)
+                source = "eBay->EUR"
 
-        # link d'acquisto di riserva per One Piece (ricerca eBay)
-        if buy_url is None and game == "onepiece":
-            buy_url = ebay_search_url(card.get("ebay_query", card["name"]))
-
-        # Immagine + seriale One Piece da optcgapi (gratis)
+        # immagine + seriale One Piece da optcgapi
         if game == "onepiece":
             oc = optcg_fetch(card.get("ebay_code"))
             if oc:
                 image = oc["image"] or image
                 serial = oc["serial"] or serial
 
-        # prezzo principale (US -> EU -> JP)
-        primary = prices["us"] or prices["eu"] or prices["jp"]
-
-        # --- storico + variazione 7g ---
-        if coarse and len(coarse) >= 2:
-            # Pokemon con dati Cardmarket: storico coarse reale, 7g dal periodo EUR
-            series = coarse
-            ch = tf["d7"] if (tf and tf.get("d7") is not None) else change_7d(series)
-        elif primary is None:
-            # nessuna fonte reale -> demo
+        # --- aggiorna lo storico (in EUR) ---
+        if eur is None:
             if not series:
-                series = demo_seed_history(ref, card.get("demo_base", 10))
+                series = demo_base_series(ref, card.get("demo_base", 10))
             else:
-                series.append(demo_next(series[-1]))
-            primary = series[-1]
-            prices["us"] = primary
-            source = "demo"
-            ch = change_7d(series)
+                last = series[-1][1]
+                eur = round(last * random.uniform(0.97, 1.05), 2)
+                series.append([NOW.isoformat(), eur])
+            eur = series[-1][1]
+            source = "demo" if source == "demo" else source
         else:
             if not series:
-                series = seed_history_to(primary)
+                series = seed_series(eur)
             else:
-                series.append(primary)
-            ch = change_7d(series)
+                series.append([NOW.isoformat(), eur])
 
         series = series[-HISTORY_LEN:]
         history[ref] = series
+
+        # --- variazioni ---
+        tf = cm_tf or {
+            "d1": change_over(series, 1),
+            "d7": change_over(series, 7),
+            "d30": change_over(series, 30),
+        }
+        ch = tf.get("d7")
         if ch is None:
-            ch = 0.0
+            ch = change_simple(series[-SPARK_LEN:])
         changes.append(ch)
-        spark = series[-SPARK_LEN:] if len(series) >= 2 else (series or [0, 0])
+
+        spark = [round(v, 2) for _, v in series[-SPARK_LEN:]]
+        chart = downsample(series, CHART_LEN)
+
+        # link d'acquisto
+        nm = card["name"]
+        if game == "onepiece":
+            cm_url = "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=" + urllib.parse.quote(nm)
+            ebay_url = ebay_search_url(card.get("ebay_query", nm))
+            vinted_url = "https://www.vinted.it/catalog?search_text=" + urllib.parse.quote(f"{nm} {card.get('ebay_code','')}")
+        else:
+            cm_url = "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=" + urllib.parse.quote(nm)
+            ebay_url = ebay_search_url(f"{nm} {serial} pokemon card")
+            vinted_url = "https://www.vinted.it/catalog?search_text=" + urllib.parse.quote(f"{nm} pokemon {serial}")
 
         items.append({
             "ref": ref,
-            "name": card["name"],
+            "name": nm,
+            "game": game,
             "set": card.get("set", ""),
             "rarity": card.get("rarity", "—"),
             "serial": serial,
             "image": image,
             "change7d": ch,
             "tf": tf,
-            "prices": prices,
+            "prices": {"eu": eur},
             "history": spark,
+            "chart": chart,
             "note": card.get("note", ""),
             "signal": card.get("signal", "FATTO"),
-            "buyUrl": buy_url,
+            "buyUrl": ebay_url,
+            "buyLinks": {"cardmarket": cm_url, "ebay": ebay_url, "vinted": vinted_url},
         })
-        disp = primary if primary is not None else (series[-1] if series else 0)
-        print(f"  - {ref:24} {disp:>10} ({source:13}) {ch:+.1f}% 7g")
+        print(f"  - {ref:24} {('EUR '+format(eur,'.2f')) if eur is not None else '--':>12} ({source:11}) {ch:+.1f}% 7g")
 
     market_pulse = round(statistics.mean(changes), 1) if changes else 0.0
 
-    # --- Radar / Opportunita' (segnale: momentum positivo + presenza nelle notizie) ---
+    # --- Radar: pool ampio (top 12) che la app fa ruotare in Home ---
     titles = [n["title"].lower() for n in news]
     radar = []
     for item in items:
@@ -512,21 +561,22 @@ def main() -> None:
             reasons.append(f"+{mom:.0f}% 7g")
         if in_news:
             reasons.append("nelle notizie")
+        if not reasons:
+            reasons.append("da tenere d'occhio")
         item["inNews"] = in_news
-        if reasons:
-            item["radarReason"] = " · ".join(reasons)
-            radar.append((mom + (15 if in_news else 0), item["ref"]))
+        item["radarReason"] = " · ".join(reasons)
+        radar.append((mom + (15 if in_news else 0), item["ref"]))
     radar.sort(reverse=True)
-    radar_refs = [r for _, r in radar[:6]]
+    radar_refs = [r for _, r in radar[:12]]
 
-    # collega ogni notizia alle carte citate nel titolo
     for n in news:
         t = n["title"].lower()
         n["cards"] = [item["ref"] for item in items if card_key(item["name"]) in t]
 
     data = {
-        "lastUpdate": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "lastUpdate": NOW.isoformat(),
         "marketPulse": market_pulse,
+        "fxUsdEur": USD_EUR,
         "radar": radar_refs,
         "items": items,
         "news": news,
