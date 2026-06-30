@@ -53,6 +53,30 @@ const changeColor = (n) => {
 // installata in Home, iOS 16.4+). Su Expo Go nativo non esiste -> guardia.
 const canNotify = () => typeof window !== 'undefined' && 'Notification' in window;
 
+// Personaggi "iconici": molto richiesti dal mercato -> domanda costante.
+// NON è una garanzia di crescita, ma è un fattore di importanza reale.
+const ICONIC = [
+  // Pokémon
+  'pikachu', 'charizard', 'gengar', 'mewtwo', 'mew', 'eevee', 'umbreon', 'espeon',
+  'sylveon', 'vaporeon', 'jolteon', 'flareon', 'leafeon', 'glaceon', 'lugia', 'rayquaza',
+  'gyarados', 'dragonite', 'gardevoir', 'lucario', 'greninja', 'snorlax', 'blastoise',
+  'venusaur', 'tyranitar', 'garchomp', 'gardevoir', 'arceus', 'giratina', 'darkrai',
+  // One Piece
+  'luffy', 'zoro', 'nami', 'sanji', 'ace', 'law', 'shanks', 'yamato', 'robin', 'sabo',
+  'boa hancock', 'hancock', 'doflamingo', 'katakuri', 'kid', 'kaido', 'big mom', 'roger',
+  'rayleigh', 'sabo', 'nico robin', 'trafalgar', 'monkey d', 'gol d',
+];
+
+const iconicFor = (name) => {
+  const n = (name || '').toLowerCase();
+  return ICONIC.find(c => n.includes(c)) ? true : false;
+};
+
+const fmtTime = (ts) => {
+  try { return new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }
+  catch { return '—'; }
+};
+
 const buyLinksFor = (item) => {
   if (item.buyLinks) return item.buyLinks;
   const nm = item.name || '';
@@ -177,7 +201,7 @@ const CardRow = React.memo(function CardRow({ item, onPress, showAlert, moved })
       )}
       <View style={styles.rowLeft}>
         <View style={styles.rowHeader}>
-          <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
+          <Text style={styles.rowName} numberOfLines={1}>{iconicFor(item.name) ? '👑 ' : ''}{item.name}</Text>
           {hasMoved ? (
             <View style={[styles.movedPill, { backgroundColor: moved > 0 ? '#13351f' : '#3a1514' }]}>
               <Text style={[styles.movedText, { color: moved > 0 ? theme.up : theme.down }]}>
@@ -226,6 +250,22 @@ function PriceFinder({ item }) {
       ) : (
         <Text style={styles.tfNote}>Prezzo più basso eBay non disponibile ora — apri le ricerche qui sotto.</Text>
       )}
+
+      {(() => {
+        const sell = toEur(item.prices);
+        if (bo && bo.total && sell && sell > bo.total * 1.15) {
+          const mult = sell / bo.total;
+          return (
+            <View style={styles.resaleBox}>
+              <Text style={styles.resaleTitle}>📊 Margine di rivendita</Text>
+              <Text style={styles.resaleMain}>Compri a ~{fmt(bo.total)} → valore di mercato ~{fmt(sell)}</Text>
+              <Text style={styles.resaleUp}>potenziale +{((mult - 1) * 100).toFixed(0)}% (×{mult.toFixed(1)})</Text>
+              <Text style={styles.resaleNote}>Il valore di mercato è il prezzo medio richiesto, non garantito: contano condizioni, autenticità e commissioni di vendita.</Text>
+            </View>
+          );
+        }
+        return null;
+      })()}
 
       <Text style={styles.sectionTitle}>Cerca al minor prezzo su</Text>
       <View style={styles.marketGrid}>
@@ -287,8 +327,37 @@ function AddToPortfolio({ item, onAdd }) {
   );
 }
 
+function factorsFor(item) {
+  const f = [];
+  const price = toEur(item.prices);
+  if (iconicFor(item.name)) f.push('👑 Personaggio iconico — domanda costante sul mercato');
+  if (item.change7d >= 5) f.push(`📈 In salita: ${pct(item.change7d)} negli ultimi 7g`);
+  if (item.inNews) f.push('📰 Se ne parla nelle notizie recenti');
+  if (price != null && price <= 15) f.push('💶 Ancora economica: prezzo d’ingresso basso');
+  const bo = item.bestOffer;
+  if (bo && bo.total && price && price > bo.total * 1.15) {
+    f.push(`💰 In giro c’è chi la vende sotto il valore di mercato (da ~${fmt(bo.total)})`);
+  }
+  return f;
+}
+
+function WhyWatch({ item }) {
+  const factors = factorsFor(item);
+  if (!factors.length) return null;
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Perché tenerla d'occhio</Text>
+      <View style={styles.whyBox}>
+        {factors.map((t, i) => <Text key={i} style={styles.whyItem}>{t}</Text>)}
+        <Text style={styles.whyNote}>Sono fattori di mercato, non una garanzia di crescita.</Text>
+      </View>
+    </>
+  );
+}
+
 function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
   const priceVal = toEur(item.prices);
+  const iconic = iconicFor(item.name);
   return (
     <ScrollView style={styles.detail} contentContainerStyle={{ paddingBottom: 40 }}>
       <TouchableOpacity style={styles.backBtn} onPress={onBack}>
@@ -298,6 +367,7 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
 
       <Text style={styles.detailName}>{item.name}</Text>
       <Text style={styles.detailSub}>{item.set} · {item.rarity}{item.serial ? ` · ${item.serial}` : ''}</Text>
+      {iconic ? <Text style={styles.iconicTag}>👑 Personaggio iconico</Text> : null}
 
       {item.image && (
         <Image source={{ uri: item.image }} style={styles.detailImage} resizeMode="contain" />
@@ -327,6 +397,8 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
           {item.game === 'onepiece' ? 'prezzo indicativo da annunci (eBay), convertito in €' : 'prezzo di tendenza Cardmarket (€)'}
         </Text>
       </View>
+
+      <WhyWatch item={item} />
 
       <Text style={styles.sectionTitle}>Segnale</Text>
       <View style={styles.signalRow}>
@@ -513,7 +585,7 @@ const NEWS_FILTERS = [
   { key: 'forum', label: '💬 Community', test: n => n.kind === 'forum' },
 ];
 
-function NewsTab({ news, lastUpdate, refreshing, onRefresh }) {
+function NewsTab({ news, lastUpdate, lastChecked, refreshing, onRefresh }) {
   const [active, setActive] = useState('all');
   const all = news || [];
   const chips = NEWS_FILTERS.filter(f => f.key === 'all' || all.some(f.test));
@@ -526,7 +598,10 @@ function NewsTab({ news, lastUpdate, refreshing, onRefresh }) {
       ListHeaderComponent={
         <View>
           <Text style={styles.newsUpdated}>
-            {all.length} notizie · agg. {lastUpdate ? new Date(lastUpdate).toLocaleString('it-IT') : '—'} · tira giù per aggiornare
+            {all.length} notizie · generate {lastUpdate ? fmtTime(lastUpdate) : '—'} · controllato {fmtTime(lastChecked)}
+          </Text>
+          <Text style={styles.newsUpdated2}>
+            tira giù (o 🔄 in alto) per ricontrollare · le notizie si rigenerano ogni ~30 min
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {chips.map(f => {
@@ -578,6 +653,19 @@ function CatalogBrowser({ game, onOpen }) {
   const [cards, setCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [sort, setSort] = useState('num');
+
+  const sortedCards = useMemo(() => {
+    const arr = [...cards];
+    if (sort === 'price_desc') arr.sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+    else if (sort === 'price_asc') arr.sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
+    else if (sort === 'name') arr.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    else arr.sort((a, b) => (typeof a.num === 'number' ? a.num - b.num : String(a.num).localeCompare(String(b.num))));
+    return arr;
+  }, [cards, sort]);
+  const SORTS = game === 'op'
+    ? [['num', 'Numero'], ['price_desc', 'Prezzo ↓'], ['price_asc', 'Prezzo ↑']]
+    : [['num', 'Numero'], ['name', 'Nome']];
 
   useEffect(() => {
     let cancelled = false;
@@ -614,12 +702,14 @@ function CatalogBrowser({ game, onOpen }) {
           const list = (d && Array.isArray(d.cards) ? d.cards : []).map(c => ({
             spec: { src: 'pkm', id: c.id }, name: c.name,
             thumb: c.image ? c.image + '/low.png' : null,
+            num: parseInt(c.localId, 10) || 0, price: null,
           }));
           if (!cancelled) setCards(list);
         } else {
           const a = await (await fetch('https://optcgapi.com/api/sets/' + sel.id + '/')).json();
           const list = (Array.isArray(a) ? a : []).map(c => ({
             spec: { src: 'op', raw: c }, name: c.card_name, thumb: c.card_image || null,
+            num: c.card_set_id || '', price: parseFloat(String(c.market_price || '').replace(/[^0-9.]/g, '')) || null,
           }));
           if (!cancelled) setCards(list);
         }
@@ -641,16 +731,30 @@ function CatalogBrowser({ game, onOpen }) {
           <Text style={styles.catBackText} numberOfLines={1}>Tutti i set · {sel.name}</Text>
         </TouchableOpacity>
         {loadingCards ? <ActivityIndicator color={theme.accent} style={{ marginTop: 20 }} /> : (
-          <View style={styles.catGrid}>
-            {cards.map((c, i) => (
-              <TouchableOpacity key={i} style={styles.catCard} onPress={() => open(c.spec)} activeOpacity={0.7} disabled={opening}>
-                {c.thumb ? <Image source={{ uri: c.thumb }} style={styles.catThumb} resizeMode="contain" />
-                  : <View style={[styles.catThumb, styles.thumbEmpty]} />}
-                <Text style={styles.catCardName} numberOfLines={1}>{c.name}</Text>
-              </TouchableOpacity>
-            ))}
-            {!cards.length && <Text style={styles.searchHint}>Nessuna carta in questo set.</Text>}
-          </View>
+          <>
+            <View style={styles.srcChips}>
+              <Text style={styles.sortLabel}>Ordina:</Text>
+              {SORTS.map(([k, lab]) => {
+                const on = k === sort;
+                return (
+                  <TouchableOpacity key={k} style={[styles.chip, on && styles.chipOn]} onPress={() => setSort(k)} activeOpacity={0.7}>
+                    <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{lab}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={[styles.catGrid, { marginTop: 12 }]}>
+              {sortedCards.map((c, i) => (
+                <TouchableOpacity key={i} style={styles.catCard} onPress={() => open(c.spec)} activeOpacity={0.7} disabled={opening}>
+                  {c.thumb ? <Image source={{ uri: c.thumb }} style={styles.catThumb} resizeMode="contain" />
+                    : <View style={[styles.catThumb, styles.thumbEmpty]} />}
+                  <Text style={styles.catCardName} numberOfLines={1}>{iconicFor(c.name) ? '👑 ' : ''}{c.name}</Text>
+                  {c.price != null ? <Text style={styles.catCardPrice}>{fmt(Math.round(c.price * USD_EUR * 100) / 100)}</Text> : null}
+                </TouchableOpacity>
+              ))}
+              {!cards.length && <Text style={styles.searchHint}>Nessuna carta in questo set.</Text>}
+            </View>
+          </>
         )}
       </View>
     );
@@ -959,6 +1063,7 @@ export default function App() {
   const [rotation, setRotation] = useState(0);
   const [notifOn, setNotifOn] = useState(false);
   const [portfolio, setPortfolio] = useState([]);
+  const [lastChecked, setLastChecked] = useState(Date.now());
   const prevTab = useRef(0);
   const notifiedRef = useRef(new Set());
 
@@ -1045,6 +1150,7 @@ export default function App() {
       setData(sampleData);
     }
     setRotation(r => r + 1);
+    setLastChecked(Date.now());
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -1159,7 +1265,7 @@ export default function App() {
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 1 && <PortfolioTab holdings={portfolio} data={data} onPress={setDetail} onRemove={removeFromPortfolio} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
-        {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 4 && <SearchTab onPress={setDetail} />}
       </View>
 
@@ -1216,7 +1322,8 @@ const styles = StyleSheet.create({
   backText: { color: theme.accent, fontSize: font.md },
   detailName: { color: theme.text, fontSize: font.xxl, fontWeight: '800' },
   detailSub: { color: theme.textDim, fontSize: font.sm, marginTop: 4 },
-  detailImage: { width: 200, height: 280, alignSelf: 'center', marginTop: 16, marginBottom: 8 },
+  detailImage: { width: 240, height: 336, alignSelf: 'center', marginTop: 16, marginBottom: 8 },
+  iconicTag: { color: theme.accent, fontSize: font.sm, fontWeight: '700', marginTop: 6 },
   sectionTitle: { color: theme.textDim, fontSize: font.sm, fontWeight: '600', marginBottom: 8, marginTop: 18 },
 
   priceBig: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border },
@@ -1244,7 +1351,7 @@ const styles = StyleSheet.create({
   chipTxt: { color: theme.textDim, fontSize: font.sm, fontWeight: '600' },
   chipTxtOn: { color: theme.text },
 
-  thumb: { width: 44, height: 60, borderRadius: 4, marginRight: 10, backgroundColor: theme.bg },
+  thumb: { width: 54, height: 75, borderRadius: 5, marginRight: 12, backgroundColor: theme.bg },
   thumbEmpty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border },
 
   buyRow: { flexDirection: 'row', gap: 8 },
@@ -1294,7 +1401,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.border,
   },
-  suggThumb: { width: 30, height: 42, borderRadius: 3, backgroundColor: theme.bg },
+  suggThumb: { width: 40, height: 56, borderRadius: 4, backgroundColor: theme.bg },
   suggName: { color: theme.text, fontSize: font.md, fontWeight: '600' },
   suggSub: { color: theme.textDim, fontSize: font.xs, marginTop: 1 },
 
@@ -1308,7 +1415,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 7, borderTopWidth: 1, borderTopColor: theme.border,
   },
-  radarThumb: { width: 28, height: 39, borderRadius: 3, backgroundColor: theme.bg },
+  radarThumb: { width: 34, height: 47, borderRadius: 4, backgroundColor: theme.bg },
   radarName: { color: theme.text, fontSize: font.sm, fontWeight: '600' },
   radarReason: { color: theme.up, fontSize: font.xs, marginTop: 1 },
   radarPrice: { color: theme.accent, fontSize: font.sm, fontWeight: '600' },
@@ -1389,5 +1496,19 @@ const styles = StyleSheet.create({
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   catCard: { width: '31.5%', marginBottom: 12 },
   catThumb: { width: '100%', aspectRatio: 0.71, borderRadius: 5, backgroundColor: theme.bg },
-  catCardName: { color: theme.textDim, fontSize: font.xs, marginTop: 3 },
+  catCardName: { color: theme.text, fontSize: font.xs, marginTop: 4, fontWeight: '600' },
+  catCardPrice: { color: theme.accent, fontSize: font.xs, fontWeight: '700', marginTop: 1 },
+  sortLabel: { color: theme.textDim, fontSize: font.xs, alignSelf: 'center', marginRight: 2 },
+
+  whyBox: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.accentDim },
+  whyItem: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
+  whyNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8 },
+
+  resaleBox: { backgroundColor: '#13351f', borderRadius: 10, padding: 14, marginTop: 12, borderWidth: 1, borderColor: theme.up },
+  resaleTitle: { color: theme.up, fontSize: font.sm, fontWeight: '700' },
+  resaleMain: { color: theme.text, fontSize: font.md, fontWeight: '700', marginTop: 6 },
+  resaleUp: { color: theme.up, fontSize: font.lg, fontWeight: '800', marginTop: 2 },
+  resaleNote: { color: theme.textDim, fontSize: font.xs, lineHeight: 16, marginTop: 8 },
+
+  newsUpdated2: { color: theme.textDim, fontSize: font.xs, textAlign: 'center', paddingBottom: 4, fontStyle: 'italic' },
 });
