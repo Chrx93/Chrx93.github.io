@@ -494,12 +494,17 @@ def normalize_series(raw):
 
 
 def seed_series(target: float, days: int = 14):
-    """Storico di 'rodaggio' timestampato: termina sul prezzo reale di oggi."""
+    """Storico di 'rodaggio' timestampato: termina sul prezzo reale di oggi.
+
+    Volatilita' MOLTO bassa di proposito: finche' non si accumula storico reale,
+    il seed deve restare quasi piatto per NON generare falsi segnali di momentum
+    (radar / 'In rampa'). Il momentum vero emerge man mano coi dati reali.
+    """
     random.seed(str(target))
     prices = [round(target, 2)]
     p = target
     for _ in range(days - 1):
-        p = p / random.uniform(0.97, 1.05)
+        p = p / random.uniform(0.993, 1.007)
         prices.append(round(p, 2))
     prices.reverse()
     out = []
@@ -664,7 +669,7 @@ def main() -> None:
                 series = demo_base_series(ref, card.get("demo_base", 10))
             else:
                 last = series[-1][1]
-                eur = round(last * random.uniform(0.97, 1.05), 2)
+                eur = round(last * random.uniform(0.997, 1.003), 2)
                 series.append([NOW.isoformat(), eur])
             eur = series[-1][1]
             source = "demo" if source == "demo" else source
