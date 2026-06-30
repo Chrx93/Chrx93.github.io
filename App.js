@@ -571,6 +571,107 @@ function NewsTab({ news, lastUpdate, refreshing, onRefresh }) {
   );
 }
 
+function CatalogBrowser({ game, onOpen }) {
+  const [sets, setSets] = useState([]);
+  const [loadingSets, setLoadingSets] = useState(false);
+  const [sel, setSel] = useState(null);
+  const [cards, setCards] = useState([]);
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSel(null); setCards([]); setSets([]); setLoadingSets(true);
+    (async () => {
+      try {
+        if (game === 'pkm') {
+          const a = await (await fetch('https://api.tcgdex.net/v2/en/sets')).json();
+          const list = (Array.isArray(a) ? a : []).map(s => ({
+            id: s.id, name: s.name,
+            count: (s.cardCount && (s.cardCount.official || s.cardCount.total)) || null,
+            logo: s.logo ? s.logo + '.png' : null,
+          })).reverse();
+          if (!cancelled) setSets(list);
+        } else {
+          const a = await (await fetch('https://optcgapi.com/api/allSets/')).json();
+          const list = (Array.isArray(a) ? a : []).map(s => ({ id: s.set_id, name: s.set_name, count: null, logo: null }));
+          if (!cancelled) setSets(list);
+        }
+      } catch { if (!cancelled) setSets([]); }
+      if (!cancelled) setLoadingSets(false);
+    })();
+    return () => { cancelled = true; };
+  }, [game]);
+
+  useEffect(() => {
+    if (!sel) return;
+    let cancelled = false;
+    setCards([]); setLoadingCards(true);
+    (async () => {
+      try {
+        if (game === 'pkm') {
+          const d = await (await fetch('https://api.tcgdex.net/v2/en/sets/' + sel.id)).json();
+          const list = (d && Array.isArray(d.cards) ? d.cards : []).map(c => ({
+            spec: { src: 'pkm', id: c.id }, name: c.name,
+            thumb: c.image ? c.image + '/low.png' : null,
+          }));
+          if (!cancelled) setCards(list);
+        } else {
+          const a = await (await fetch('https://optcgapi.com/api/sets/' + sel.id + '/')).json();
+          const list = (Array.isArray(a) ? a : []).map(c => ({
+            spec: { src: 'op', raw: c }, name: c.card_name, thumb: c.card_image || null,
+          }));
+          if (!cancelled) setCards(list);
+        }
+      } catch { if (!cancelled) setCards([]); }
+      if (!cancelled) setLoadingCards(false);
+    })();
+    return () => { cancelled = true; };
+  }, [sel, game]);
+
+  const open = async (spec) => { setOpening(true); try { await onOpen(spec); } catch {} setOpening(false); };
+
+  if (loadingSets) return <ActivityIndicator color={theme.accent} style={{ marginTop: 30 }} />;
+
+  if (sel) {
+    return (
+      <View style={{ marginTop: 12 }}>
+        <TouchableOpacity style={styles.catBack} onPress={() => setSel(null)} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={16} color={theme.accent} />
+          <Text style={styles.catBackText} numberOfLines={1}>Tutti i set · {sel.name}</Text>
+        </TouchableOpacity>
+        {loadingCards ? <ActivityIndicator color={theme.accent} style={{ marginTop: 20 }} /> : (
+          <View style={styles.catGrid}>
+            {cards.map((c, i) => (
+              <TouchableOpacity key={i} style={styles.catCard} onPress={() => open(c.spec)} activeOpacity={0.7} disabled={opening}>
+                {c.thumb ? <Image source={{ uri: c.thumb }} style={styles.catThumb} resizeMode="contain" />
+                  : <View style={[styles.catThumb, styles.thumbEmpty]} />}
+                <Text style={styles.catCardName} numberOfLines={1}>{c.name}</Text>
+              </TouchableOpacity>
+            ))}
+            {!cards.length && <Text style={styles.searchHint}>Nessuna carta in questo set.</Text>}
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ marginTop: 12 }}>
+      <Text style={styles.catTitle}>Catalogo {game === 'pkm' ? 'Pokémon' : 'One Piece'} · {sets.length} set</Text>
+      {sets.map(s => (
+        <TouchableOpacity key={s.id} style={styles.catSetRow} onPress={() => setSel(s)} activeOpacity={0.7}>
+          {s.logo ? <Image source={{ uri: s.logo }} style={styles.catSetLogo} resizeMode="contain" />
+            : <View style={[styles.catSetLogo, styles.thumbEmpty]}><Ionicons name="albums-outline" size={16} color={theme.textDim} /></View>}
+          <Text style={styles.catSetName} numberOfLines={1}>{s.name}</Text>
+          {s.count ? <Text style={styles.catSetCount}>{s.count}</Text> : null}
+          <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 function SearchTab({ onPress }) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
@@ -703,32 +804,36 @@ function SearchTab({ onPress }) {
         })}
       </View>
 
-      {!error && !searched && (
-        <Text style={styles.searchHint}>
-          Scrivi il nome (es. charizard, luffy) o il numero. Suggerimenti istantanei — Pokémon + One Piece.
-        </Text>
-      )}
-      {error && <Text style={styles.searchHint}>{error}</Text>}
-      {!loading && !error && searched && results.length === 0 && (
-        <Text style={styles.searchHint}>Nessun risultato per “{q}”.</Text>
-      )}
-
-      {results.map(s => (
-        <TouchableOpacity key={s.key} style={styles.sugg} onPress={() => openCard(s)} activeOpacity={0.7} disabled={opening}>
-          {s.thumb ? (
-            <Image source={{ uri: s.thumb }} style={styles.suggThumb} resizeMode="contain" />
-          ) : (
-            <View style={[styles.suggThumb, styles.thumbEmpty]}>
-              <Ionicons name="image-outline" size={14} color={theme.textDim} />
-            </View>
+      {q.trim().length >= 2 ? (
+        <>
+          {error && <Text style={styles.searchHint}>{error}</Text>}
+          {!loading && !error && results.length === 0 && (
+            <Text style={styles.searchHint}>Nessun risultato per “{q}”.</Text>
           )}
-          <View style={{ flex: 1 }}>
-            <Text style={styles.suggName} numberOfLines={1}>{s.name}</Text>
-            <Text style={styles.suggSub} numberOfLines={1}>{s.sub}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
-        </TouchableOpacity>
-      ))}
+          {results.map(s => (
+            <TouchableOpacity key={s.key} style={styles.sugg} onPress={() => openCard(s)} activeOpacity={0.7} disabled={opening}>
+              {s.thumb ? (
+                <Image source={{ uri: s.thumb }} style={styles.suggThumb} resizeMode="contain" />
+              ) : (
+                <View style={[styles.suggThumb, styles.thumbEmpty]}>
+                  <Ionicons name="image-outline" size={14} color={theme.textDim} />
+                </View>
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.suggName} numberOfLines={1}>{s.name}</Text>
+                <Text style={styles.suggSub} numberOfLines={1}>{s.sub}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+            </TouchableOpacity>
+          ))}
+        </>
+      ) : src === 'all' ? (
+        <Text style={styles.searchHint}>
+          Scrivi un nome (es. charizard, luffy) o un numero — oppure scegli 🏴‍☠️ One Piece o ⚡ Pokémon qui sopra per sfogliare tutto il catalogo per set.
+        </Text>
+      ) : (
+        <CatalogBrowser game={src} onOpen={openCard} />
+      )}
     </ScrollView>
   );
 }
@@ -1270,4 +1375,19 @@ const styles = StyleSheet.create({
   pfPl: { fontSize: font.md, fontWeight: '700' },
   pfHint: { fontSize: font.xs, fontWeight: '600', marginTop: 2 },
   srcChips: { flexDirection: 'row', gap: 8, marginTop: 10 },
+
+  catTitle: { color: theme.textDim, fontSize: font.xs, fontWeight: '700', letterSpacing: 0.3, marginBottom: 8, textTransform: 'uppercase' },
+  catSetRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: theme.border,
+  },
+  catSetLogo: { width: 40, height: 26, borderRadius: 3, backgroundColor: theme.bg, alignItems: 'center', justifyContent: 'center' },
+  catSetName: { color: theme.text, fontSize: font.md, fontWeight: '600', flex: 1 },
+  catSetCount: { color: theme.textDim, fontSize: font.xs, marginRight: 4 },
+  catBack: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, marginBottom: 4 },
+  catBackText: { color: theme.accent, fontSize: font.md, fontWeight: '600' },
+  catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  catCard: { width: '31.5%', marginBottom: 12 },
+  catThumb: { width: '100%', aspectRatio: 0.71, borderRadius: 5, backgroundColor: theme.bg },
+  catCardName: { color: theme.textDim, fontSize: font.xs, marginTop: 3 },
 });
