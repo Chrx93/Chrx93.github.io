@@ -1,20 +1,20 @@
 {
-  "lastUpdate": "2026-06-28T18:51:04.531418+00:00",
-  "marketPulse": 6.9,
-  "fxUsdEur": 0.87712,
+  "lastUpdate": "2026-06-30T18:35:56.091504+00:00",
+  "marketPulse": 0.6,
+  "fxUsdEur": 0.87765,
   "radar": [
     "PKM-RAYQUAZA-POP1",
-    "PKM-GRENINJA-GX",
-    "PKM-SNORLAX-JUNGLE",
+    "OP09-001-SHANKS",
     "PKM-PIKACHU-PROMO",
+    "PKM-GRENINJA-GX",
     "PKM-GARDEVOIR-DP3",
     "OP01-067-CROCODILE",
-    "OP01-121-YAMATO",
-    "OP01-013-SANJI",
     "PKM-SYLVEON-PROMO",
-    "OP11-067-KATAKURI",
+    "OP01-121-YAMATO",
+    "OP01-047-LAW",
     "EB04-007-ZORO",
-    "PKM-MEWTWO-BASE"
+    "OP01-013-SANJI",
+    "OP09-062-ROBIN"
   ],
   "items": [
     {
@@ -25,24 +25,24 @@
       "rarity": "Leader",
       "serial": "OP01-024",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-024.jpg",
-      "change7d": -6.1,
+      "change7d": -11.9,
       "tf": {
-        "d1": -1.0,
-        "d7": -6.1,
-        "d30": 8.4
+        "d1": -10.5,
+        "d7": -11.9,
+        "d30": -3.0
       },
       "prices": {
-        "eu": 11.39
+        "eu": 10.19
       },
       "history": [
-        11.57,
-        11.68,
-        11.38,
         11.45,
         11.51,
         11.39,
         10.08,
-        11.39
+        11.39,
+        10.19,
+        10.19,
+        10.19
       ],
       "chart": [
         [
@@ -108,6 +108,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           11.39
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          10.19
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          10.19
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          10.19
         ]
       ],
       "note": "Leader iconico, prezzo accessibile",
@@ -117,9 +129,16 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Monkey%20D.%20Luffy",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Monkey%20D%20Luffy%20OP01-024%20leader&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Monkey%20D.%20Luffy",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Monkey%20D.%20Luffy%20OP01-024"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Monkey%20D.%20Luffy%20OP01-024",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Monkey%20D%20Luffy%20OP01-024%20leader&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": null,
+      "range": {
+        "low": 10.08,
+        "high": 12.13,
+        "days": 19
+      },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
     },
@@ -131,24 +150,24 @@
       "rarity": "SEC",
       "serial": "OP01-121",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-121.jpg",
-      "change7d": 11.6,
+      "change7d": 8.5,
       "tf": {
-        "d1": 5.2,
-        "d7": 11.6,
-        "d30": 12.1
+        "d1": 0.1,
+        "d7": 8.5,
+        "d30": 12.2
       },
       "prices": {
-        "eu": 17.54
+        "eu": 17.55
       },
       "history": [
-        16.17,
-        16.84,
-        16.54,
         16.22,
         16.67,
         16.88,
         17.53,
-        17.54
+        17.54,
+        17.55,
+        17.55,
+        17.55
       ],
       "chart": [
         [
@@ -214,6 +233,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           17.54
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          17.55
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          17.55
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          17.55
         ]
       ],
       "note": "Personaggio molto amato, SEC sotto i $10",
@@ -223,17 +254,24 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Yamato",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Yamato%20OP01-121&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Yamato",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Yamato%20OP01-121"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Yamato%20OP01-121",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Yamato%20OP01-121&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
-        "price": 3.09,
+        "price": 3.08,
         "ship": 0.0,
-        "total": 3.09,
+        "total": 3.08,
         "seller": "ru_toyhobbyjapan",
         "url": "https://www.ebay.it/itm/397863550939?_skw=Yamato+OP01-121&hash=item5ca283ffdb:g:yfQAAeSwnflp5xSl"
       },
+      "illustrator": null,
+      "range": {
+        "low": 15.46,
+        "high": 17.55,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+12% 7g"
+      "radarReason": "+8% 7g"
     },
     {
       "ref": "EB04-007-ZORO",
@@ -243,24 +281,24 @@
       "rarity": "SR",
       "serial": "EB04-007",
       "image": "https://optcgapi.com/media/static/Card_Images/EB04-007_TLnEm4i.jpg",
-      "change7d": 8.7,
+      "change7d": 5.3,
       "tf": {
-        "d1": 4.4,
-        "d7": 8.7,
-        "d30": 13.1
+        "d1": 0.1,
+        "d7": 5.3,
+        "d30": 13.2
       },
       "prices": {
-        "eu": 13.15
+        "eu": 13.16
       },
       "history": [
-        12.5,
-        12.49,
-        12.2,
         12.54,
         12.6,
         13.16,
         13.15,
-        13.15
+        13.15,
+        13.16,
+        13.16,
+        13.16
       ],
       "chart": [
         [
@@ -326,6 +364,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           13.15
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          13.16
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          13.16
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          13.16
         ]
       ],
       "note": "Fan-favorite, SR recente accessibile",
@@ -335,7 +385,8 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Roronoa%20Zoro",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Roronoa%20Zoro%20EB04-007&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Roronoa%20Zoro",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Roronoa%20Zoro%20EB04-007"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Roronoa%20Zoro%20EB04-007",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Roronoa%20Zoro%20EB04-007&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
         "price": 7.75,
@@ -344,8 +395,14 @@
         "seller": "jimmycollectibles",
         "url": "https://www.ebay.it/itm/358667631507?_skw=Roronoa+Zoro+EB04-007&hash=item538241bb93:g:zzEAAeSwZwtqKwOD"
       },
+      "illustrator": null,
+      "range": {
+        "low": 11.63,
+        "high": 13.16,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+9% 7g"
+      "radarReason": "+5% 7g"
     },
     {
       "ref": "OP01-067-CROCODILE",
@@ -355,21 +412,21 @@
       "rarity": "SR",
       "serial": "OP01-067",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-067.jpg",
-      "change7d": 14.3,
+      "change7d": 8.7,
       "tf": {
-        "d1": 1.2,
-        "d7": 14.3,
+        "d1": 0.0,
+        "d7": 8.7,
         "d30": 21.8
       },
       "prices": {
         "eu": 2.63
       },
       "history": [
-        2.42,
-        2.44,
-        2.5,
         2.61,
         2.6,
+        2.63,
+        2.63,
+        2.63,
         2.63,
         2.63,
         2.63
@@ -438,6 +495,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           2.63
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          2.63
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          2.63
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          2.63
         ]
       ],
       "note": "Leader giocato, versione accessibile",
@@ -447,7 +516,8 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Crocodile",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Crocodile%20OP01-067&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Crocodile",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Crocodile%20OP01-067"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Crocodile%20OP01-067",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Crocodile%20OP01-067&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
         "price": 2.16,
@@ -456,8 +526,14 @@
         "seller": "cardster_tokyo",
         "url": "https://www.ebay.it/itm/234727114090?_skw=Crocodile+OP01-067&hash=item36a6d3856a:g:ZoYAAOSwU8FjQkZb"
       },
+      "illustrator": null,
+      "range": {
+        "low": 2.16,
+        "high": 2.63,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+14% 7g"
+      "radarReason": "+9% 7g"
     },
     {
       "ref": "OP11-067-KATAKURI",
@@ -467,24 +543,24 @@
       "rarity": "SR",
       "serial": "OP11-067",
       "image": "https://optcgapi.com/media/static/Card_Images/OP11-067.jpg",
-      "change7d": 9.2,
+      "change7d": -14.6,
       "tf": {
-        "d1": -3.0,
-        "d7": 9.2,
-        "d30": 17.6
+        "d1": -18.0,
+        "d7": -14.6,
+        "d30": -3.6
       },
       "prices": {
-        "eu": 4.27
+        "eu": 3.5
       },
       "history": [
-        4.1,
-        4.24,
-        4.27,
         4.27,
         4.4,
         4.27,
         4.27,
-        4.27
+        4.27,
+        3.5,
+        3.5,
+        3.5
       ],
       "chart": [
         [
@@ -550,6 +626,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           4.27
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          3.5
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          3.5
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          3.5
         ]
       ],
       "note": "Personaggio popolare, prezzo basso",
@@ -559,7 +647,8 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Charlotte%20Katakuri",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Charlotte%20Katakuri%20OP11-067&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Charlotte%20Katakuri",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Charlotte%20Katakuri%20OP11-067"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Charlotte%20Katakuri%20OP11-067",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Charlotte%20Katakuri%20OP11-067&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
         "price": 5.25,
@@ -568,8 +657,14 @@
         "seller": "shibacam_japan",
         "url": "https://www.ebay.it/itm/198109834750?_skw=Charlotte+Katakuri+OP11-067&hash=item2e20442dfe:g:mhEAAeSwNiFpkgcY"
       },
+      "illustrator": null,
+      "range": {
+        "low": 3.5,
+        "high": 4.4,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+9% 7g"
+      "radarReason": "da tenere d'occhio"
     },
     {
       "ref": "OP01-047-LAW",
@@ -579,24 +674,24 @@
       "rarity": "SR",
       "serial": "OP01-047",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-047.jpg",
-      "change7d": 7.4,
+      "change7d": 7.9,
       "tf": {
-        "d1": 4.1,
-        "d7": 7.4,
-        "d30": 17.4
+        "d1": 4.0,
+        "d7": 7.9,
+        "d30": 22.1
       },
       "prices": {
-        "eu": 3.03
+        "eu": 3.15
       },
       "history": [
-        2.92,
-        3.0,
-        2.93,
         3.0,
         2.91,
         3.03,
         3.03,
-        3.03
+        3.03,
+        3.15,
+        3.15,
+        3.15
       ],
       "chart": [
         [
@@ -662,6 +757,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           3.03
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          3.15
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          3.15
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          3.15
         ]
       ],
       "note": "Fan-favorite, domanda costante",
@@ -671,17 +778,24 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Trafalgar%20Law",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Trafalgar%20Law%20OP01-047&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Trafalgar%20Law",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Trafalgar%20Law%20OP01-047"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Trafalgar%20Law%20OP01-047",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Trafalgar%20Law%20OP01-047&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
-        "price": 2.01,
+        "price": 2.0,
         "ship": 0.0,
-        "total": 2.01,
+        "total": 2.0,
         "seller": "jfh-collectibles",
         "url": "https://www.ebay.it/itm/147113511883?_skw=Trafalgar+Law+OP01-047&hash=item2240a60bcb:g:EuMAAeSwaytpdRYV"
       },
+      "illustrator": null,
+      "range": {
+        "low": 2.51,
+        "high": 3.15,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+7% 7g"
+      "radarReason": "+8% 7g"
     },
     {
       "ref": "OP01-013-SANJI",
@@ -691,24 +805,24 @@
       "rarity": "SR",
       "serial": "OP01-013",
       "image": "https://optcgapi.com/media/static/Card_Images/OP01-013.jpg",
-      "change7d": 11.4,
+      "change7d": 3.5,
       "tf": {
-        "d1": 1.6,
-        "d7": 11.4,
-        "d30": 19.8
+        "d1": -3.0,
+        "d7": 3.5,
+        "d30": 16.1
       },
       "prices": {
-        "eu": 18.54
+        "eu": 17.98
       },
       "history": [
-        17.38,
-        18.16,
-        18.88,
         18.44,
         18.25,
         18.75,
         18.68,
-        18.54
+        18.54,
+        18.55,
+        17.98,
+        17.98
       ],
       "chart": [
         [
@@ -774,6 +888,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           18.54
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          18.55
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          17.98
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          17.98
         ]
       ],
       "note": "Fan-favorite, versione accessibile",
@@ -783,17 +909,24 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Sanji",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Sanji%20OP01-013&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Sanji",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Sanji%20OP01-013"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Sanji%20OP01-013",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Sanji%20OP01-013&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
-        "price": 2.4,
+        "price": 2.39,
         "ship": 0.0,
-        "total": 2.4,
+        "total": 2.39,
         "seller": "cardster_tokyo",
         "url": "https://www.ebay.it/itm/234695470240?_skw=Sanji+OP01-013&hash=item36a4f0aca0:g:MPYAAOSwo5ljIgkz"
       },
+      "illustrator": null,
+      "range": {
+        "low": 15.48,
+        "high": 18.88,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+11% 7g"
+      "radarReason": "da tenere d'occhio"
     },
     {
       "ref": "OP07-019-BONNEY",
@@ -803,24 +936,24 @@
       "rarity": "Leader",
       "serial": "OP07-019",
       "image": "https://optcgapi.com/media/static/Card_Images/OP07-019.jpg",
-      "change7d": -2.4,
+      "change7d": -3.5,
       "tf": {
-        "d1": -9.3,
-        "d7": -2.4,
-        "d30": 9.5
+        "d1": -2.4,
+        "d7": -3.5,
+        "d30": 6.8
       },
       "prices": {
-        "eu": 3.7
+        "eu": 3.61
       },
       "history": [
-        3.74,
-        3.77,
-        3.86,
         3.91,
         4.08,
         4.14,
         3.7,
-        3.7
+        3.7,
+        3.61,
+        3.61,
+        3.61
       ],
       "chart": [
         [
@@ -886,6 +1019,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           3.7
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          3.61
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          3.61
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          3.61
         ]
       ],
       "note": "Leader competitivo",
@@ -895,14 +1040,21 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Jewelry%20Bonney",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Jewelry%20Bonney%20OP07-019%20leader&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Jewelry%20Bonney",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Jewelry%20Bonney%20OP07-019"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Jewelry%20Bonney%20OP07-019",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Jewelry%20Bonney%20OP07-019%20leader&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
-        "price": 2.25,
+        "price": 2.24,
         "ship": 0.0,
-        "total": 2.25,
+        "total": 2.24,
         "seller": "sakura_shipping",
         "url": "https://www.ebay.it/itm/136819767975?_skw=Jewelry+Bonney+OP07-019+leader&hash=item1fdb17faa7:g:6K8AAOSwoWBl2saw"
+      },
+      "illustrator": null,
+      "range": {
+        "low": 3.38,
+        "high": 4.14,
+        "days": 19
       },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
@@ -915,24 +1067,24 @@
       "rarity": "Leader",
       "serial": "OP09-001",
       "image": "https://optcgapi.com/media/static/Card_Images/OP09-001.jpg",
-      "change7d": 0.2,
+      "change7d": 16.1,
       "tf": {
-        "d1": -2.9,
-        "d7": 0.2,
-        "d30": 14.7
+        "d1": 18.3,
+        "d7": 16.1,
+        "d30": 35.6
       },
       "prices": {
-        "eu": 4.38
+        "eu": 5.18
       },
       "history": [
-        4.46,
-        4.44,
-        4.42,
         4.3,
         4.51,
         4.38,
         4.38,
-        4.38
+        4.38,
+        5.18,
+        5.18,
+        5.18
       ],
       "chart": [
         [
@@ -998,6 +1150,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           4.38
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          5.18
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          5.18
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          5.18
         ]
       ],
       "note": "Personaggio top, leader popolare",
@@ -1007,7 +1171,8 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Shanks",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Shanks%20OP09-001%20leader&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Shanks",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Shanks%20OP09-001"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Shanks%20OP09-001",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Shanks%20OP09-001%20leader&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
         "price": 1.99,
@@ -1016,8 +1181,14 @@
         "seller": "phoenix_entreprise",
         "url": "https://www.ebay.it/itm/157361170598?_skw=Shanks+OP09-001+leader&hash=item24a374e8a6:g:0wAAAOSwublnpBRz"
       },
+      "illustrator": null,
+      "range": {
+        "low": 3.82,
+        "high": 5.18,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "da tenere d'occhio"
+      "radarReason": "+16% 7g"
     },
     {
       "ref": "OP09-062-ROBIN",
@@ -1027,21 +1198,21 @@
       "rarity": "Leader",
       "serial": "OP09-062",
       "image": "https://optcgapi.com/media/static/Card_Images/OP09-062.jpg",
-      "change7d": 7.4,
+      "change7d": 2.3,
       "tf": {
-        "d1": 1.2,
-        "d7": 7.4,
+        "d1": 0.0,
+        "d7": 2.3,
         "d30": 17.4
       },
       "prices": {
         "eu": 1.75
       },
       "history": [
-        1.71,
-        1.7,
-        1.68,
         1.64,
         1.73,
+        1.75,
+        1.75,
+        1.75,
         1.75,
         1.75,
         1.75
@@ -1110,6 +1281,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           1.75
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          1.75
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          1.75
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          1.75
         ]
       ],
       "note": "Leader giocata, fan-favorite",
@@ -1119,17 +1302,24 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Nico%20Robin",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Nico%20Robin%20OP09-062%20leader&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Nico%20Robin",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Nico%20Robin%20OP09-062"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Nico%20Robin%20OP09-062",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Nico%20Robin%20OP09-062%20leader&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
-        "price": 2.39,
+        "price": 2.13,
         "ship": 0.0,
-        "total": 2.39,
-        "seller": "phoenix_entreprise",
-        "url": "https://www.ebay.it/itm/127020235534?_skw=Nico+Robin+OP09-062+leader&hash=item1d92fefb0e:g:XYkAAOSwPwVnpBVx"
+        "total": 2.13,
+        "seller": "sakura_shipping",
+        "url": "https://www.ebay.it/itm/137247304840?_skw=Nico+Robin+OP09-062+leader&hash=item1ff493ac88:g:u7IAAeSwTpVp6H4a"
+      },
+      "illustrator": null,
+      "range": {
+        "low": 1.48,
+        "high": 1.75,
+        "days": 19
       },
       "inNews": false,
-      "radarReason": "+7% 7g"
+      "radarReason": "da tenere d'occhio"
     },
     {
       "ref": "OP10-030-SMOKER",
@@ -1139,22 +1329,22 @@
       "rarity": "SR",
       "serial": "OP10-030",
       "image": "https://optcgapi.com/media/static/Card_Images/OP10-030.jpg",
-      "change7d": 2.7,
+      "change7d": 0.0,
       "tf": {
-        "d1": -0.9,
-        "d7": 2.7,
+        "d1": 0.0,
+        "d7": 0.0,
         "d30": 17.2
       },
       "prices": {
         "eu": 3.48
       },
       "history": [
-        3.48,
-        3.43,
-        3.52,
         3.49,
         3.51,
         3.5,
+        3.48,
+        3.48,
+        3.48,
         3.48,
         3.48
       ],
@@ -1222,6 +1412,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           3.48
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          3.48
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          3.48
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          3.48
         ]
       ],
       "note": "SR recente, prezzo contenuto",
@@ -1231,14 +1433,21 @@
         "cardmarket": "https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=Smoker",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Smoker%20OP10-030&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Smoker",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Smoker%20OP10-030"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Smoker%20OP10-030",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Smoker%20OP10-030&LH_Auction=1&_sop=1"
       },
       "bestOffer": {
-        "price": 1.28,
+        "price": 1.27,
         "ship": 1.06,
-        "total": 2.34,
+        "total": 2.33,
         "seller": "ripnrare",
         "url": "https://www.ebay.it/itm/397717209027?_skw=Smoker+OP10-030&hash=item5c99caffc3:g:LiQAAeSwZYpptrI5"
+      },
+      "illustrator": null,
+      "range": {
+        "low": 2.97,
+        "high": 3.52,
+        "days": 19
       },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
@@ -1251,24 +1460,24 @@
       "rarity": "Ultra Rare",
       "serial": "24/131",
       "image": "https://assets.tcgdex.net/en/sm/sm6/24/high.png",
-      "change7d": 19.5,
+      "change7d": 14.2,
       "tf": {
-        "d1": 18.9,
-        "d7": 19.5,
-        "d30": -7.7
+        "d1": null,
+        "d7": 14.2,
+        "d30": -18.5
       },
       "prices": {
-        "eu": 8.32
+        "eu": 7.38
       },
       "history": [
-        8.0,
-        8.36,
-        8.27,
         8.22,
         8.5,
         8.32,
         8.32,
-        8.32
+        8.32,
+        7.38,
+        7.38,
+        7.38
       ],
       "chart": [
         [
@@ -1334,6 +1543,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           8.32
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          7.38
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          7.38
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          7.38
         ]
       ],
       "note": "Personaggio popolarissimo, GX accessibile",
@@ -1343,11 +1564,18 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Greninja%20GX",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Greninja%20GX%2024/131%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Greninja%20GX",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Greninja%20GX%20pokemon%2024/131"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Greninja%20GX%20pokemon%2024/131",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Greninja%20GX%2024/131%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "5ban Graphics",
+      "range": {
+        "low": 7.38,
+        "high": 8.5,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+20% 7g"
+      "radarReason": "+14% 7g"
     },
     {
       "ref": "PKM-SYLVEON-PROMO",
@@ -1357,24 +1585,24 @@
       "rarity": "Promo",
       "serial": "30/30",
       "image": null,
-      "change7d": 9.8,
+      "change7d": 8.6,
       "tf": {
         "d1": null,
         "d7": null,
         "d30": null
       },
       "prices": {
-        "eu": 17.48
+        "eu": 17.73
       },
       "history": [
-        15.92,
-        15.71,
-        16.37,
         16.32,
         16.83,
         17.48,
         17.48,
-        17.48
+        17.48,
+        17.73,
+        17.73,
+        17.73
       ],
       "chart": [
         [
@@ -1440,6 +1668,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           17.48
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          17.73
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          17.73
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          17.73
         ]
       ],
       "note": "Eeveelution amata, sotto $25",
@@ -1449,11 +1689,18 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Sylveon",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Sylveon%2030/30%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Sylveon",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Sylveon%20pokemon%2030/30"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Sylveon%20pokemon%2030/30",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Sylveon%2030/30%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "5ban Graphics",
+      "range": {
+        "low": 13.71,
+        "high": 17.73,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+10% 7g"
+      "radarReason": "+9% 7g"
     },
     {
       "ref": "PKM-PIKACHU-PROMO",
@@ -1463,24 +1710,24 @@
       "rarity": "Promo",
       "serial": "5/12",
       "image": null,
-      "change7d": 3.0,
+      "change7d": -0.3,
       "tf": {
         "d1": null,
         "d7": null,
         "d30": null
       },
       "prices": {
-        "eu": 34.79
+        "eu": 34.81
       },
       "history": [
-        33.78,
-        33.89,
-        35.13,
         34.93,
         34.09,
         34.79,
         34.79,
-        34.79
+        34.79,
+        34.81,
+        34.81,
+        34.81
       ],
       "chart": [
         [
@@ -1546,6 +1793,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           34.79
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          34.81
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          34.81
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          34.81
         ]
       ],
       "note": "Mascotte, sempre richiesto",
@@ -1555,9 +1814,16 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Pikachu",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Pikachu%205/12%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Pikachu",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Pikachu%20pokemon%205/12"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Pikachu%20pokemon%205/12",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Pikachu%205/12%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "MAHOU",
+      "range": {
+        "low": 27.78,
+        "high": 35.13,
+        "days": 19
+      },
       "inNews": true,
       "radarReason": "nelle notizie"
     },
@@ -1569,24 +1835,24 @@
       "rarity": "Holo Rare",
       "serial": "7/132",
       "image": "https://assets.tcgdex.net/en/dp/dp3/7/high.png",
-      "change7d": 17.0,
+      "change7d": 12.4,
       "tf": {
-        "d1": 45.4,
-        "d7": 17.0,
-        "d30": 36.9
+        "d1": null,
+        "d7": 12.4,
+        "d30": 15.3
       },
       "prices": {
-        "eu": 14.53
+        "eu": 13.18
       },
       "history": [
-        12.97,
-        13.45,
-        13.67,
         14.25,
         13.9,
         14.53,
         14.53,
-        14.53
+        14.53,
+        13.18,
+        13.18,
+        13.18
       ],
       "chart": [
         [
@@ -1652,6 +1918,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           14.53
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          13.18
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          13.18
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          13.18
         ]
       ],
       "note": "Vintage holo molto amata",
@@ -1661,11 +1939,18 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Gardevoir",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Gardevoir%207/132%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Gardevoir",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Gardevoir%20pokemon%207/132"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Gardevoir%20pokemon%207/132",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Gardevoir%207/132%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "Atsuko Nishida",
+      "range": {
+        "low": 12.54,
+        "high": 14.53,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+17% 7g"
+      "radarReason": "+12% 7g"
     },
     {
       "ref": "PKM-TYRANITAR-EX7",
@@ -1675,21 +1960,21 @@
       "rarity": "Holo Rare",
       "serial": "19/109",
       "image": "https://assets.tcgdex.net/en/ex/ex7/19/high.png",
-      "change7d": -30.6,
+      "change7d": -34.2,
       "tf": {
-        "d1": -19.0,
-        "d7": -30.6,
-        "d30": -7.7
+        "d1": -22.6,
+        "d7": -34.2,
+        "d30": -9.5
       },
       "prices": {
         "eu": 21.59
       },
       "history": [
-        21.82,
-        21.48,
-        21.63,
         21.42,
         21.75,
+        21.59,
+        21.59,
+        21.59,
         21.59,
         21.59,
         21.59
@@ -1758,6 +2043,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           21.59
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          21.59
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          21.59
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          21.59
         ]
       ],
       "note": "Vintage e-series, domanda da collezione",
@@ -1767,9 +2064,16 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Dark%20Tyranitar",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Dark%20Tyranitar%2019/109%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Dark%20Tyranitar",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Dark%20Tyranitar%20pokemon%2019/109"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Dark%20Tyranitar%20pokemon%2019/109",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Dark%20Tyranitar%2019/109%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "Nakaoka",
+      "range": {
+        "low": 17.65,
+        "high": 21.82,
+        "days": 19
+      },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
     },
@@ -1781,24 +2085,24 @@
       "rarity": "Holo Rare",
       "serial": "6/130",
       "image": "https://assets.tcgdex.net/en/dp/dp1/6/high.png",
-      "change7d": 3.6,
+      "change7d": 2.0,
       "tf": {
         "d1": null,
         "d7": null,
         "d30": null
       },
       "prices": {
-        "eu": 53.38
+        "eu": 53.41
       },
       "history": [
-        51.51,
-        52.29,
-        53.68,
         52.38,
         54.59,
         53.38,
         53.38,
-        53.38
+        53.38,
+        53.41,
+        53.41,
+        53.41
       ],
       "chart": [
         [
@@ -1864,6 +2168,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           53.38
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          53.41
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          53.41
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          53.41
         ]
       ],
       "note": "Personaggio popolare, holo vintage",
@@ -1873,9 +2189,16 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Lucario",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Lucario%206/130%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Lucario",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Lucario%20pokemon%206/130"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Lucario%20pokemon%206/130",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Lucario%206/130%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "Ken Sugimori",
+      "range": {
+        "low": 46.04,
+        "high": 54.59,
+        "days": 19
+      },
       "inNews": false,
       "radarReason": "da tenere d'occhio"
     },
@@ -1887,24 +2210,24 @@
       "rarity": "Holo Rare",
       "serial": "27/64",
       "image": "https://assets.tcgdex.net/en/base/base2/27/high.png",
-      "change7d": 18.1,
+      "change7d": -17.0,
       "tf": {
         "d1": null,
-        "d7": 18.1,
-        "d30": null
+        "d7": -17.0,
+        "d30": 42.7
       },
       "prices": {
-        "eu": 115.69
+        "eu": 102.32
       },
       "history": [
-        114.87,
-        116.73,
-        113.41,
         115.93,
         116.0,
         115.69,
         115.69,
-        115.69
+        115.69,
+        102.32,
+        102.32,
+        102.32
       ],
       "chart": [
         [
@@ -1970,6 +2293,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           115.69
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          102.32
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          102.32
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          102.32
         ]
       ],
       "note": "Classico vintage, molto amato",
@@ -1979,11 +2314,18 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Snorlax",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Snorlax%2027/64%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Snorlax",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Snorlax%20pokemon%2027/64"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Snorlax%20pokemon%2027/64",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Snorlax%2027/64%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "Ken Sugimori",
+      "range": {
+        "low": 102.32,
+        "high": 116.73,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+18% 7g"
+      "radarReason": "da tenere d'occhio"
     },
     {
       "ref": "PKM-MEWTWO-BASE",
@@ -1993,24 +2335,24 @@
       "rarity": "Holo Rare",
       "serial": "10/102",
       "image": "https://assets.tcgdex.net/en/base/base1/10/high.png",
-      "change7d": 7.8,
+      "change7d": -20.5,
       "tf": {
         "d1": null,
-        "d7": 7.8,
+        "d7": null,
         "d30": null
       },
       "prices": {
-        "eu": 117.93
+        "eu": 95.45
       },
       "history": [
-        119.63,
-        117.18,
-        121.3,
         120.11,
         116.98,
         117.93,
         117.93,
-        117.93
+        117.93,
+        95.45,
+        95.45,
+        95.45
       ],
       "chart": [
         [
@@ -2076,6 +2418,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           117.93
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          95.45
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          95.45
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          95.45
         ]
       ],
       "note": "Base Set iconico, sotto $100",
@@ -2085,11 +2439,18 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Mewtwo",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Mewtwo%2010/102%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Mewtwo",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Mewtwo%20pokemon%2010/102"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Mewtwo%20pokemon%2010/102",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Mewtwo%2010/102%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "Ken Sugimori",
+      "range": {
+        "low": 95.45,
+        "high": 121.3,
+        "days": 19
+      },
       "inNews": false,
-      "radarReason": "+8% 7g"
+      "radarReason": "da tenere d'occhio"
     },
     {
       "ref": "PKM-RAYQUAZA-POP1",
@@ -2109,11 +2470,11 @@
         "eu": 87.45
       },
       "history": [
-        78.87,
-        82.78,
-        84.3,
         84.71,
         85.75,
+        87.45,
+        87.45,
+        87.45,
         87.45,
         87.45,
         87.45
@@ -2182,6 +2543,18 @@
         [
           "2026-06-28T18:51:04.531418+00:00",
           87.45
+        ],
+        [
+          "2026-06-30T18:31:47.500859+00:00",
+          87.45
+        ],
+        [
+          "2026-06-30T18:34:06.579492+00:00",
+          87.45
+        ],
+        [
+          "2026-06-30T18:35:56.091504+00:00",
+          87.45
         ]
       ],
       "note": "Promo POP raro, fan-favorite",
@@ -2191,159 +2564,230 @@
         "cardmarket": "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Rayquaza",
         "ebay": "https://www.ebay.it/sch/i.html?_nkw=Rayquaza%203/17%20pokemon%20card&_sop=15",
         "cardtrader": "https://www.cardtrader.com/en/search?q=Rayquaza",
-        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Rayquaza%20pokemon%203/17"
+        "vinted": "https://www.vinted.it/catalog?order=price_low_to_high&search_text=Rayquaza%20pokemon%203/17",
+        "auction": "https://www.ebay.it/sch/i.html?_nkw=Rayquaza%203/17%20pokemon%20card&LH_Auction=1&_sop=1"
       },
       "bestOffer": null,
+      "illustrator": "Katsura Tabata",
+      "range": {
+        "low": 67.4,
+        "high": 87.45,
+        "days": 19
+      },
       "inNews": true,
       "radarReason": "+25% 7g · nelle notizie"
     }
   ],
   "news": [
     {
-      "id": "US2-[DAY 2] One Piece Card Game Offline Regi",
-      "title": "[DAY 2] One Piece Card Game Offline Regional | Live From Toulouse | BANDAI OFFICIAL LIVESTREAM",
+      "id": "US7-Why is the Ditto BROKEN - Entire 30th An",
+      "title": "Why is the Ditto BROKEN - Entire 30th Anniversary Product Release Schedule",
       "source": "YouTube",
       "region": "US",
       "kind": "video",
-      "date": "2026-06-28",
-      "time": "15:29",
-      "iso": "2026-06-28T15:29:39+00:00",
+      "date": "2026-06-30",
+      "time": "17:00",
+      "iso": "2026-06-30T17:00:04+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1WOUVUYTlwQWx0NnN4a2hzajcwRDUySTdVeG9FVVRvMGtoZDJjdUR3Mk52N3FzbU1UYkJPWVk0aW1rOEtmMkRBNEpHM0tlcFdKUFVlZjZ3?oc=5",
-      "titleIt": "[GIORNO 2] Gioco di carte One Piece offline regionale | In diretta da Tolosa | LIVESTREAMING UFFICIALE BANDAI"
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9UVFRYMElXMmRoWnNleUV4WDhJQWRNS1hWTURvNFcySWtSS1RxLXRPWXpwdzd2c1duRFl1VjVMQ1ZJMTVNcUtaRDBwTENVM0VGZTVkREtB?oc=5",
+      "titleIt": "Perché Ditto è ROTTO - Programma di rilascio dell'intero prodotto per il 30° anniversario"
     },
     {
-      "id": "US9-Great New One Piece Cards Officially Rev",
-      "title": "Great New One Piece Cards Officially Revealed! Starter Decks Get Better! (One Piece TCG News)",
-      "source": "YouTube",
-      "region": "US",
-      "kind": "video",
-      "date": "2026-06-28",
-      "time": "14:00",
-      "iso": "2026-06-28T14:00:25+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1ta01wTmhubVZNU3gwM2tzOUtBWWFNMkxkUVVqNjF1eW8tT0tfbmZWOVRkTXpxNE4xWW1CRU43ZG9ncGxBVGFESFRtTTFKejVrbk9qd3JB?oc=5",
-      "titleIt": "Nuove fantastiche carte di One Piece rivelate ufficialmente! I mazzi iniziali migliorano! (Notizie sul GCC di One Piece)"
-    },
-    {
-      "id": "US1-Best Prime Day trading card deals 2026: ",
-      "title": "Best Prime Day trading card deals 2026: Pokémon, Magic: The Gathering, One Piece, and more",
-      "source": "Mashable",
+      "id": "US2-ONE PIECE Card Game Booster Box: \"THE BE",
+      "title": "ONE PIECE Card Game Booster Box: \"THE BEST\" PRB-01 By Bandai (Japanese Language, Factory Sealed)",
+      "source": "Santo André BIZ",
       "region": "US",
       "kind": "news",
-      "date": "2026-06-28",
-      "time": "09:26",
-      "iso": "2026-06-28T09:26:04+00:00",
+      "date": "2026-06-30",
+      "time": "15:40",
+      "iso": "2026-06-30T15:40:41+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOMXpwdk1NNllrR2o1ZHMwZXNTZ0Z4NXJSUU5BdjE5clBsN3pHUVJQanZBUndjcndtZkVVSjhJR0Z2TFhaUjBkXy1vUVJQMVBGX3BjY0kxcER2WnhTR0h6SFpZa1pxV1RxTi1UdHVvVDk4ZjNYN0QtT3ppNHBlcVNoT2FB?oc=5",
-      "titleIt": "Le migliori offerte di carte collezionabili Prime Day 2026: Pokémon, Magic: The Gathering, One Piece e altro ancora"
+      "url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxQWmlYYlZNVFdNX1BrM1p2YkJvQ2cwT0RQRWRfZkxzeHVpb2VyTF9PYmVKUkd4cVlwWnhKeDZGNXJuMl9PRkM0YTRVVUNIeHgzbmRKVHMwektvNW1ySjY1NXdxckJVRzAtbVMzd2hvaThMdXEzUzR1QmdpbmtLcFlFUnUtbDBMWG41cG5Ta2hueGJ0dw?oc=5",
+      "titleIt": "Confezione di buste per gioco di carte ONE PIECE: \"THE BEST\" PRB-01 di Bandai (lingua giapponese, sigillato in fabbrica)"
     },
     {
-      "id": "US5-Is Deoxys The Missing Piece For Steven's",
-      "title": "Is Deoxys The Missing Piece For Steven's Metagross?",
+      "id": "JP3-【ポケカ30周年】30th CELEBRATION(30th セレブレーション)",
+      "title": "【ポケカ30周年】30th CELEBRATION(30th セレブレーション)の当たりランキング/買取相場/封入率/予約抽選/値段まとめ【2026年9月16日発売】",
+      "source": "SNKRDUNK",
+      "region": "JP",
+      "kind": "news",
+      "date": "2026-06-30",
+      "time": "13:22",
+      "iso": "2026-06-30T13:22:03+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE1ucWpSOW4zT25ORzEyS1Ezamo3YWVoaC03ODJ1SkVjMDlhbnlpNHpyb2QxbVdHdE1WVm1XTGIzRGNvaTZHNk92WGF4NGM?oc=5",
+      "titleIt": "[Pokéka 30° anniversario] 30a CELEBRAZIONE (30a celebrazione) classifica dei vincitori/prezzo di mercato/tasso di inclusione/lotteria di prenotazione/riepilogo dei prezzi [Rilasciato il 16 settembre 2026]"
+    },
+    {
+      "id": "US1-Pokémon TCG: 30th Celebration Product Sh",
+      "title": "Pokémon TCG: 30th Celebration Product Showcase",
+      "source": "Pokemon.com",
+      "region": "US",
+      "kind": "news",
+      "date": "2026-06-30",
+      "time": "13:05",
+      "iso": "2026-06-30T13:05:34+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxNUWdWalVsaHpzOVM3UUxiTmdNeEEzbllwV0NrWGh6TUhmM0VEMjM2X0cyd2dpekkxX08zbUtHMzNkaWxBazJRQ3JTcl96eG9RN2hkQTM0aXlZbXdvby1pSldKdWl0SXBPM002TDFSZXdhWU5pMmZQZGJLMnRsUWx1ZnZtYw?oc=5",
+      "titleIt": "Pokémon GCC: vetrina di prodotti per la celebrazione del 30° anniversario"
+    },
+    {
+      "id": "US3-How To Play G/U Luffy | Top 8 Deck Profi",
+      "title": "How To Play G/U Luffy | Top 8 Deck Profile Ft. Adam | One Piece Card Game",
       "source": "YouTube",
       "region": "US",
       "kind": "video",
-      "date": "2026-06-28",
-      "time": "03:54",
-      "iso": "2026-06-28T03:54:20+00:00",
+      "date": "2026-06-30",
+      "time": "02:16",
+      "iso": "2026-06-30T02:16:40+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE82MVZvdHA4cGNqZy1QM0VxT3QyZmVMQXdvN01sandUSGpRS0RGNXJTUDN6U1JyNUpycDRVTFlneFNoa3hqakk4QUR3cXk3OFVsXzVfeXhB?oc=5",
-      "titleIt": "Deoxys è il pezzo mancante del Metagross di Steven?"
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1JR0oweWFxbWZPcnRhbEV4cnF2NUdJMUptZjhNcUxTa2tmZDNBd3pNSHI1QTBEV3hqWEtYTUd5RFJZZnN2N0RMTDRnaUM2QnZfSmtxZWZR?oc=5",
+      "titleIt": "Come giocare a G/U Rufy | Top 8 profili di coperta ft. Adamo | Gioco di carte One Piece"
     },
     {
-      "id": "US2-10 Best Pokémon TCG Chase Cards in Chaos",
-      "title": "10 Best Pokémon TCG Chase Cards in Chaos Rising",
+      "id": "US3-10 Pokémon TCG Cards That Aren't Valuabl",
+      "title": "10 Pokémon TCG Cards That Aren't Valuable Anymore",
       "source": "Comic Book Resources",
       "region": "US",
       "kind": "news",
+      "date": "2026-06-29",
+      "time": "21:15",
+      "iso": "2026-06-29T21:15:13+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1PeHpzUDdwYU9ac19xa1FPZ09ybVJoQWZxa1lVYlVEcGhSSU50cDRuejBxbTllVk9mZkhEcDVkMlQ1VjhraUgxS1dvNGU0ZmI4N241Wl9pNTl4cVJidDBOOHpKMXNGeDNQ?oc=5",
+      "titleIt": "10 carte del GCC Pokémon che non hanno più valore"
+    },
+    {
+      "id": "US9-18 Magic Cards to Sell This Month",
+      "title": "18 Magic Cards to Sell This Month",
+      "source": "YouTube",
+      "region": "US",
+      "kind": "video",
+      "date": "2026-06-29",
+      "time": "15:29",
+      "iso": "2026-06-29T15:29:32+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFA4WTYwaUV0Z0plWXBPZEw2NlpkWkhWZjk2ZGhGVHBmWks4M0M1bHpGTUhIWmotYXRHRGpiVWhqbFNvSDVoUmIxQUpVeXM5TVJFMWhVazRn?oc=5",
+      "titleIt": "18 carte magiche da vendere questo mese"
+    },
+    {
+      "id": "US5-Pokémon Listened To Our Show and Removed",
+      "title": "Pokémon Listened To Our Show and Removed Ekans Spawns",
+      "source": "YouTube",
+      "region": "US",
+      "kind": "video",
+      "date": "2026-06-29",
+      "time": "14:00",
+      "iso": "2026-06-29T14:00:38+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1KZHdnaTBCekRramg0aERyUWdVLWFOX1R1dTlOY0NyVVlNNEI0cU1TdW1qMGFlRWdMT2VaTFpMUDdIZWxpVkR6ZkhSbENiSUtyY3BaNlhn?oc=5",
+      "titleIt": "I Pokémon hanno ascoltato il nostro programma e hanno rimosso le uova di Ekans"
+    },
+    {
+      "id": "US6-Exclusive New Brock Special Illustration",
+      "title": "Exclusive New Brock Special Illustration Rare Revealed! New Team Rocket Products! (Pokemon TCG News)",
+      "source": "YouTube",
+      "region": "US",
+      "kind": "video",
+      "date": "2026-06-29",
+      "time": "12:15",
+      "iso": "2026-06-29T12:15:31+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9RWHNBd3hRVzRuMHUtSXAxcTFjMHQwNjZ0TzctME53U3R2ZnZSbjE3OTA4c0NjYmRncGV4VW82SzNZOVNuYVZMcnJLSXA5Z0FyTHdWZkF3?oc=5",
+      "titleIt": "Rivelata la rara illustrazione speciale esclusiva di New Brock! Nuovi prodotti Team Rocket! (Notizie sul GCC Pokémon)"
+    },
+    {
+      "id": "JP1-【ワンピースカード】ドジャースルフィ(ドン!!カード) プロモの買取相場予想や配",
+      "title": "【ワンピースカード】ドジャースルフィ(ドン!!カード) プロモの買取相場予想や配布後の高騰考察｜ONE PIECE Night 2026",
+      "source": "SNKRDUNK",
+      "region": "JP",
+      "kind": "news",
+      "date": "2026-06-29",
+      "time": "06:22",
+      "iso": "2026-06-29T06:22:16+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE9sMkxWT1EtYnFjajRPZ3lZMEwzV3I4cldhbWUxcUItVmNBX1puVmU4b3lxN2NrcllMdVJWc3AyZzE0eFZsZlUwdlR0Y2I?oc=5",
+      "titleIt": "[Carta One Piece] Dodger Rufy (Carta Don!!) Previsioni del prezzo di acquisto promozionale e aumento dei prezzi dopo la distribuzione | ONE PIECE Notte 2026"
+    },
+    {
+      "id": "US4-KPop Demon Hunters Energy Edition Collec",
+      "title": "KPop Demon Hunters Energy Edition Collectible Trading Cards Kayou Unboxing",
+      "source": "YouTube",
+      "region": "US",
+      "kind": "video",
       "date": "2026-06-28",
-      "time": "00:31",
-      "iso": "2026-06-28T00:31:00+00:00",
+      "time": "13:00",
+      "iso": "2026-06-28T13:00:04+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFBpVjg2dUswYW5XUmpQblJtY1NUdmNaRzRZSnQ0N2t6UVJoemJ1T3F0bmNPbHNTaEVCRGRyeEtrekNESVhnN3RoRVZSNXdSa0RBdDN6RE5zVzZOMzNuYmZ3dEtR?oc=5",
-      "titleIt": "Le 10 migliori carte Inseguimento del GCC Pokémon in Chaos Rising"
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFBkU0ZFdXZUV0JRVE5PM3dsVGVwR2NIMF9pRDZscEtVOTRKdUZWZHJHa2xuYXRpaGVlakhhLUM0Zmw2cUVsQnEwVEF1Q0NBTWQxeEk0c053?oc=5",
+      "titleIt": "Carte collezionabili da collezione KPop Demon Hunters Energy Edition Kayou Unboxing"
     },
     {
-      "id": "US3-ST30 Luffy & Ace Is GOOD?! Top 8 Peoria ",
-      "title": "ST30 Luffy & Ace Is GOOD?! Top 8 Peoria Treasure Cup w/ KevyZhou | One Piece Card Game",
-      "source": "YouTube",
+      "id": "US2-The Pokémon TCG's new Delta Reign Rayqua",
+      "title": "The Pokémon TCG's new Delta Reign Rayquaza card has officially been revealed",
+      "source": "wargamer.com",
       "region": "US",
-      "kind": "video",
+      "kind": "news",
       "date": "2026-06-27",
-      "time": "22:05",
-      "iso": "2026-06-27T22:05:37+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFB5VTZTNGQ1eUFZdmFzTHBZVDA3MXpSRjROOVY2SXVIVU5CU1B5ZnJBX0Q0ZWV6VUhoQ1M4N05TNWRzWnRtQ0ZfSjNRUml3SDRKckNRZllB?oc=5",
-      "titleIt": "ST30 Rufy e Ace sono BUONISSIMI?! Le migliori 8 coppe del tesoro di Peoria con KevyZhou | Gioco di carte One Piece"
-    },
-    {
-      "id": "US4-Mega Dragalge ex Survives Top Tier Meta!",
-      "title": "Mega Dragalge ex Survives Top Tier Meta!? 🪸☢️ W/ Paldean Clodsire ex, Rocket's Sneasel & Dugtrio.",
-      "source": "YouTube",
-      "region": "US",
-      "kind": "video",
-      "date": "2026-06-27",
-      "time": "14:47",
-      "iso": "2026-06-27T14:47:49+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9OZFE5R2xnUVZNVm93Y3psTEx6ZlVndHpCQmRXQWlkLVhWMzctLWZxQ1p6YmJ2MkJ2a3kwaTVDdm5XWFhpa2hKeGNDSXBNWTU1QzJiVk9R?oc=5",
-      "titleIt": "L'ex Mega Dragalge sopravvive al meta di livello superiore!? 🪸☢️ Con Paldean Clodsire ex, Rocket's Sneasel e Dugtrio."
-    },
-    {
-      "id": "US8-Mega Rayquaza ex is disappointing?! (Del",
-      "title": "Mega Rayquaza ex is disappointing?! (Delta Reign Preview #1)",
-      "source": "YouTube",
-      "region": "US",
-      "kind": "video",
-      "date": "2026-06-27",
-      "time": "00:00",
-      "iso": "2026-06-27T00:00:06+00:00",
+      "time": "23:27",
+      "iso": "2026-06-27T23:27:53+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [
         "PKM-RAYQUAZA-POP1"
       ],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1hY2Z3dmpUU0kzT1oyLTFlZEstd25iOTl2VmxhQ1NsNm9NUUZwOVdCOHgtMXZ3MFRmblVZOVNNZURhV1RWWkhZcXE4T05qUjdYZjhBQUpR?oc=5",
-      "titleIt": "L'ex Mega Rayquaza è deludente?! (Anteprima di Delta Reign n. 1)"
+      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxQY2YxMkM0dzY0dDI4WDVFT1Rma3dra3J0eGZRemRBcE9wc1V5MmJ1VjJGandFUWoxMm1vQXRZR3pZVlY3UUNSc2dyaXAwV3N3aHdYNXRUREwwak9WOXY5V2dGNENwUFRld1dPWURBR0xJZDFjejk1aEZta2J1ZG9ud0VveXg?oc=5",
+      "titleIt": "La nuova carta Rayquaza Delta Reign del GCC Pokémon è stata ufficialmente rivelata"
     },
     {
-      "id": "US7-Pokémon UNITE―Yveltal, Palkia, Reshiram,",
-      "title": "Pokémon UNITE―Yveltal, Palkia, Reshiram, and Solgaleo Join the Battle!",
+      "id": "US8-Top 10 Off Meta Decks To Try In Pokemon ",
+      "title": "Top 10 Off Meta Decks To Try In Pokemon Pocket",
       "source": "YouTube",
       "region": "US",
       "kind": "video",
       "date": "2026-06-26",
       "time": "13:00",
-      "iso": "2026-06-26T13:00:57+00:00",
+      "iso": "2026-06-26T13:00:03+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFBkbWVYc1FuYVpaVGQtT0lGMFhULTRWMlNfdkxpdTd6SmxiSEdVYzV3NEc4OXhUaU1rQXFONkg1TGxaNS11YnllQ0pPOVphWnJQOUdyQmhR?oc=5",
-      "titleIt": "Pokémon UNITED: Yveltal, Palkia, Reshiram e Solgaleo si uniscono alla battaglia!"
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE0yV0NUUDlVeEswb3N2WmxUV1VVZV9WV2hFMkVSTTZPRFk4WEVkM3FobTJnWnVXNWFXMFhhb3JfSjk2cHlEUzJ5aENUMi1GLUV5aU1IaTlB?oc=5",
+      "titleIt": "I 10 migliori mazzi Meta da provare in Pokemon Pocket"
     },
     {
       "id": "JP2-【ポケカ】メガレックウザex SARの買取相場予想や発売後の高騰考察｜ストームエ",
@@ -2378,7 +2822,7 @@
       "titleIt": "[Pokéka] Mega Rayquaza ex MUR previsione del prezzo di acquisto e aumento dei prezzi dopo il rilascio | Tempesta Smeralda"
     },
     {
-      "id": "JP7-【ポケカ】ストームエメラルダの当たりランキング/買取相場/封入率/予約抽選/値段",
+      "id": "JP8-【ポケカ】ストームエメラルダの当たりランキング/買取相場/封入率/予約抽選/値段",
       "title": "【ポケカ】ストームエメラルダの当たりランキング/買取相場/封入率/予約抽選/値段まとめ【2026年7月31日発売】",
       "source": "SNKRDUNK",
       "region": "JP",
@@ -2394,7 +2838,38 @@
       "titleIt": "[Pokeka] Classifica vincente di Storm Emeralda/prezzo di mercato di acquisto/tasso di inclusione/lotteria di prenotazione/riepilogo dei prezzi [pubblicato il 31 luglio 2026]"
     },
     {
-      "id": "EU1-Aprono la cassaforte con la fiamma ossid",
+      "id": "US3-Best Prime Day trading card deals 2026: ",
+      "title": "Best Prime Day trading card deals 2026: Pokémon, Magic: The Gathering, One Piece, and more",
+      "source": "Mashable",
+      "region": "US",
+      "kind": "news",
+      "date": "2026-06-26",
+      "time": "06:25",
+      "iso": "2026-06-26T06:25:15+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOMXpwdk1NNllrR2o1ZHMwZXNTZ0Z4NXJSUU5BdjE5clBsN3pHUVJQanZBUndjcndtZkVVSjhJR0Z2TFhaUjBkXy1vUVJQMVBGX3BjY0kxcER2WnhTR0h6SFpZa1pxV1RxTi1UdHVvVDk4ZjNYN0QtT3ppNHBlcVNoT2FB?oc=5",
+      "titleIt": "Le migliori offerte di carte collezionabili Prime Day 2026: Pokémon, Magic: The Gathering, One Piece e altro ancora"
+    },
+    {
+      "id": "EU1-Furto record di carte Pokémon in Italia:",
+      "title": "Furto record di carte Pokémon in Italia: derubato un collezionista per 200mila euro",
+      "source": "Everyeye.it",
+      "region": "EU",
+      "kind": "news",
+      "date": "2026-06-25",
+      "time": "20:49",
+      "iso": "2026-06-25T20:49:00+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPWHdJZjhGQ1JkcnR4UGU2UWo1YmVncVBDMFhyZjdGOEpVeFFJU0hDenZad05jY1FsT1FzTUppRWZHYWZXVDlvS3BoT0Z2Vy1Sdi02U3JBZjNPMlBFWkVUWTU0aEdHN25FbnUwd2hueUVXeUpjY1daR3J5cHk3dWIzYlQ5ZzdHWmFRWnRVam1lTFJGX243elhtSjdsci1Ca2NDLV9CbmczdEFhZHc3ZVI4Rk9lSQ?oc=5"
+    },
+    {
+      "id": "EU2-Aprono la cassaforte con la fiamma ossid",
       "title": "Aprono la cassaforte con la fiamma ossidrica: dentro ci sono carte Pokémon da 200mila euro",
       "source": "la Repubblica",
       "region": "EU",
@@ -2409,105 +2884,23 @@
       "url": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxQZTBCel9QUno1OGhURjRZUUdWbFo3NE54b1RTUUZqLUJhNzZIYTdxZ0NXbEdXRVZEYmQ4ME9EaWV3eVpTNXV5WThjZjZIS2NDek1sWUNURkRxd09DTHRXc0hkT2lINjdEOGN1QjRpOHNmOFNWYUJBdlJPVndBWHhaX0MwQWctZmliNndIUlNOUHJMQ2dqTjRqb05mclZUa2t3TGk0b3lSdV8yZEVZVEtLX0RXUnNSQkVxakIybW9JT2VvOFc3SDZKcUdMWHZTOHlkczRsNzNTZVlFRE45TmfSAeMBQVVfeXFMTmdzS2IxR2NWZWxiZHZ5al9CNi10SThiZksyXzhoUHJjbkRDRVFqcjRPcXozRmNPaUY2Uk8zd0FicnFxZGR2M0xfd0x5bWwxRTd6dTYyYlNwZ0hVREVnUU5ranJRNURYMEZfVWhLci00ME1JMUJJbk1TdzlNWFJvUnN4bVVsbnBQbGZEb0hScWMtZ2EtX0R3Z21fbFBQSUx5OGJHdWIyeGR3MDJHT2VLZG9SUG5HbjlWcl9iZ2UzRjZBbm8wM0RXRU9uSVhBRHFqaGhhamI4Y0dRUzZHSU5GV254bEk?oc=5"
     },
     {
-      "id": "US1-Six brilliant Rayquaza Pokémon cards to ",
-      "title": "Six brilliant Rayquaza Pokémon cards to buy before Delta Reign",
-      "source": "wargamer.com",
-      "region": "US",
-      "kind": "news",
-      "date": "2026-06-25",
-      "time": "16:02",
-      "iso": "2026-06-25T16:02:59+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [
-        "PKM-RAYQUAZA-POP1"
-      ],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE9uUGdUYmtaYkRYUkNPTG5VQ1FqcEY5TlRmdlBhcjV1cUFqM2VsMF9OMjllX2ZfZXJrQXVSTEtKamhaalVYRFMyU3FpZzBQZDRnQ0U1M3lwbnpRb25wbXd0Sl9SbEZOekNnN1hLd1pqQ2thcHRZRFNJWg?oc=5",
-      "titleIt": "Sei brillanti carte Pokémon Rayquaza da acquistare prima di Delta Reign"
-    },
-    {
-      "id": "US9-Global games revenue surpassed $200 bill",
-      "title": "Global games revenue surpassed $200 billion in 2025",
-      "source": "games.gg",
-      "region": "US",
-      "kind": "news",
-      "date": "2026-06-25",
-      "time": "12:21",
-      "iso": "2026-06-25T12:21:10+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE0wUGlpcmZoaWtXTlFyYUtpRDUtX3ZoMWJ3dEVCMGVPdGF0eVBBZUxVMkdvcHUtdXNpQVlhVC1KalRONF9scll1UnU4THphMzdod2swU3ZFenYwV1BjOFZhcVdQbDhQN3NTRzc3Tw?oc=5",
-      "titleIt": "Le entrate globali dei giochi hanno superato i 200 miliardi di dollari nel 2025"
-    },
-    {
-      "id": "JP6-【ポケカ30周年】25thプロモパックの注目度上昇中！当たりカードの相場上昇率と",
-      "title": "【ポケカ30周年】25thプロモパックの注目度上昇中！当たりカードの相場上昇率と人気の理由を解説【プロモカードパック 25th ANNIVERSARY edition】",
-      "source": "SNKRDUNK",
-      "region": "JP",
-      "kind": "news",
-      "date": "2026-06-25",
-      "time": "07:30",
-      "iso": "2026-06-25T07:30:35+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE0wSUNkSGpCRFlDVk1aMVQ3bmExRnBnSldEd1ZKa3c0UGxCNkpoWGdTSHA0VHhJVThLbnNHOUh2WlF4R2F3YlY5cWhBQms?oc=5",
-      "titleIt": "[Pokéka 30° anniversario] Il 25° pacchetto promozionale sta attirando l'attenzione! Spiegazione del tasso di aumento del prezzo di mercato delle carte vincenti e motivo della loro popolarità [Promo Card Pack 25th ANNIVERSARY edition]"
-    },
-    {
-      "id": "US9-Pokémon TCG Pocket: Everyday Wonders Exp",
-      "title": "Pokémon TCG Pocket: Everyday Wonders Expansion Coming Soon",
-      "source": "Pokemon.com",
-      "region": "US",
-      "kind": "news",
-      "date": "2026-06-24",
-      "time": "13:06",
-      "iso": "2026-06-24T13:06:10+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxORGVfMnpsWmx1WXpQejVwNUxTeWlocnFwRjc3VlJqT2pZbFpiSnhaVWlMcWw2UGdPT0lvTWg3ZjZSU0xKZnd6Q2hfckZWc2VQLWJZX2lxQkswRXdYbWFDQWxWN09Mb0ZMa0FHRGoycU5ScEFtOVJjVzZtT3dvWWxncUtmeUxyLVM0TFZLZmRsblVSYWs?oc=5",
-      "titleIt": "Pokémon GCC Pocket: l'espansione Everyday Wonders in arrivo"
-    },
-    {
       "id": "US1-Pokémon TCG Pocket: Everyday Wonders | O",
       "title": "Pokémon TCG Pocket: Everyday Wonders | Official Trailer",
       "source": "YouTube",
       "region": "US",
       "kind": "video",
       "date": "2026-06-24",
-      "time": "13:00",
-      "iso": "2026-06-24T13:00:48+00:00",
+      "time": "13:01",
+      "iso": "2026-06-24T13:01:18+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9ZYk5rejFYUVdoNm13ZS1LWlB1bkZGYXF4eDhxazdEM3dPSUp0ckk4UF9MckhPYlBGai1UUlRidzlvWndXLWJPNkp5cktMUTFTU3RXajBn?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFBzM0FVYlNxeFNxZXd2dXFVSWFBb3htNzdjdG1ROURhM0JpNkpzRTRSU1dHRTRReWdwVWFHU1kzcEQ1OWUwNXhfSVE1SWxnT2JHSE5oNGpn?oc=5",
       "titleIt": "Pocket del GCC Pokémon: Meraviglie quotidiane | Trailer ufficiale"
     },
     {
-      "id": "US6-I Put $15,000 on Credit Cards for Pokemo",
-      "title": "I Put $15,000 on Credit Cards for Pokemon Cards",
-      "source": "YouTube",
-      "region": "US",
-      "kind": "video",
-      "date": "2026-06-23",
-      "time": "13:00",
-      "iso": "2026-06-23T13:00:17+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9RVld0Sml5NVB6NlpBU0ltSUFXbWx6eWtyYlM2SEVFa0hleWFwTlRwM3k5cndPTkFwSUxhV3Byd2pmbU9Oek8wZ0UxTjJKUWw0dlphblh3?oc=5",
-      "titleIt": "Ho messo $ 15.000 su carte di credito per carte Pokemon"
-    },
-    {
-      "id": "JP3-【ポケカ】エーフィex SAR仕様の買取相場予想や発売後の高騰考察｜30th C",
+      "id": "JP5-【ポケカ】エーフィex SAR仕様の買取相場予想や発売後の高騰考察｜30th C",
       "title": "【ポケカ】エーフィex SAR仕様の買取相場予想や発売後の高騰考察｜30th CELEBRATION プレミアムデッキセット エーフィ・ブラッキー",
       "source": "SNKRDUNK",
       "region": "JP",
@@ -2523,7 +2916,7 @@
       "titleIt": "[Pokeka] Previsioni del prezzo d'acquisto per le specifiche Effie ex SAR e considerazione dell'aumento dei prezzi dopo il rilascio | Set di mazzi Premium 30° CELEBRAZIONE Effie Blackie"
     },
     {
-      "id": "JP4-【ポケカ】ブラッキーex SAR仕様の買取相場予想や発売後の高騰考察｜30th ",
+      "id": "JP6-【ポケカ】ブラッキーex SAR仕様の買取相場予想や発売後の高騰考察｜30th ",
       "title": "【ポケカ】ブラッキーex SAR仕様の買取相場予想や発売後の高騰考察｜30th CELEBRATION プレミアムデッキセット エーフィ・ブラッキー",
       "source": "SNKRDUNK",
       "region": "JP",
@@ -2541,7 +2934,7 @@
     {
       "id": "EU2-Decklab sbarca a Cagliari: il paradiso d",
       "title": "Decklab sbarca a Cagliari: il paradiso dei collezionisti di Pokémon e One Piece apre a Pirri",
-      "source": "CagliariToday",
+      "source": "cagliaritoday.it",
       "region": "EU",
       "kind": "news",
       "date": "2026-06-22",
@@ -2554,23 +2947,7 @@
       "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxNeTh4bk9Fa3llNWExWnBpWUZha2JuN28zV1FHeGVMd1hxc19IcTRaNW9KVGhRR2M3Mk5mR2Vpa2NHeWZpYjVYVWVRTGpTOEpYZU81cHkzTWpEVUdwLURqQjVQYm1aT24xbEJveVZhUHk4VmdoNlZqamtfQTlXSXBtNVVicVI3WTA?oc=5"
     },
     {
-      "id": "JP2-【ワンピースカード】世界最強の戦士の当たりランキング/買取相場/封入率/レア別相",
-      "title": "【ワンピースカード】世界最強の戦士の当たりランキング/買取相場/封入率/レア別相場/値段まとめ【2026年8月22日発売】",
-      "source": "SNKRDUNK",
-      "region": "JP",
-      "kind": "news",
-      "date": "2026-06-19",
-      "time": "09:04",
-      "iso": "2026-06-19T09:04:09+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE1zTXU5bU5tWlZUNWZqeW4xWmNVZWFHaUZLY3REbFJyRlYtYjloTUpCdUJZNW1GVVdPcGNOcmp5MkxELXFvc05VU09VanY?oc=5",
-      "titleIt": "[Carta One Piece] Classifica del guerriero più forte del mondo/Prezzo di mercato di acquisto/Tasso di inclusione/Prezzo di mercato per rarità/Riepilogo dei prezzi [Rilasciato il 22 agosto 2026]"
-    },
-    {
-      "id": "US2-ONE PIECE Card Game Reveals First Look a",
+      "id": "US1-ONE PIECE Card Game Reveals First Look a",
       "title": "ONE PIECE Card Game Reveals First Look at Elbaph and Heroines Vol. 2 Sets",
       "source": "Crunchyroll",
       "region": "US",
@@ -2586,7 +2963,7 @@
       "titleIt": "Il gioco di carte ONE PIECE rivela il primo sguardo a Elbaph and Heroines Vol. 2 set"
     },
     {
-      "id": "US3-After more than a decade, Naruto is gett",
+      "id": "US4-After more than a decade, Naruto is gett",
       "title": "After more than a decade, Naruto is getting another shot at TCG glory",
       "source": "Polygon.com",
       "region": "US",
@@ -2602,7 +2979,23 @@
       "titleIt": "Dopo più di un decennio, Naruto ha un'altra possibilità di gloria nel GCC"
     },
     {
-      "id": "EU2-Carte Pokemon, ecco perché sono il nuovo",
+      "id": "US8-Man loses $15K on fake 'One Piece' cards",
+      "title": "Man loses $15K on fake 'One Piece' cards on FB Marketplace",
+      "source": "moneywise.com",
+      "region": "US",
+      "kind": "news",
+      "date": "2026-06-16",
+      "time": "07:00",
+      "iso": "2026-06-16T07:00:00+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxNRFF2dUxCTk1yUmtwYzZRd0JHWngxX3BoYlZRQUVyeUpYb0tINE5wYThTemVCRDhfamNIcWJNS3NsNXZ3ZGRPaDBhQVJiN3B3Q2N6cjhUVDhCN1JSd0twMzhBTDB2R21BR3dXMWRNalk4RnBuY0dYNUI5Tlkza19rdTV3SVAzUThqZGtUMjE0NmdBNkFyVTBGYTVkUVBCOG5LdWh2NXJWWXJBWHp6eUI2MDlfYXd4djh2em9fMTREQnJIS2pvOGdLdEVaeXZlNnAwY1dQWTIzaFJfOXBRa09FTjdFMDN4S2tSWXJr?oc=5",
+      "titleIt": "Un uomo perde $ 15.000 con carte false di \"One Piece\" sul Marketplace di FB"
+    },
+    {
+      "id": "EU3-Carte Pokemon, ecco perché sono il nuovo",
       "title": "Carte Pokemon, ecco perché sono il nuovo obiettivo della criminalità",
       "source": "Sky TG24",
       "region": "EU",
@@ -2617,23 +3010,7 @@
       "url": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPaXJlV0dDd2hfWmYwVzloQWR4QW9zMDBiTktmR2JlU1VsU09JMUNDQWZ1NGtaRjdkc3piazl2WTR1Z0NvaWhXQkxXNFZ5RVduZWNEQUxmYUFjbzRGaHhvQkJ5Zkllb2xjWk0zM0VscThMdklnWlBiX1JuZ2U3LXhlazdCN0NrWW9f?oc=5"
     },
     {
-      "id": "US7-One Piece The Time of Battle (OP-16) TCG",
-      "title": "One Piece The Time of Battle (OP-16) TCG Checklist and Set Details",
-      "source": "Beckett",
-      "region": "US",
-      "kind": "news",
-      "date": "2026-06-15",
-      "time": "07:00",
-      "iso": "2026-06-15T07:00:00+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQRk04WWtVMjAxYVFvd1A2S0Y1OENnbGR1TjdLc0lyQWl6cEJTVElpZFptaXdhOGthSmdwTjVScl9uYVhQbW5jWVRMZW90X2VvSmw4Yl9mRzFnQmotSUx4dFAyaEdKOUl4dkgwRkFvckJjUFRWaVdQYmltZUlXT1VST2JZeUlwREtGS2Q3VVp5VHUzVUJFZldhMThB?oc=5",
-      "titleIt": "Elenco di controllo del GCC di One Piece The Time of Battle (OP-16) e dettagli del set"
-    },
-    {
-      "id": "JP1-【ワンピースカード】「神の島の冒険」の当たりランキング/買取相場/封入率/レア別",
+      "id": "JP2-【ワンピースカード】「神の島の冒険」の当たりランキング/買取相場/封入率/レア別",
       "title": "【ワンピースカード】「神の島の冒険」の当たりランキング/買取相場/封入率/レア別相場/値段まとめ【6/15更新】",
       "source": "SNKRDUNK",
       "region": "JP",
@@ -2665,7 +3042,7 @@
       "titleIt": "[Carta One Piece] Classifica del momento della battaglia decisiva/Prezzo di mercato di acquisto/Tasso di inclusione/Prezzo di mercato per rarità/Riepilogo dei prezzi [Aggiornato il 15/6]"
     },
     {
-      "id": "US4-The Best-Selling Cards for One Piece Car",
+      "id": "US5-The Best-Selling Cards for One Piece Car",
       "title": "The Best-Selling Cards for One Piece Card Game: The Time of Battle",
       "source": "TCGplayer",
       "region": "US",
@@ -2681,7 +3058,23 @@
       "titleIt": "Le carte più vendute per One Piece Card Game: The Time of Battle"
     },
     {
-      "id": "US5-Upcoming One Piece TCG Releases: Huge Se",
+      "id": "JP9-【ポケカ】ミュウツーex FURの買取相場予想や発売後の高騰考察｜30th CE",
+      "title": "【ポケカ】ミュウツーex FURの買取相場予想や発売後の高騰考察｜30th CELEBRATION(30th セレブレーション)",
+      "source": "SNKRDUNK",
+      "region": "JP",
+      "kind": "news",
+      "date": "2026-06-09",
+      "time": "07:00",
+      "iso": "2026-06-09T07:00:00+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE41SnlETDRxTUl5WjJlV2ZacE1mODl4eW9qZ0c3dWpmdlpieUgyOXdqSkhFV1ctOTljMlllblhJUXhNS296MVVZSXNuUk8?oc=5",
+      "titleIt": "[Pokéka] Previsioni del prezzo di acquisto di Mewtwo ex FUR e considerazione dell'aumento dei prezzi dopo il rilascio | 30a FESTA"
+    },
+    {
+      "id": "US6-Upcoming One Piece TCG Releases: Huge Se",
       "title": "Upcoming One Piece TCG Releases: Huge Set Drops June 12th",
       "source": "Card Game Base",
       "region": "US",
@@ -2697,23 +3090,7 @@
       "titleIt": "Prossime uscite del GCC di One Piece: Huge Set uscirà il 12 giugno"
     },
     {
-      "id": "JP9-【ポケカ】ピカチュウex FUR仕様 [131/M-P]の買取相場予想や発売後の",
-      "title": "【ポケカ】ピカチュウex FUR仕様 [131/M-P]の買取相場予想や発売後の高騰考察｜30th CELEBRATION FUTURISTIC BOX",
-      "source": "SNKRDUNK",
-      "region": "JP",
-      "kind": "news",
-      "date": "2026-06-08",
-      "time": "07:00",
-      "iso": "2026-06-08T07:00:00+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTFBzaVowU2NGMEgtWmFiQnI5dnFfQTlXN2lnTV9CTjhkek9pM2lUQXpveHBmeDc3ZWpqbmc0UnBnU3FmY2dzcmN5NGtMTW4?oc=5",
-      "titleIt": "[Pokeka] Pikachu ex FUR specifica [131/M-P] previsione del prezzo di acquisto e aumento dei prezzi dopo il rilascio | SCATOLA FUTURISTICA DEL 30° CELEBRATION"
-    },
-    {
-      "id": "US3-Get Ready for Pokémon TCG: 30th Celebrat",
+      "id": "US5-Get Ready for Pokémon TCG: 30th Celebrat",
       "title": "Get Ready for Pokémon TCG: 30th Celebration",
       "source": "Pokemon.com",
       "region": "US",
@@ -2745,7 +3122,7 @@
       "titleIt": "L'hype di One Piece è qui e una nuova vendita di dischi"
     },
     {
-      "id": "US6-A $100,000 Pokémon Card Is About to Chan",
+      "id": "US5-A $100,000 Pokémon Card Is About to Chan",
       "title": "A $100,000 Pokémon Card Is About to Change One Collector’s Life",
       "source": "Sports Illustrated",
       "region": "US",
@@ -2795,38 +3172,7 @@
       "titleIt": "1998 La Pokémon Japanese 3rd Place Pikachu Card viene venduta per 1,7 milioni"
     },
     {
-      "id": "JP9-【ワンピースカード】バスケルフィの買取・相場価格と値段推移｜ONE PIECE ",
-      "title": "【ワンピースカード】バスケルフィの買取・相場価格と値段推移｜ONE PIECE COLLEGE BASKETBALL US VOYAGE",
-      "source": "SNKRDUNK",
-      "region": "JP",
-      "kind": "news",
-      "date": "2026-05-14",
-      "time": "07:00",
-      "iso": "2026-05-14T07:00:00+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE1ZMmJLS3dNZHdaaEp3bEhtWUxqTmpWYU04U1lXbGl2U1pZUS1WRW00blZfT1k4QlRSZEpFNUprMFo3RWVqZ1lpeExSNnk?oc=5",
-      "titleIt": "[Carta One Piece] Prezzo di acquisto/mercato e andamento dei prezzi di Basket｜ONE PIECE COLLEGE BASKETBALL US VOYAGE"
-    },
-    {
-      "id": "EU6-Imperdibili su Amazon: i 3 gadget One Pi",
-      "title": "Imperdibili su Amazon: i 3 gadget One Piece più pazzi di maggio 2026 a prezzi imbattibili",
-      "source": "Everyeye.it",
-      "region": "EU",
-      "kind": "news",
-      "date": "2026-05-07",
-      "time": "07:00",
-      "iso": "2026-05-07T07:00:00+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxNMHpCS2VBTmp6U28wZHAzN1RwQjd5azg4QWVab2ZFUnFzUnFrdVl4U2lBd1doZTFUQ3NxSkw1LXZlZE1lRTU3NkhvOVNuMnZxSkxPQXk1NjVXQjluRk93U09LbjF2b093XzVjaXdBNjB1NVJwWGM0ZzkzaklvNGxUb0pIX0JnVDc0NUtDUHc4TzRQcWpkY3FCQUlmRmZCNHliOTF0NUZIcE1Hcks2UWRiWWxib0paQ3RCUVE?oc=5"
-    },
-    {
-      "id": "US6-The Pokémon TCG: Mega Evolution—Pitch Bl",
+      "id": "US7-The Pokémon TCG: Mega Evolution—Pitch Bl",
       "title": "The Pokémon TCG: Mega Evolution—Pitch Black Expansion Arrives July 17, 2026",
       "source": "Pokemon.com",
       "region": "US",
@@ -2842,7 +3188,7 @@
       "titleIt": "L'espansione Megaevoluzione - Nero Pece del GCC Pokémon arriverà il 17 luglio 2026"
     },
     {
-      "id": "EU5-One Piece TCG: 4 box imperdibili per ini",
+      "id": "EU4-One Piece TCG: 4 box imperdibili per ini",
       "title": "One Piece TCG: 4 box imperdibili per iniziare subito a giocare e collezionare le carte",
       "source": "Everyeye.it",
       "region": "EU",
@@ -2857,7 +3203,7 @@
       "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOQ2JaT2htZjRNaFNaY3c1RWdZelFNNUpkQTcyV0hxYzN0c1NqUU9EcG5mUEhPS1lEaEhiSF9rSlR3ZmFCRmhKLTdGaU4yVG85Q0ZTYVF4OUVGNDV6OUdqNmhMclk1V21vUTZFbm5WTFdmV1BBcFBkclhSc1lNNEhmWVFCR3dNS1c1V2pBYXNQcU11MTJ4RkxRRklZZUN1TmNOWngzeDMteUtUZUtZX0dsSw?oc=5"
     },
     {
-      "id": "US8-Pokémon TCG Pocket: Pulsing Aura Expansi",
+      "id": "US9-Pokémon TCG Pocket: Pulsing Aura Expansi",
       "title": "Pokémon TCG Pocket: Pulsing Aura Expansion Coming Soon",
       "source": "Pokemon.com",
       "region": "US",
@@ -2871,22 +3217,6 @@
       "summary": "",
       "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQNk1XSzRBbm5RcXJzWEplTGxab0ZRcXFhOENPZkdicUpDRHdsa2N2OFFHOXpuOERQU2lxNUdDcUtJMk1xSjgzUGZkZW1zeFNSckxnZ1h4NkZMeGw3dEFIUWdRN0VTcEJtOWNvQzJGSGNwQUZ4ZkNvc0JLU05GZFpQcHJnZDhIQXJrVGFSSEhn?oc=5",
       "titleIt": "Pocket del GCC Pokémon: espansione dell'aura pulsante in arrivo"
-    },
-    {
-      "id": "US5-Groom Sells Three Rare Pokémon Cards for",
-      "title": "Groom Sells Three Rare Pokémon Cards for $41K, Covers Wedding Costs",
-      "source": "Complex",
-      "region": "US",
-      "kind": "market",
-      "date": "2026-04-21",
-      "time": "07:00",
-      "iso": "2026-04-21T07:00:00+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPNjJSc3VNRnhYbnlCNmMyLURTYldGc3ZPakVDS1RTQjdKVVh1bjlWcUdfaFQzVldaM0NfQWJPZy1FLTBsRExIWDd1Wi1iblppeU1ZY0t0aDNtUzNTN2RqRk5GbUVzZWg0ZmJrV0Fkc1lSV1FiRGV5UldIbXpCU0pycDZzZXdMczQ2YjlxSE5VMlc?oc=5",
-      "titleIt": "Lo sposo vende tre carte Pokémon rare per $ 41.000 e copre le spese del matrimonio"
     },
     {
       "id": "EU9-Gioco di carte One Piece: quali sono le ",
@@ -2904,23 +3234,7 @@
       "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNSWJZRnpkaXFwcTltRW1nZHRiUnVXeFBHMWlhWHZxVk51RU56bnF6eE90eUNWSDh4RDgtSUpHVVU4NWxKNVd4VWgzLUEzOC11WlNkSmtvX19YOGdWZ3JOYWVIX0U2YUxIWDdEcnZVNjNQRGhXZmo4Q3NzR3NKYXo2ZGdZN1hYYnJocXpzdmVtQUg1SXBkSlNJ?oc=5"
     },
     {
-      "id": "JP8-【ワンピースカード】モンキー・D・ルフィ L(マガジンルフィVol.2)の買取・",
-      "title": "【ワンピースカード】モンキー・D・ルフィ L(マガジンルフィVol.2)の買取・相場価格と値段推移｜ONE PIECE magazine 特集 ヒロインズ 021 付録",
-      "source": "SNKRDUNK",
-      "region": "JP",
-      "kind": "news",
-      "date": "2026-04-13",
-      "time": "07:00",
-      "iso": "2026-04-13T07:00:00+00:00",
-      "signal": "HYPE",
-      "dir": null,
-      "cards": [],
-      "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE9fRTZabnlhSUtjcFFzc09yUlNzaW9DVFExM0NmRHg5X0ppZFNqZXY2MmdNejBvdVBlVWtFUmtpRk9maDVUNWdUdDJZZ08?oc=5",
-      "titleIt": "[Carta One Piece] Monkey D. Luffy L (Magazine Luffy Vol.2) prezzo di acquisto/mercato e andamento dei prezzi | Rivista ONE PIECE Speciale Eroine 021 Appendice"
-    },
-    {
-      "id": "JP5-【最新】ポケカ未開封ボックス高騰ランキングTOP50！取引相場上昇中の人気タイト",
+      "id": "JP4-【最新】ポケカ未開封ボックス高騰ランキングTOP50！取引相場上昇中の人気タイト",
       "title": "【最新】ポケカ未開封ボックス高騰ランキングTOP50！取引相場上昇中の人気タイトルを紹介",
       "source": "SNKRDUNK",
       "region": "JP",
@@ -2951,23 +3265,23 @@
       "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxQQW1mT01LS3YxNmt3dV93QTlXdlJRbGxQVFV5MjJVUUI5amdDNXg0VGRMeXpuM1Z0U3BSLWoyWTNkTklOTDZZM2JDSmdsaDNqeGxMWUFYYlUxMkt3TzNVUkJSM0U3YWlEalhLcW1xUjdjTldSWWpFa1JHUXpQakNDd2FkTWs2N3JITTRjdw?oc=5"
     },
     {
-      "id": "JP7-【ワンピースカード】高額・当たりカードランキング｜2026年最新 | スニーカー",
-      "title": "【ワンピースカード】高額・当たりカードランキング｜2026年最新 | スニーカーダンク",
+      "id": "JP8-【最新】ニカルフィ相場上昇中！スニダン人気カードTOP20を一挙紹介【ワンピース",
+      "title": "【最新】ニカルフィ相場上昇中！スニダン人気カードTOP20を一挙紹介【ワンピースカード】",
       "source": "SNKRDUNK",
       "region": "JP",
       "kind": "news",
-      "date": "2026-03-24",
+      "date": "2026-04-04",
       "time": "07:00",
-      "iso": "2026-03-24T07:00:00+00:00",
+      "iso": "2026-04-04T07:00:00+00:00",
       "signal": "HYPE",
       "dir": null,
       "cards": [],
       "summary": "",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTFByb3E2bW5GWDNyc1dXanRPaTlCVWtPb3JhczgwVF9qanpPM0VRMHQtbUl2UnlJZDFuUk5UbkZpczdkd3lkLXBEVzJqME4?oc=5",
-      "titleIt": "[Carta One Piece] Classifica delle carte vincenti/di alto valore | 2026 ultimo | Sneaker Dunk"
+      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE5nY2lTT0xBZG9Xc2d5NTJOblhZa1VPYzR5QlRCRVNGNUg4cm9jbzh6cGdfREpwTWRQbDVqNWEtX2twci1qQ285YmhzQW0?oc=5",
+      "titleIt": "[Ultima] Sale il prezzo di mercato di Nicalfi! Introducing Sunidan's TOP 20 popular cards [One Piece Card]"
     },
     {
-      "id": "US7-From collectible to investable: the rise",
+      "id": "US6-From collectible to investable: the rise",
       "title": "From collectible to investable: the rise of Pokémon trading cards as Asia’s newest asset class",
       "source": "Tatler Asia",
       "region": "US",
@@ -2983,7 +3297,7 @@
       "titleIt": "Da collezionabili a investibili: l’ascesa delle carte collezionabili Pokémon come la nuova classe di asset in Asia"
     },
     {
-      "id": "US7-The Pokémon TCG Is Celebrating 30 Years ",
+      "id": "US8-The Pokémon TCG Is Celebrating 30 Years ",
       "title": "The Pokémon TCG Is Celebrating 30 Years with Special Worldwide Releases",
       "source": "Pokemon.com",
       "region": "US",
@@ -2999,7 +3313,7 @@
       "titleIt": "Il GCC Pokémon festeggia 30 anni con uscite speciali in tutto il mondo"
     },
     {
-      "id": "US8-30 years after Pokémon’s release, fans a",
+      "id": "US7-30 years after Pokémon’s release, fans a",
       "title": "30 years after Pokémon’s release, fans are still trying to collect them all",
       "source": "朝日新聞",
       "region": "US",
@@ -3015,7 +3329,7 @@
       "titleIt": "30 anni dopo l’uscita dei Pokémon, i fan stanno ancora cercando di collezionarli tutti"
     },
     {
-      "id": "US6-One Piece 'saved my life': Card game com",
+      "id": "US7-One Piece 'saved my life': Card game com",
       "title": "One Piece 'saved my life': Card game community thriving in Spokane despite scalpers online and at Gonzaga games",
       "source": "The Spokesman-Review",
       "region": "US",
@@ -3031,7 +3345,7 @@
       "titleIt": "One Piece mi ha salvato la vita: la comunità dei giochi di carte prospera a Spokane nonostante gli scalper online e su Gonzaga Games"
     },
     {
-      "id": "US8-I found the most expensive trading card ",
+      "id": "US9-I found the most expensive trading card ",
       "title": "I found the most expensive trading card games, according to math",
       "source": "wargamer.com",
       "region": "US",
@@ -3047,7 +3361,7 @@
       "titleIt": "Ho trovato i giochi di carte collezionabili più costosi, secondo la matematica"
     },
     {
-      "id": "US9-Logan Paul's Pokémon Card Sale Has Left ",
+      "id": "US8-Logan Paul's Pokémon Card Sale Has Left ",
       "title": "Logan Paul's Pokémon Card Sale Has Left A Lot Of Questions",
       "source": "Kotaku",
       "region": "US",
@@ -3078,6 +3392,22 @@
       "url": "https://news.google.com/rss/articles/CBMizwJBVV95cUxPb0FvdjVhaXBQaEd3OVl4dm90LV85UUFXS3dlYy1YbUQwSmtickRsMWJYWEZmYUtySU5ac0RYYmVPYUJyamhrVXN1bGJRRm9rVUxkX3A5TDZuWUlEcTFMaWIzbG5wbnIta3FYWVRpVmFjN2FKdjFpb2FJQ1JPRXpaeDY0cU5haVBneEdWM29zQnNmLUNDMk5ibkd4ZGJIZndSZ244NTZwNGZ2UHd4MVpjdng3ajFNZ1VROV91eGo3SDJwMnd2QzE2MDFzbXhCSWF3c1VYM1lxWlNxTHNkMEQ4cjlDLTVrUFJSd0VQbHBsamlkck9UMzdqc1VVYlBfb1hBMGF2SzBqYTFsNVVmY1V2M01iUENaX3h6WVZGeEJvdFdtSWd3TW1rTXY4MkVvZGYxUkJMbzcybW0tcFN0VUhxOWFwUUZUWHJpYUJoY05nTdIB1AJBVV95cUxORWhPQ1l4VEF5ZEVFVG4welNSekxnZUhZTU4yNHIyVXo4Z2hSMTFIOUY3SDNKWnQtcXBhRkZ6ZF9KbVBydk9jRnVMcC1lRjBuNkxlRXJwV3YwT2VWNGV1S01QNXJ2Sm9nX05adktIM0haakktOERIRVlNeV9RZVpsMkJBeUJnTWd3TktpQU5QTFRoWmlVVDBWMWpVRmVVTHZVcVBWcUVmLUF6UmJ0REFPVUhIazZmRG9ZMFA3N2lIQkQ2Yy1LWUFVT0pMSDV1UW5Uc3JOT0FYdGxOZkNEblpBNVAtNHBzcXJJdktrdUx1dHJ5eTlqYV9pZ2pfQk40a0pzNENwZlJqVWpQODJvVWs0MFZMOHBVTHhyOU9jckVfS0VxQXgxS0JNX3FQNkdfRFdPX2MtYU1SS3FIZjBZR2ZYcDRYNmlqUEFlMTdCMk8zZWEwWGpy?oc=5"
     },
     {
+      "id": "US9-Pokémon TCG News:”Pokémon illustrator” s",
+      "title": "Pokémon TCG News:”Pokémon illustrator” sold for a record-breaking $16,492,000!",
+      "source": "SNKRDUNK",
+      "region": "US",
+      "kind": "market",
+      "date": "2026-02-19",
+      "time": "08:00",
+      "iso": "2026-02-19T08:00:00+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxPM3lBeUNYNFliT0xrQ3pqc1BUQlpJVFNPdE9QR2p5RVdiZk54azRYUmw3S3hISDRaSkRkZ0RjMzhTNURSSE1DWFkwZndvdm00dEFKd1lmYjRncjFpTnBPaENmZEtNR3pKZWFSOF85WjhTTXF4REhRUFdLOHBIRjJfd2J0cEp6T3dQYVVxRUtlTGMwR3BQOE85eHNCSXUtVmIyUWU0S0Y0TXJuTzZYV2FLSXZuSTFFaDg?oc=5",
+      "titleIt": "Novità sul GCC Pokémon: \"Illustratore di Pokémon\" è stato venduto per la cifra record di 16.492.000 dollari!"
+    },
+    {
       "id": "US3-MOST EXPENSIVE TRADING CARD... EVER! 🤯💵 ",
       "title": "MOST EXPENSIVE TRADING CARD... EVER! 🤯💵 American social media star and professional wrestler Logan Paul announced on social media that he now owns the world record for the priciest trading card sold in a private sale. The ultra-rare card fetched a s",
       "source": "facebook.com",
@@ -3094,7 +3424,7 @@
       "titleIt": "LA CARTA COLLEZIONABILE PIÙ COSTOSA... DI SEMPRE! 🤯💵 La star americana dei social media e wrestler professionista Logan Paul ha annunciato sui social media che ora possiede il record mondiale per la carta collezionabile più costosa venduta in una vendita privata. La carta ultra-rara ha ottenuto un s"
     },
     {
-      "id": "EU5-Trading card games: la nuova grande NARR",
+      "id": "EU6-Trading card games: la nuova grande NARR",
       "title": "Trading card games: la nuova grande NARRATIVA del settore crypto per il 2026",
       "source": "Criptovaluta.it",
       "region": "EU",
@@ -3109,7 +3439,7 @@
       "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNVHloWlhob2NwclRMMlpMSmVnYmtJaXBpNVNra0Y2aFpsZFczWEF0WnRHdjEwZkljNmN6VGFlQlQ4UHNxMHR1YXRWamhYMkExM2lGa09sLW52M3FjbkhQQlZ6VHZrdk1WdWZ4R1JLTlBaSnlWV2tRR0c2M3JCZDdGUWVR?oc=5"
     },
     {
-      "id": "JP8-【独自】高騰中のプロモカードランキング！相場上昇の理由と注目の最新プロモまとめ【",
+      "id": "JP7-【独自】高騰中のプロモカードランキング！相場上昇の理由と注目の最新プロモまとめ【",
       "title": "【独自】高騰中のプロモカードランキング！相場上昇の理由と注目の最新プロモまとめ【ポケカ】",
       "source": "SNKRDUNK",
       "region": "JP",
@@ -3140,7 +3470,7 @@
       "url": "https://news.google.com/rss/articles/CBMiV0FVX3lxTE9ORy02cWRJT25mY1lmMEhnS3RaSjRBZEZlMW9VR3lMS2cyYVVsanhUemQ1ckdFVnhQLWlpLUJ0MU91aEVUb1B0cWNrcXRjM09sYzZKZmxaTQ?oc=5"
     },
     {
-      "id": "US5-2026 Pokémon TCG Standard Format Rotatio",
+      "id": "US6-2026 Pokémon TCG Standard Format Rotatio",
       "title": "2026 Pokémon TCG Standard Format Rotation Announcement",
       "source": "Pokemon.com",
       "region": "US",
@@ -3154,6 +3484,22 @@
       "summary": "",
       "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxPazVzcWtFbV9tSHJBd1BraGJuYmxEMFlPRWxvOFdrODFMRk5ueDVhcjh4WUJ4TlBGNjk5amhydHNVakg1VHhGTDB4WFZsNlBxOTkwb0p2dUlnQmU3UDZCaUFDc2NhbGN0b3pBSEtYTVEtaklzaEZwRkVyaHlOMlJpZEQta0tRUHg2WXJ6SERzSQ?oc=5",
       "titleIt": "Annuncio della rotazione del formato standard del GCC Pokémon 2026"
+    },
+    {
+      "id": "JP7-【最新】「モンキー・D・ルフィ」相場上昇中の人気カードランキングTOP30！【ワ",
+      "title": "【最新】「モンキー・D・ルフィ」相場上昇中の人気カードランキングTOP30！【ワンピースカード】",
+      "source": "SNKRDUNK",
+      "region": "JP",
+      "kind": "news",
+      "date": "2026-01-08",
+      "time": "08:00",
+      "iso": "2026-01-08T08:00:00+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE90NVFGcGhTTHRtZld6dDZTb3E5V0hicDhTR3YwSEtuaTZXQTBKZjZQY3lCbG1XT2ktUnQ4QW5FUUhtR2RNbDJhTS14X3M?oc=5",
+      "titleIt": "[Ultima] Classifica TOP 30 delle carte più popolari di \"Monkey D. Luffy\" il cui valore di mercato è in aumento! [Carta di un pezzo]"
     },
     {
       "id": "EU3-One Piece, l'attore di Zoro sostiene il ",
@@ -3171,6 +3517,22 @@
       "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNTFhLcTRrM19XZkViVlozaERiNXFRRVVGOUZSMkQ3bVl2T05lSmpWelBPU0JBNXlCdHRDT0l3a25tZmhBcklQMVVoOE5EUEx3UUx5d1ptT1h0dkc1Zjc1UDJHeW5DVm9UeU5TVTZFZFZ6OGNaQzRielpCdGpMY0daclhrWDZxN2JfdTRMZUdrSmExaGtVdVhzSF94a1pfYjl1OGppcFNGbw?oc=5"
     },
     {
+      "id": "JP9-【ワンピースカード】モンキー・Ｄ・ルフィ SEC-RSP(赤コミパラ)の買取・相",
+      "title": "【ワンピースカード】モンキー・Ｄ・ルフィ SEC-RSP(赤コミパラ)の買取・相場価格と値段推移｜受け継がれる意志",
+      "source": "SNKRDUNK",
+      "region": "JP",
+      "kind": "news",
+      "date": "2025-12-26",
+      "time": "08:00",
+      "iso": "2025-12-26T08:00:00+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE1keXBWX1RCNHRTYUFPRTFiUlUtRy10SktNMHBTNDdOdE1aMFRJbHZTaUdGcWdQMXk5UnN4c1lqNEwtVEw4THVZdkNONzg?oc=5",
+      "titleIt": "[Carta One Piece] Monkey D. Luffy SEC-RSP (Red Komipara) prezzo di acquisto/mercato e andamento dei prezzi | Volontà ereditaria"
+    },
+    {
       "id": "EU6-Riftbound è un gioco di carte colleziona",
       "title": "Riftbound è un gioco di carte collezionabili pensato sia per gli appassionati che per i collezionisti",
       "source": "Multiplayer",
@@ -3186,7 +3548,7 @@
       "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOQ3ZfQ0dpYXlQaDJoRjdaUXNScTVscFIzc05aT0dnMWZrbHJTNGJla3dzeVBnRkdMMXpuZHhURHhNNmFpQzYtQW9Vb2N5SWUycWFHQl9CLVRicjNQeTYxZHJOY2lwYmRDQzEzTmRqd1M2dlFYR0tGM3YwNjlpZWpCVll2T2RYSjV3NDZ3RFN2U3ZyVm9vRkhhZ1h4QncxWFZlUnc2SUpCY096SE51WTVMcHhYQ3JiWWlrdFE?oc=5"
     },
     {
-      "id": "EU4-Linate: sequestrate 20.000 carte Pokémon",
+      "id": "EU5-Linate: sequestrate 20.000 carte Pokémon",
       "title": "Linate: sequestrate 20.000 carte Pokémon e One Piece",
       "source": "Libero",
       "region": "EU",
@@ -3201,7 +3563,7 @@
       "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxOYzhraGlyX1dNdGJhU1hRT2hab1p0RzFReXBkWlJaX1gtME04X1lydEFsRjRSY2QwbktBYV9UMmc0ZEUzaVJGc1lNQ2ktdmJkVlhVZmtQX2lFUUhLdDJ5c0l4Wnk1Z3RLNkRGczdXZUw1YU1naF9LVXBsZVFPeE1veFJMaUtiZ0J0T3hfbEdZM1d0UmE4LXfSAZsBQVVfeXFMUG95YXVDaHVwRnVocUxCUGhkV1llUk1kQ3RfME1vaFNRelFsMUNveklOOHpRcXpqOUhzSzFKNS1QQnY0Ymd6aFlNak9WM2JVMldDQWhNYVNmaTF0SjYyZjRyWFc3MDQwNENDQ18zWEk4TUhncEVESzk1azZ3c0stMUtNMUNvaW9kZk1oQnVwWXJpMnROQTdQYXd5YlE?oc=5"
     },
     {
-      "id": "EU3-RaiNews. . Oltre 20.000 carte da collezi",
+      "id": "EU4-RaiNews. . Oltre 20.000 carte da collezi",
       "title": "RaiNews. . Oltre 20.000 carte da collezione Pokemon e One Piece dal valore di circa 90mila euro sono state sequestrate dalla Guardia di Finanza all'aeroporto di Linate. Il ricco bottino si trovava stipato nelle valigie di un passeggero proveniente da Tokyo, via",
       "source": "facebook.com",
       "region": "EU",
@@ -3325,7 +3687,7 @@
       "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNeGttVlRra19qckpSdUpyb05ZZVYzT1UwbWRJdnc1Q2F5b3ZPZjVCREhQblNhTjhReGQtbDRnNk1lS0k5Z1VKd3VBYzNfcjJIbGNXampOLWtleTVUNjBGNFRDdzMwcUVYWDVHT1Q4c0VKaDdoVFV3R2FaUmlMM3pWV3IwaE42b2VOSTRzcDlvMl80a3REeDIzaUFKMU5FakJqZWdwZ1ZrOTRSR0ZFbUZoUW5fNA?oc=5"
     },
     {
-      "id": "EU4-ONE PIECE CARD GAME – Tutte le novità in",
+      "id": "EU5-ONE PIECE CARD GAME – Tutte le novità in",
       "title": "ONE PIECE CARD GAME – Tutte le novità in arrivo ad agosto",
       "source": "Akiba Gamers",
       "region": "EU",
@@ -3338,6 +3700,205 @@
       "cards": [],
       "summary": "",
       "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxPbHAyZC1zdmRLSkN3R212eXhDTzh3UHdpVlVsYUM0TTVZSmVZNlVjaXdUUFl3VXpRTVdpalNKZmF3aFhpbUloNWdBRUxvbXBuRVI3VUtsNjVvZ00yNU5RbF9adGI2eF9xczl4ZGxlaXRCSVRJUFRTTVNLY3FWZDhvODNLdjM4bzg5MUZOaDNIbjRabmVmaklBa1pB?oc=5"
+    },
+    {
+      "id": "US2-How to play Pokemon TCG",
+      "title": "How to play Pokemon TCG",
+      "source": "YouTube",
+      "region": "US",
+      "kind": "video",
+      "date": "2022-11-15",
+      "time": "12:00",
+      "iso": "2022-11-15T12:00:09+00:00",
+      "signal": "HYPE",
+      "dir": null,
+      "cards": [],
+      "summary": "",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1SVUZfT0d4LVM5djBWbEhjcnhZM2dJUjNYa1dOX1ptVWFFRTVadGswZDZCSXF2aE1rTy1ZU2VJdXc2TWJvdXJWTGJTdWEtc2JQUVBhZzJR?oc=5",
+      "titleIt": "Come giocare al GCC Pokémon"
+    }
+  ],
+  "artists": [
+    {
+      "name": "aky CG Works",
+      "count": 2,
+      "avg": 317.24,
+      "max": 459.41,
+      "cards": [
+        {
+          "id": "me02.5-294",
+          "name": "Mega Charizard Y ex",
+          "price": 459.41,
+          "image": "https://assets.tcgdex.net/en/me/me02.5/294/low.png",
+          "set": "Ascended Heroes"
+        },
+        {
+          "id": "me02.5-295",
+          "name": "Mega Dragonite ex",
+          "price": 175.07,
+          "image": "https://assets.tcgdex.net/en/me/me02.5/295/low.png",
+          "set": "Ascended Heroes"
+        }
+      ]
+    },
+    {
+      "name": "takuyoa",
+      "count": 5,
+      "avg": 301.16,
+      "max": 844.86,
+      "cards": [
+        {
+          "id": "me02-125",
+          "name": "Mega Charizard X ex",
+          "price": 844.86,
+          "image": "https://assets.tcgdex.net/en/me/me02/125/low.png",
+          "set": "Phantasmal Flames"
+        },
+        {
+          "id": "me02-130",
+          "name": "Mega Charizard X ex",
+          "price": 305.87,
+          "image": "https://assets.tcgdex.net/en/me/me02/130/low.png",
+          "set": "Phantasmal Flames"
+        },
+        {
+          "id": "me04-122",
+          "name": "Mega Greninja ex",
+          "price": 178.58,
+          "image": "https://assets.tcgdex.net/en/me/me04/122/low.png",
+          "set": "Chaos Rising"
+        },
+        {
+          "id": "me03-124",
+          "name": "Mega Zygarde ex",
+          "price": 123.84,
+          "image": "https://assets.tcgdex.net/en/me/me03/124/low.png",
+          "set": "Perfect Order"
+        },
+        {
+          "id": "me03-118",
+          "name": "Mega Starmie ex",
+          "price": 52.64,
+          "image": "https://assets.tcgdex.net/en/me/me03/118/low.png",
+          "set": "Perfect Order"
+        }
+      ]
+    },
+    {
+      "name": "5ban Graphics",
+      "count": 3,
+      "avg": 138.11,
+      "max": 222.22,
+      "cards": [
+        {
+          "id": "me01-188",
+          "name": "Mega Lucario ex",
+          "price": 222.22,
+          "image": "https://assets.tcgdex.net/en/me/me01/188/low.png",
+          "set": "Mega Evolution"
+        },
+        {
+          "id": "me01-187",
+          "name": "Mega Gardevoir ex",
+          "price": 177.25,
+          "image": "https://assets.tcgdex.net/en/me/me01/187/low.png",
+          "set": "Mega Evolution"
+        },
+        {
+          "id": "me02-126",
+          "name": "Rotom ex",
+          "price": 14.87,
+          "image": "https://assets.tcgdex.net/en/me/me02/126/low.png",
+          "set": "Phantasmal Flames"
+        }
+      ]
+    },
+    {
+      "name": "kantaro",
+      "count": 2,
+      "avg": 44.27,
+      "max": 64.31,
+      "cards": [
+        {
+          "id": "me03-120",
+          "name": "Mega Zygarde ex",
+          "price": 64.31,
+          "image": "https://assets.tcgdex.net/en/me/me03/120/low.png",
+          "set": "Perfect Order"
+        },
+        {
+          "id": "me02.5-291",
+          "name": "Canari",
+          "price": 24.22,
+          "image": "https://assets.tcgdex.net/en/me/me02.5/291/low.png",
+          "set": "Ascended Heroes"
+        }
+      ]
+    },
+    {
+      "name": "Studio Bora Inc.",
+      "count": 5,
+      "avg": 2.89,
+      "max": 5.59,
+      "cards": [
+        {
+          "id": "me04-113",
+          "name": "Special Red Card",
+          "price": 5.59,
+          "image": "https://assets.tcgdex.net/en/me/me04/113/low.png",
+          "set": "Chaos Rising"
+        },
+        {
+          "id": "me03-117",
+          "name": "Wondrous Patch",
+          "price": 4.23,
+          "image": "https://assets.tcgdex.net/en/me/me03/117/low.png",
+          "set": "Perfect Order"
+        },
+        {
+          "id": "me04-115",
+          "name": "Tool Scrapper",
+          "price": 2.34,
+          "image": "https://assets.tcgdex.net/en/me/me04/115/low.png",
+          "set": "Chaos Rising"
+        },
+        {
+          "id": "me02-123",
+          "name": "Switch",
+          "price": 1.48,
+          "image": "https://assets.tcgdex.net/en/me/me02/123/low.png",
+          "set": "Phantasmal Flames"
+        },
+        {
+          "id": "me02-121",
+          "name": "Punk Helmet",
+          "price": 0.82,
+          "image": "https://assets.tcgdex.net/en/me/me02/121/low.png",
+          "set": "Phantasmal Flames"
+        }
+      ]
+    },
+    {
+      "name": "Toyste Beach",
+      "count": 2,
+      "avg": 1.91,
+      "max": 3.01,
+      "cards": [
+        {
+          "id": "me03-115",
+          "name": "Sacred Ash",
+          "price": 3.01,
+          "image": "https://assets.tcgdex.net/en/me/me03/115/low.png",
+          "set": "Perfect Order"
+        },
+        {
+          "id": "me02-122",
+          "name": "Sacred Charm",
+          "price": 0.81,
+          "image": "https://assets.tcgdex.net/en/me/me02/122/low.png",
+          "set": "Phantasmal Flames"
+        }
+      ]
     }
   ]
 }

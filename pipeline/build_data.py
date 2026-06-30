@@ -36,6 +36,7 @@ ROOT = pathlib.Path(__file__).parent
 WATCHLIST = ROOT / "watchlist.json"
 HISTORY = ROOT / "history.json"
 TRANSLATIONS = ROOT / "translations.json"
+ARTISTS = ROOT / "artists.json"
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -147,6 +148,7 @@ def tcgdex_fetch(card_id: str):
         "cm_avg30": _eur("avg30"),
         "image": image,
         "serial": serial,
+        "illustrator": c.get("illustrator"),
     }
 
 
@@ -374,6 +376,76 @@ def card_key(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Studio ARTISTI: quali illustratori hanno le carte di maggior valore.
+# Campiona i rari (numeri alti) dei set Pokémon recenti, prende illustratore +
+# prezzo Cardmarket, aggrega per artista. Dati reali; cresce nel tempo (cache).
+# ---------------------------------------------------------------------------
+def build_artists(max_fetch: int = 110):
+    try:
+        sets = _get_json("https://api.tcgdex.net/v2/en/sets")
+    except Exception as exc:  # noqa: BLE001
+        print(f"    artisti: lista set errore: {exc}")
+        return []
+    if not isinstance(sets, list):
+        return []
+    recent = [s for s in sets if (s.get("cardCount") or {}).get("official")][-16:]
+
+    def num_of(c):
+        digits = "".join(ch for ch in str(c.get("localId", "")) if ch.isdigit())
+        try:
+            return int(digits) if digits else 0
+        except ValueError:
+            return 0
+
+    by_art = {}
+    fetched = 0
+    for s in reversed(recent):
+        if fetched >= max_fetch:
+            break
+        try:
+            full = _get_json(f"https://api.tcgdex.net/v2/en/sets/{s['id']}")
+        except Exception:  # noqa: BLE001
+            continue
+        cards = sorted(full.get("cards") or [], key=num_of, reverse=True)[:10]
+        for c in cards:
+            if fetched >= max_fetch:
+                break
+            try:
+                fc = _get_json(f"https://api.tcgdex.net/v2/en/cards/{c['id']}")
+            except Exception:  # noqa: BLE001
+                continue
+            fetched += 1
+            ill = fc.get("illustrator")
+            price = ((fc.get("pricing") or {}).get("cardmarket") or {}).get("trend")
+            if not ill or not price:
+                continue
+            img = fc.get("image")
+            key = ill.strip().lower()  # accorpa "Takuyoa" e "takuyoa"
+            entry = by_art.setdefault(key, {"name": ill, "cards": []})
+            entry["cards"].append({
+                "id": fc.get("id"), "name": fc.get("name"), "price": round(price, 2),
+                "image": (img + "/low.png") if img else None,
+                "set": (fc.get("set") or {}).get("name", ""),
+            })
+
+    artists = []
+    for entry in by_art.values():
+        cards = entry["cards"]
+        if len(cards) < 2:  # serve un pattern: almeno 2 carte di valore
+            continue
+        cards.sort(key=lambda x: x["price"], reverse=True)
+        prices = [c["price"] for c in cards]
+        artists.append({
+            "name": entry["name"], "count": len(cards),
+            "avg": round(sum(prices) / len(prices), 2), "max": max(prices),
+            "cards": cards[:6],
+        })
+    artists.sort(key=lambda a: (a["avg"], a["count"]), reverse=True)
+    print(f"[TCG Radar] Artisti: {len(artists)} con 2+ carte (da {fetched} campionate)")
+    return artists[:15]
+
+
+# ---------------------------------------------------------------------------
 # Traduzione titoli notizie -> italiano (Google translate gtx, gratis, no key)
 # ---------------------------------------------------------------------------
 def translate_it(text: str, cache: dict):
@@ -546,6 +618,7 @@ def main() -> None:
         source = "demo"
         cm_tf = None  # variazioni Cardmarket reali (Pokemon)
         best_offer = None  # annuncio piu' economico su eBay.it
+        illustrator = None
 
         # --- Pokemon: TCGdex (Cardmarket EUR) ---
         if game == "pokemon" and card.get("pokemontcg_id") and not FORCE_DEMO:
@@ -557,6 +630,7 @@ def main() -> None:
                 eur = e if e is not None else to_eur(usd)
                 image = info["image"] or image
                 serial = info["serial"] or serial
+                illustrator = info.get("illustrator")
                 source = "tcgdex"
                 if eur and eur >= 2:
                     def _chg(avg, t=eur):
@@ -617,6 +691,12 @@ def main() -> None:
         spark = [round(v, 2) for _, v in series[-SPARK_LEN:]]
         chart = downsample(series, CHART_LEN)
 
+        # minimo/massimo dello storico accumulato (per "posizione" nel dettaglio)
+        rng = None
+        vals = [v for _, v in series]
+        if len(vals) >= 3:
+            rng = {"low": round(min(vals), 2), "high": round(max(vals), 2), "days": len(vals)}
+
         # link d'acquisto (ricerca ordinata dal piu' economico dove possibile)
         nm = card["name"]
         ct_url = "https://www.cardtrader.com/en/search?q=" + urllib.parse.quote(nm)
@@ -626,11 +706,16 @@ def main() -> None:
             ebay_url = ebay_search_url(q)
             vinted_url = ("https://www.vinted.it/catalog?order=price_low_to_high&search_text="
                           + urllib.parse.quote(f"{nm} {card.get('ebay_code','')}"))
+            auction_q = q
         else:
             cm_url = "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=" + urllib.parse.quote(nm)
             ebay_url = ebay_search_url(f"{nm} {serial} pokemon card")
             vinted_url = ("https://www.vinted.it/catalog?order=price_low_to_high&search_text="
                           + urllib.parse.quote(f"{nm} pokemon {serial}"))
+            auction_q = f"{nm} {serial} pokemon card"
+        # aste in corso, in chiusura per prime
+        auction_url = ("https://www.ebay.it/sch/i.html?_nkw=" + urllib.parse.quote(auction_q)
+                       + "&LH_Auction=1&_sop=1")
 
         items.append({
             "ref": ref,
@@ -648,8 +733,11 @@ def main() -> None:
             "note": card.get("note", ""),
             "signal": card.get("signal", "FATTO"),
             "buyUrl": ebay_url,
-            "buyLinks": {"cardmarket": cm_url, "ebay": ebay_url, "cardtrader": ct_url, "vinted": vinted_url},
+            "buyLinks": {"cardmarket": cm_url, "ebay": ebay_url, "cardtrader": ct_url,
+                         "vinted": vinted_url, "auction": auction_url},
             "bestOffer": best_offer,
+            "illustrator": illustrator,
+            "range": rng,
         })
         print(f"  - {ref:24} {('EUR '+format(eur,'.2f')) if eur is not None else '--':>12} ({source:11}) {ch:+.1f}% 7g")
 
@@ -679,6 +767,16 @@ def main() -> None:
         t = n["title"].lower()
         n["cards"] = [item["ref"] for item in items if card_key(item["name"]) in t]
 
+    # Studio artisti (con cache: se il campionamento fallisce, riuso l'ultimo buono)
+    artists = build_artists() if not FORCE_DEMO else []
+    if not artists and ARTISTS.exists():
+        try:
+            artists = json.loads(ARTISTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            artists = []
+    if artists:
+        ARTISTS.write_text(json.dumps(artists, ensure_ascii=False, indent=2), encoding="utf-8")
+
     data = {
         "lastUpdate": NOW.isoformat(),
         "marketPulse": market_pulse,
@@ -686,6 +784,7 @@ def main() -> None:
         "radar": radar_refs,
         "items": items,
         "news": news,
+        "artists": artists,
     }
 
     OUTPUT.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

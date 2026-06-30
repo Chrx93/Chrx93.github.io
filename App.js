@@ -87,7 +87,8 @@ const buyLinksFor = (item) => {
   const ebay = 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`) + '&_sop=15';
   const cardtrader = 'https://www.cardtrader.com/en/search?q=' + encodeURIComponent(nm);
   const vinted = 'https://www.vinted.it/catalog?order=price_low_to_high&search_text=' + encodeURIComponent(`${nm} ${serial}`);
-  return { cardmarket: cm, ebay, cardtrader, vinted };
+  const auction = 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`) + '&LH_Auction=1&_sop=1';
+  return { cardmarket: cm, ebay, cardtrader, vinted, auction };
 };
 
 const MARKETS = [
@@ -143,6 +144,7 @@ function mapTcgdexCard(c) {
     history,
     note: `${setObj.name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
     signal: 'FATTO',
+    illustrator: c.illustrator || null,
   };
 }
 
@@ -277,6 +279,15 @@ function PriceFinder({ item }) {
           </TouchableOpacity>
         ))}
       </View>
+
+      {links.auction ? (
+        <TouchableOpacity style={[styles.auctionBtn, item.change7d >= 10 && styles.auctionBtnHot]} onPress={() => Linking.openURL(links.auction)} activeOpacity={0.85}>
+          <Ionicons name="hammer-outline" size={16} color={theme.bg} />
+          <Text style={styles.auctionText}>
+            🔨 Aste in corso su eBay{item.change7d >= 10 ? ' · sta salendo, possibile occasione!' : ''}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
       <Text style={styles.disclaimer}>
         Solo eBay mostra automaticamente il prezzo più basso reale. Cardmarket, Cardtrader e Vinted
         aprono la ricerca ordinata dal più economico (non permettono la lettura automatica del prezzo;
@@ -368,6 +379,7 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
       <Text style={styles.detailName}>{item.name}</Text>
       <Text style={styles.detailSub}>{item.set} · {item.rarity}{item.serial ? ` · ${item.serial}` : ''}</Text>
       {iconic ? <Text style={styles.iconicTag}>👑 Personaggio iconico</Text> : null}
+      {item.illustrator ? <Text style={styles.illTag}>🎨 Illustratore: {item.illustrator}</Text> : null}
 
       {item.image && (
         <Image source={{ uri: item.image }} style={styles.detailImage} resizeMode="contain" />
@@ -397,6 +409,21 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
           {item.game === 'onepiece' ? 'prezzo indicativo da annunci (eBay), convertito in €' : 'prezzo di tendenza Cardmarket (€)'}
         </Text>
       </View>
+
+      {item.range && item.range.high > item.range.low && priceVal != null ? (
+        <View style={styles.rangeBox}>
+          <View style={styles.rangeBar}>
+            <View style={[styles.rangeFill, { width: `${Math.min(100, Math.max(0, ((priceVal - item.range.low) / (item.range.high - item.range.low)) * 100))}%` }]} />
+          </View>
+          <View style={styles.rangeLabels}>
+            <Text style={styles.rangeLbl}>min {fmt(item.range.low)}</Text>
+            <Text style={styles.rangeLbl}>max {fmt(item.range.high)}</Text>
+          </View>
+          <Text style={styles.rangeNote}>
+            Sei al {Math.round(((priceVal - item.range.low) / (item.range.high - item.range.low)) * 100)}% tra minimo e massimo dello storico raccolto finora.
+          </Text>
+        </View>
+      ) : null}
 
       <WhyWatch item={item} />
 
@@ -646,6 +673,56 @@ function NewsTab({ news, lastUpdate, lastChecked, refreshing, onRefresh }) {
   );
 }
 
+function ArtistsView({ artists, onOpen }) {
+  const [sel, setSel] = useState(null);
+  const [opening, setOpening] = useState(false);
+  const list = artists || [];
+  if (!list.length) {
+    return <Text style={styles.searchHint}>Studio artisti in preparazione — si costruisce dai rari recenti, riprova tra poco.</Text>;
+  }
+  const open = async (id) => { setOpening(true); try { await onOpen({ src: 'pkm', id }); } catch {} setOpening(false); };
+
+  if (sel) {
+    return (
+      <View style={{ marginTop: 12 }}>
+        <TouchableOpacity style={styles.catBack} onPress={() => setSel(null)} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={16} color={theme.accent} />
+          <Text style={styles.catBackText} numberOfLines={1}>Tutti gli artisti · {sel.name}</Text>
+        </TouchableOpacity>
+        <Text style={styles.artStat}>{sel.count} carte di valore · media {fmt(sel.avg)} · max {fmt(sel.max)}</Text>
+        <View style={[styles.catGrid, { marginTop: 10 }]}>
+          {sel.cards.map((c, i) => (
+            <TouchableOpacity key={i} style={styles.catCard} onPress={() => open(c.id)} activeOpacity={0.7} disabled={opening}>
+              {c.image ? <Image source={{ uri: c.image }} style={styles.catThumb} resizeMode="contain" /> : <View style={[styles.catThumb, styles.thumbEmpty]} />}
+              <Text style={styles.catCardName} numberOfLines={1}>{c.name}</Text>
+              <Text style={styles.catCardPrice}>{fmt(c.price)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  const maxAvg = Math.max(...list.map(a => a.avg)) || 1;
+  return (
+    <View style={{ marginTop: 12 }}>
+      <Text style={styles.catTitle}>🎨 Artisti per valore delle carte</Text>
+      <Text style={styles.artIntro}>Illustratori i cui rari recenti valgono di più: il disegno conta. Campione dai set recenti, cresce nel tempo.</Text>
+      {list.map((a, i) => (
+        <TouchableOpacity key={i} style={styles.artRow} onPress={() => setSel(a)} activeOpacity={0.7}>
+          <Text style={styles.artRank}>{i + 1}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.artName} numberOfLines={1}>{a.name}</Text>
+            <Text style={styles.artSub}>{a.count} carte · media {fmt(a.avg)} · max {fmt(a.max)}</Text>
+            <View style={styles.artBarBg}><View style={[styles.artBarFill, { width: `${Math.max(6, (a.avg / maxAvg) * 100)}%` }]} /></View>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 function CatalogBrowser({ game, onOpen }) {
   const [sets, setSets] = useState([]);
   const [loadingSets, setLoadingSets] = useState(false);
@@ -776,8 +853,9 @@ function CatalogBrowser({ game, onOpen }) {
   );
 }
 
-function SearchTab({ onPress }) {
+function SearchTab({ onPress, artists }) {
   const [q, setQ] = useState('');
+  const [browseMode, setBrowseMode] = useState('set');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -933,10 +1011,26 @@ function SearchTab({ onPress }) {
         </>
       ) : src === 'all' ? (
         <Text style={styles.searchHint}>
-          Scrivi un nome (es. charizard, luffy) o un numero — oppure scegli 🏴‍☠️ One Piece o ⚡ Pokémon qui sopra per sfogliare tutto il catalogo per set.
+          Scrivi un nome (es. charizard, luffy) o un numero — oppure scegli 🏴‍☠️ One Piece o ⚡ Pokémon qui sopra per sfogliare tutto il catalogo per set (e gli artisti).
         </Text>
       ) : (
-        <CatalogBrowser game={src} onOpen={openCard} />
+        <>
+          {src === 'pkm' && (
+            <View style={[styles.srcChips, { marginTop: 12 }]}>
+              {[['set', '📚 Set'], ['artists', '🎨 Artisti']].map(([k, lab]) => {
+                const on = k === browseMode;
+                return (
+                  <TouchableOpacity key={k} style={[styles.chip, on && styles.chipOn]} onPress={() => setBrowseMode(k)} activeOpacity={0.7}>
+                    <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{lab}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {src === 'pkm' && browseMode === 'artists'
+            ? <ArtistsView artists={artists} onOpen={openCard} />
+            : <CatalogBrowser game={src} onOpen={openCard} />}
+        </>
       )}
     </ScrollView>
   );
@@ -1266,7 +1360,7 @@ export default function App() {
         {tab === 1 && <PortfolioTab holdings={portfolio} data={data} onPress={setDetail} onRemove={removeFromPortfolio} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 4 && <SearchTab onPress={setDetail} />}
+        {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} />}
       </View>
 
       <View style={styles.tabbar}>
@@ -1511,4 +1605,28 @@ const styles = StyleSheet.create({
   resaleNote: { color: theme.textDim, fontSize: font.xs, lineHeight: 16, marginTop: 8 },
 
   newsUpdated2: { color: theme.textDim, fontSize: font.xs, textAlign: 'center', paddingBottom: 4, fontStyle: 'italic' },
+
+  illTag: { color: theme.hypeText, fontSize: font.sm, fontWeight: '600', marginTop: 4 },
+  rangeBox: { marginTop: 14 },
+  rangeBar: { height: 8, borderRadius: 4, backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, overflow: 'hidden' },
+  rangeFill: { height: '100%', backgroundColor: theme.accent },
+  rangeLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  rangeLbl: { color: theme.textDim, fontSize: font.xs },
+  rangeNote: { color: theme.textDim, fontSize: font.xs, marginTop: 4, fontStyle: 'italic' },
+
+  auctionBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: theme.hypeText, borderRadius: 10, paddingVertical: 13, marginTop: 10,
+  },
+  auctionBtnHot: { backgroundColor: theme.up },
+  auctionText: { color: theme.bg, fontSize: font.sm, fontWeight: '700' },
+
+  artStat: { color: theme.accent, fontSize: font.sm, fontWeight: '600', marginTop: 2 },
+  artIntro: { color: theme.textDim, fontSize: font.xs, lineHeight: 17, marginBottom: 10 },
+  artRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: theme.border },
+  artRank: { color: theme.accent, fontSize: font.lg, fontWeight: '800', width: 22, textAlign: 'center' },
+  artName: { color: theme.text, fontSize: font.md, fontWeight: '700' },
+  artSub: { color: theme.textDim, fontSize: font.xs, marginTop: 2, marginBottom: 5 },
+  artBarBg: { height: 6, borderRadius: 3, backgroundColor: theme.bg, overflow: 'hidden' },
+  artBarFill: { height: '100%', backgroundColor: theme.accent },
 });
