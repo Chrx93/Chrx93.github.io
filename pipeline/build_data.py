@@ -637,14 +637,15 @@ def main() -> None:
                 serial = info["serial"] or serial
                 illustrator = info.get("illustrator")
                 source = "tcgdex"
-                if eur and eur >= 2:
+                if eur and eur >= 5:
                     def _chg(avg, t=eur):
                         if not avg:
                             return None
                         v = round((t - avg) / avg * 100, 1)
-                        # le medie Cardmarket su carte poco scambiate danno valori
-                        # assurdi (+400%): oltre il 60% e' quasi sempre rumore.
-                        return v if abs(v) <= 60 else None
+                        # le medie a 7g di Cardmarket su carte poco liquide sono
+                        # rumorose: oltre il 30% e' quasi sempre rumore, non un
+                        # movimento reale -> scarto (cade sullo storico vero).
+                        return v if abs(v) <= 30 else None
                     cm_tf = {"d1": _chg(info["cm_avg1"]), "d7": _chg(info["cm_avg7"]),
                              "d30": _chg(info["cm_avg30"])}
 

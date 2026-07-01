@@ -117,11 +117,11 @@ function mapTcgdexCard(c) {
   if (usd && eur && (eur > usd * 5 || usd > eur * 5)) eur = null;
   let tf = null;
   let history = [];
-  if (cm && eur != null && eur >= 2) {
+  if (cm && eur != null && eur >= 5) {
     const chg = (avg) => {
       if (!avg) return null;
       const v = Math.round(((eur - avg) / avg) * 1000) / 10;
-      return Math.abs(v) <= 60 ? v : null;
+      return Math.abs(v) <= 30 ? v : null;
     };
     tf = { d1: chg(cm.avg1), d7: chg(cm.avg7), d30: chg(cm.avg30) };
     history = [cm.avg30, cm.avg7, eur].filter(x => x != null);
