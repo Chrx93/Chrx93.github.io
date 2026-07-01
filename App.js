@@ -5,6 +5,7 @@ import {
   Image, Linking, TextInput, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Sparkline from './Sparkline';
 import Chart from './Chart';
@@ -578,6 +579,16 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
       .slice(0, 5),
     [data]
   );
+  const today = useMemo(() => {
+    const items = data.items || [];
+    const up = items.filter(i => i.change7d >= 3);
+    const down = items.filter(i => i.change7d <= -3);
+    return {
+      up: up.length, down: down.length,
+      tUp: up.slice().sort((a, b) => b.change7d - a.change7d)[0],
+      tDown: down.slice().sort((a, b) => a.change7d - b.change7d)[0],
+    };
+  }, [data]);
   const radarCards = useMemo(() => {
     const byRef = {};
     (data.items || []).forEach(i => { byRef[i.ref] = i; });
@@ -592,6 +603,16 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
       keyExtractor={i => i.ref}
       ListHeaderComponent={
         <>
+          <View style={styles.todayStrip}>
+            <Text style={styles.todayMain}>
+              📊 Oggi: <Text style={{ color: theme.up, fontWeight: '800' }}>{today.up} in salita</Text> · <Text style={{ color: theme.down, fontWeight: '800' }}>{today.down} in calo</Text>
+            </Text>
+            {today.tUp ? (
+              <Text style={styles.todaySub} numberOfLines={1}>
+                🔥 {today.tUp.name} {pct(today.tUp.change7d)}{today.tDown ? `   ❄️ ${today.tDown.name} ${pct(today.tDown.change7d)}` : ''}
+              </Text>
+            ) : null}
+          </View>
           <RampSection cards={ramp} onPress={onPress} />
           <RadarSection cards={radarCards} onPress={onPress} />
           <Text style={styles.listLabel}>Tutte le carte · variazione 7g</Text>
@@ -1099,6 +1120,29 @@ function SearchTab({ onPress, artists }) {
   );
 }
 
+function Donut({ segments, size = 92, stroke = 16 }) {
+  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const cx = size / 2, cy = size / 2;
+  let offset = 0;
+  return (
+    <Svg width={size} height={size}>
+      <Circle cx={cx} cy={cy} r={r} fill="none" stroke={theme.bg} strokeWidth={stroke} />
+      {segments.map((s, i) => {
+        const len = (s.value / total) * c;
+        const el = (
+          <Circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth={stroke}
+            strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offset}
+            transform={`rotate(-90 ${cx} ${cy})`} />
+        );
+        offset += len;
+        return el;
+      })}
+    </Svg>
+  );
+}
+
 function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemoveSale, refreshing, onRefresh }) {
   const [extra, setExtra] = useState({}); // prezzi live per carte non tracciate dal motore
   const [sellingId, setSellingId] = useState(null);
@@ -1154,6 +1198,17 @@ function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemo
   const plPct = invested > 0 ? (pl / invested) * 100 : 0;
   const realized = closed.reduce((s, x) => s + (x.realized || 0), 0);
 
+  const byGame = {};
+  holdings.forEach(h => {
+    const cur = currentOf(h);
+    byGame[h.game] = (byGame[h.game] || 0) + (cur != null ? cur : h.buyPrice) * h.qty;
+  });
+  const segs = [
+    { label: '⚡ Pokémon', color: theme.accent, value: byGame.pokemon || 0 },
+    { label: '🏴‍☠️ One Piece', color: theme.fattoText, value: byGame.onepiece || 0 },
+  ].filter(s => s.value > 0);
+  const segTotal = segs.reduce((s, x) => s + x.value, 0) || 1;
+
   if (!holdings.length && !closed.length) {
     return (
       <ScrollView contentContainerStyle={styles.emptyBox}
@@ -1171,22 +1226,39 @@ function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemo
       data={holdings}
       keyExtractor={h => h.id}
       ListHeaderComponent={
-        <View style={styles.pfSummary}>
-          <View style={styles.pfSumRow}>
-            <View><Text style={styles.pfSumLabel}>Investito</Text><Text style={styles.pfSumVal}>{fmt(invested)}</Text></View>
-            <View><Text style={styles.pfSumLabel}>Valore ora</Text><Text style={styles.pfSumVal}>{fmt(value)}</Text></View>
-            <View>
-              <Text style={styles.pfSumLabel}>Non realizzato</Text>
-              <Text style={[styles.pfSumVal, { color: changeColor(pl) }]}>{pl >= 0 ? '+' : ''}{fmt(pl)} ({pct(plPct)})</Text>
+        <>
+          <View style={styles.pfSummary}>
+            <View style={styles.pfSumRow}>
+              <View><Text style={styles.pfSumLabel}>Investito</Text><Text style={styles.pfSumVal}>{fmt(invested)}</Text></View>
+              <View><Text style={styles.pfSumLabel}>Valore ora</Text><Text style={styles.pfSumVal}>{fmt(value)}</Text></View>
+              <View>
+                <Text style={styles.pfSumLabel}>Non realizzato</Text>
+                <Text style={[styles.pfSumVal, { color: changeColor(pl) }]}>{pl >= 0 ? '+' : ''}{fmt(pl)} ({pct(plPct)})</Text>
+              </View>
             </View>
+            {closed.length ? (
+              <View style={styles.pfRealized}>
+                <Text style={styles.pfSumLabel}>Profitto realizzato ({closed.length} {closed.length === 1 ? 'vendita' : 'vendite'})</Text>
+                <Text style={[styles.pfSumVal, { color: changeColor(realized) }]}>{realized >= 0 ? '+' : ''}{fmt(realized)}</Text>
+              </View>
+            ) : null}
           </View>
-          {closed.length ? (
-            <View style={styles.pfRealized}>
-              <Text style={styles.pfSumLabel}>Profitto realizzato ({closed.length} {closed.length === 1 ? 'vendita' : 'vendite'})</Text>
-              <Text style={[styles.pfSumVal, { color: changeColor(realized) }]}>{realized >= 0 ? '+' : ''}{fmt(realized)}</Text>
+          {segs.length ? (
+            <View style={styles.allocBox}>
+              <Donut segments={segs} />
+              <View style={{ flex: 1, gap: 8 }}>
+                <Text style={styles.allocTitle}>Allocazione</Text>
+                {segs.map((s, i) => (
+                  <View key={i} style={styles.allocRow}>
+                    <View style={[styles.allocDot, { backgroundColor: s.color }]} />
+                    <Text style={styles.allocLabel} numberOfLines={1}>{s.label}</Text>
+                    <Text style={styles.allocPct}>{Math.round((s.value / segTotal) * 100)}% · {fmt(s.value)}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           ) : null}
-        </View>
+        </>
       }
       renderItem={({ item: h }) => {
         const cur = currentOf(h);
@@ -1499,6 +1571,20 @@ export default function App() {
     });
   }, [data, targets, notifOn]);
 
+  // Digest giornaliero: una notifica al giorno (alla prima apertura) coi movimenti top.
+  useEffect(() => {
+    if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data || !data.items) return;
+    const todayStr = new Date().toDateString();
+    AsyncStorage.getItem('tcgradar.lastDigest').then(last => {
+      if (last === todayStr) return;
+      const top = [...data.items].sort((a, b) => b.change7d - a.change7d).slice(0, 3).filter(i => i.change7d >= 3);
+      if (!top.length) return;
+      const body = 'In salita oggi: ' + top.map(i => `${i.name} ${pct(i.change7d)}`).join(', ');
+      try { new Notification('📊 TCG Radar — riepilogo del giorno', { body, icon: '/icon.png' }); } catch {}
+      AsyncStorage.setItem('tcgradar.lastDigest', todayStr).catch(() => {});
+    }).catch(() => {});
+  }, [data, notifOn]);
+
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
     if (prevTab.current === 2 && tab !== 2 && data) {
@@ -1769,6 +1855,22 @@ const styles = StyleSheet.create({
   pfSumLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 3 },
   pfSumVal: { color: theme.text, fontSize: font.md, fontWeight: '700' },
   pfRealized: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.border },
+  allocBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 16,
+    marginHorizontal: 12, marginTop: 10, padding: 14,
+    backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
+  },
+  allocTitle: { color: theme.textDim, fontSize: font.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
+  allocRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  allocDot: { width: 12, height: 12, borderRadius: 6 },
+  allocLabel: { color: theme.text, fontSize: font.sm, flex: 1 },
+  allocPct: { color: theme.textDim, fontSize: font.sm, fontWeight: '600' },
+  todayStrip: {
+    marginHorizontal: 12, marginTop: 12, padding: 12,
+    backgroundColor: theme.surface, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
+  },
+  todayMain: { color: theme.text, fontSize: font.md, fontWeight: '600' },
+  todaySub: { color: theme.textDim, fontSize: font.sm, marginTop: 5 },
   sellForm: { backgroundColor: theme.card, borderRadius: 10, padding: 12, marginHorizontal: 12, marginTop: -4, borderWidth: 1, borderColor: theme.accent },
   pfRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: theme.card,
