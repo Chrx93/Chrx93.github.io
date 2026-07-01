@@ -90,6 +90,8 @@ const buyLinksFor = (item) => {
     vinted: 'https://www.vinted.it/catalog?order=price_low_to_high&search_text=' + q,
     auction: 'https://www.ebay.it/sch/i.html?_nkw=' + q + '&LH_Auction=1&_sop=1',
     sold: 'https://www.ebay.it/sch/i.html?_nkw=' + q + '&LH_Sold=1&LH_Complete=1&_sop=13',
+    psa10: 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial} PSA 10`) + '&_sop=15',
+    psa10sold: 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial} PSA 10`) + '&LH_Sold=1&LH_Complete=1&_sop=13',
   };
   // i link del motore (game-aware) hanno priorita'; base riempie quelli mancanti (venduti, ecc.)
   return { ...base, ...(item.buyLinks || {}) };
@@ -299,6 +301,21 @@ function PriceFinder({ item }) {
           <Text style={styles.soldText}>📉 Prezzi venduti (eBay) — quanto si vende davvero</Text>
         </TouchableOpacity>
       ) : null}
+
+      <Text style={styles.sectionTitle}>🏅 Conviene gradarla? (PSA 10)</Text>
+      <View style={styles.gradeRow}>
+        <TouchableOpacity style={styles.gradeBtn} onPress={() => Linking.openURL(links.psa10)} activeOpacity={0.85}>
+          <Ionicons name="ribbon-outline" size={15} color={theme.accent} />
+          <Text style={styles.gradeBtnText}>PSA 10 in vendita</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.gradeBtn} onPress={() => Linking.openURL(links.psa10sold)} activeOpacity={0.85}>
+          <Ionicons name="stats-chart-outline" size={15} color={theme.accent} />
+          <Text style={styles.gradeBtnText}>PSA 10 venduti</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.disclaimer}>
+        Regola pratica: se un PSA 10 si vende per più del prezzo raw + ~€20 di gradazione, può convenire farla valutare. Guarda i "venduti" per numeri reali.
+      </Text>
       <Text style={styles.disclaimer}>
         Solo eBay mostra automaticamente il prezzo più basso reale. Cardmarket, Cardtrader e Vinted
         aprono la ricerca ordinata dal più economico (non permettono la lettura automatica del prezzo;
@@ -1082,8 +1099,11 @@ function SearchTab({ onPress, artists }) {
   );
 }
 
-function PortfolioTab({ holdings, data, onPress, onRemove, refreshing, onRefresh }) {
+function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemoveSale, refreshing, onRefresh }) {
   const [extra, setExtra] = useState({}); // prezzi live per carte non tracciate dal motore
+  const [sellingId, setSellingId] = useState(null);
+  const [sellPrice, setSellPrice] = useState('');
+  const closed = sales || [];
   const liveByRef = useMemo(() => {
     const m = {};
     (data && data.items ? data.items : []).forEach(i => { m[i.ref] = i; });
@@ -1132,14 +1152,15 @@ function PortfolioTab({ holdings, data, onPress, onRemove, refreshing, onRefresh
   });
   const pl = value - invested;
   const plPct = invested > 0 ? (pl / invested) * 100 : 0;
+  const realized = closed.reduce((s, x) => s + (x.realized || 0), 0);
 
-  if (!holdings.length) {
+  if (!holdings.length && !closed.length) {
     return (
       <ScrollView contentContainerStyle={styles.emptyBox}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}>
         <Ionicons name="briefcase-outline" size={40} color={theme.textDim} />
         <Text style={styles.searchHint}>
-          Il tuo portfolio è vuoto. Apri una carta e tocca “Ho comprato questa carta” per tracciare prezzo d'acquisto, valore attuale e guadagno.
+          Il tuo portfolio è vuoto. Apri una carta e tocca “Ho comprato questa carta” per tracciare prezzo d'acquisto, valore attuale, guadagno e — quando vendi — il profitto realizzato.
         </Text>
       </ScrollView>
     );
@@ -1155,10 +1176,16 @@ function PortfolioTab({ holdings, data, onPress, onRemove, refreshing, onRefresh
             <View><Text style={styles.pfSumLabel}>Investito</Text><Text style={styles.pfSumVal}>{fmt(invested)}</Text></View>
             <View><Text style={styles.pfSumLabel}>Valore ora</Text><Text style={styles.pfSumVal}>{fmt(value)}</Text></View>
             <View>
-              <Text style={styles.pfSumLabel}>Profitto/Perdita</Text>
+              <Text style={styles.pfSumLabel}>Non realizzato</Text>
               <Text style={[styles.pfSumVal, { color: changeColor(pl) }]}>{pl >= 0 ? '+' : ''}{fmt(pl)} ({pct(plPct)})</Text>
             </View>
           </View>
+          {closed.length ? (
+            <View style={styles.pfRealized}>
+              <Text style={styles.pfSumLabel}>Profitto realizzato ({closed.length} {closed.length === 1 ? 'vendita' : 'vendite'})</Text>
+              <Text style={[styles.pfSumVal, { color: changeColor(realized) }]}>{realized >= 0 ? '+' : ''}{fmt(realized)}</Text>
+            </View>
+          ) : null}
         </View>
       }
       renderItem={({ item: h }) => {
@@ -1166,27 +1193,69 @@ function PortfolioTab({ holdings, data, onPress, onRemove, refreshing, onRefresh
         const hpl = cur != null ? (cur - h.buyPrice) * h.qty : null;
         const hpct = (cur != null && h.buyPrice > 0) ? ((cur - h.buyPrice) / h.buyPrice) * 100 : null;
         const hint = (hpct == null) ? null : hpct >= 20 ? '📈 buon momento per vendere' : hpct <= -15 ? '📉 in perdita' : null;
+        const selling = sellingId === h.id;
         return (
-          <View style={styles.pfRow}>
-            <TouchableOpacity style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }} onPress={() => onPress({ ...(liveByRef[h.ref] || h) })} activeOpacity={0.75}>
-              {h.image ? <Image source={{ uri: h.image }} style={styles.thumb} resizeMode="contain" />
-                : <View style={[styles.thumb, styles.thumbEmpty]}><Ionicons name="image-outline" size={20} color={theme.textDim} /></View>}
-              <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={styles.rowName} numberOfLines={1}>{h.name}{h.qty > 1 ? ` ×${h.qty}` : ''}</Text>
-                <Text style={styles.rowSub} numberOfLines={1}>pagata {fmt(h.buyPrice)} · ora {cur != null ? fmt(cur) : '—'}</Text>
-                {hint ? <Text style={[styles.pfHint, { color: hpct >= 0 ? theme.up : theme.down }]}>{hint}</Text> : null}
-              </View>
-            </TouchableOpacity>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={[styles.pfPl, { color: changeColor(hpl) }]}>{hpl == null ? '—' : (hpl >= 0 ? '+' : '') + fmt(hpl)}</Text>
-              <Text style={[styles.rowSub, { color: changeColor(hpct) }]}>{hpct == null ? '' : pct(hpct)}</Text>
-              <TouchableOpacity onPress={() => onRemove(h.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="trash-outline" size={16} color={theme.textDim} />
+          <View>
+            <View style={styles.pfRow}>
+              <TouchableOpacity style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }} onPress={() => onPress({ ...(liveByRef[h.ref] || h) })} activeOpacity={0.75}>
+                {h.image ? <Image source={{ uri: h.image }} style={styles.thumb} resizeMode="contain" />
+                  : <View style={[styles.thumb, styles.thumbEmpty]}><Ionicons name="image-outline" size={20} color={theme.textDim} /></View>}
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <Text style={styles.rowName} numberOfLines={1}>{h.name}{h.qty > 1 ? ` ×${h.qty}` : ''}</Text>
+                  <Text style={styles.rowSub} numberOfLines={1}>pagata {fmt(h.buyPrice)} · ora {cur != null ? fmt(cur) : '—'}</Text>
+                  {hint ? <Text style={[styles.pfHint, { color: hpct >= 0 ? theme.up : theme.down }]}>{hint}</Text> : null}
+                </View>
               </TouchableOpacity>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={[styles.pfPl, { color: changeColor(hpl) }]}>{hpl == null ? '—' : (hpl >= 0 ? '+' : '') + fmt(hpl)}</Text>
+                <Text style={[styles.rowSub, { color: changeColor(hpct) }]}>{hpct == null ? '' : pct(hpct)}</Text>
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 5 }}>
+                  <TouchableOpacity onPress={() => { setSellPrice(cur != null ? String(cur) : ''); setSellingId(selling ? null : h.id); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="cash-outline" size={17} color={theme.accent} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => onRemove(h.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="trash-outline" size={16} color={theme.textDim} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
+            {selling ? (
+              <View style={styles.sellForm}>
+                <Text style={styles.buyFormLabel}>Vendi — prezzo incassato (€){h.qty > 1 ? ` per ${h.qty} pezzi` : ''}</Text>
+                <View style={styles.buyFormRow}>
+                  <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={sellPrice} onChangeText={setSellPrice} placeholder="€ venduto" placeholderTextColor={theme.textDim} />
+                  <TouchableOpacity style={styles.buyConfirm} onPress={() => { const p = parseFloat(String(sellPrice).replace(',', '.')); if (!isNaN(p) && p >= 0) { onSell(h.id, p); setSellingId(null); } }} activeOpacity={0.85}>
+                    <Text style={styles.buyConfirmText}>Registra</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : null}
           </View>
         );
       }}
+      ListFooterComponent={
+        closed.length ? (
+          <View style={{ marginTop: 16 }}>
+            <Text style={styles.listLabel}>Operazioni chiuse · realizzato {realized >= 0 ? '+' : ''}{fmt(realized)}</Text>
+            {closed.map(s => (
+              <View key={s.id} style={styles.pfRow}>
+                {s.image ? <Image source={{ uri: s.image }} style={styles.thumb} resizeMode="contain" />
+                  : <View style={[styles.thumb, styles.thumbEmpty]}><Ionicons name="image-outline" size={20} color={theme.textDim} /></View>}
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <Text style={styles.rowName} numberOfLines={1}>{s.name}{s.qty > 1 ? ` ×${s.qty}` : ''}</Text>
+                  <Text style={styles.rowSub} numberOfLines={1}>comprata {fmt(s.buyPrice)} → venduta {fmt(s.sellPrice)}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[styles.pfPl, { color: changeColor(s.realized) }]}>{s.realized >= 0 ? '+' : ''}{fmt(s.realized)}</Text>
+                  <TouchableOpacity onPress={() => onRemoveSale(s.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="trash-outline" size={14} color={theme.textDim} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null
+      }
       contentContainerStyle={{ paddingBottom: 20 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
     />
@@ -1203,6 +1272,7 @@ export default function App() {
   const [rotation, setRotation] = useState(0);
   const [notifOn, setNotifOn] = useState(false);
   const [portfolio, setPortfolio] = useState([]);
+  const [sales, setSales] = useState([]); // operazioni chiuse (vendite)
   const [targets, setTargets] = useState({}); // ref -> {below, above}
   const [lastChecked, setLastChecked] = useState(Date.now());
   const prevTab = useRef(0);
@@ -1224,6 +1294,9 @@ export default function App() {
       .catch(() => {});
     AsyncStorage.getItem('tcgradar.targets')
       .then(s => { if (s) setTargets(JSON.parse(s)); })
+      .catch(() => {});
+    AsyncStorage.getItem('tcgradar.sales')
+      .then(s => { if (s) setSales(JSON.parse(s)); })
       .catch(() => {});
   }, []);
 
@@ -1257,6 +1330,38 @@ export default function App() {
     setPortfolio(prev => {
       const next = prev.filter(h => h.id !== id);
       AsyncStorage.setItem('tcgradar.portfolio', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const sellHolding = useCallback((id, sellPrice) => {
+    const sp = Number(sellPrice);
+    setPortfolio(prev => {
+      const h = prev.find(x => x.id === id);
+      if (h && !isNaN(sp)) {
+        const sale = {
+          id: 'sale-' + Date.now(),
+          ref: h.ref, name: h.name, game: h.game, image: h.image, serial: h.serial,
+          buyPrice: h.buyPrice, sellPrice: sp, qty: h.qty,
+          realized: Math.round((sp - h.buyPrice) * h.qty * 100) / 100,
+          buyTs: h.ts, sellTs: Date.now(),
+        };
+        setSales(prevS => {
+          const nextS = [sale, ...prevS];
+          AsyncStorage.setItem('tcgradar.sales', JSON.stringify(nextS)).catch(() => {});
+          return nextS;
+        });
+      }
+      const next = prev.filter(x => x.id !== id);
+      AsyncStorage.setItem('tcgradar.portfolio', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const removeSale = useCallback((id) => {
+    setSales(prev => {
+      const next = prev.filter(s => s.id !== id);
+      AsyncStorage.setItem('tcgradar.sales', JSON.stringify(next)).catch(() => {});
       return next;
     });
   }, []);
@@ -1451,7 +1556,7 @@ export default function App() {
 
       <View style={styles.content}>
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 1 && <PortfolioTab holdings={portfolio} data={data} onPress={setDetail} onRemove={removeFromPortfolio} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} />}
@@ -1663,6 +1768,8 @@ const styles = StyleSheet.create({
   pfSumRow: { flexDirection: 'row', justifyContent: 'space-between' },
   pfSumLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 3 },
   pfSumVal: { color: theme.text, fontSize: font.md, fontWeight: '700' },
+  pfRealized: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.border },
+  sellForm: { backgroundColor: theme.card, borderRadius: 10, padding: 12, marginHorizontal: 12, marginTop: -4, borderWidth: 1, borderColor: theme.accent },
   pfRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: theme.card,
     marginHorizontal: 12, marginTop: 10, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border,
@@ -1720,6 +1827,12 @@ const styles = StyleSheet.create({
     borderRadius: 10, paddingVertical: 12, marginTop: 8,
   },
   soldText: { color: theme.text, fontSize: font.sm, fontWeight: '600' },
+  gradeRow: { flexDirection: 'row', gap: 8 },
+  gradeBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderWidth: 1, borderColor: theme.accent, borderRadius: 10, paddingVertical: 12,
+  },
+  gradeBtnText: { color: theme.accent, fontSize: font.sm, fontWeight: '700' },
 
   targetBox: { backgroundColor: theme.card, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border, marginTop: 4 },
   targetLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 8 },
