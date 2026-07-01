@@ -47,7 +47,7 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TCG-Radar/2.0"
 NOW = datetime.datetime.now(datetime.timezone.utc)
 
 
-def _get_json(url, timeout=20):
+def _get_json(url, timeout=12):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8", "ignore"))
@@ -381,9 +381,12 @@ def card_key(name: str) -> str:
 # Campiona i rari (numeri alti) dei set Pokémon recenti, prende illustratore +
 # prezzo Cardmarket, aggrega per artista. Dati reali; cresce nel tempo (cache).
 # ---------------------------------------------------------------------------
-def build_artists(max_fetch: int = 110):
+def build_artists(max_fetch: int = 70, budget_s: float = 70.0):
+    # Budget di tempo: se le API sono lente in CI, mi fermo e restituisco quel che ho
+    # (con la cache non si perde nulla). Cosi' NON blocco mai il deploy.
+    deadline = time.monotonic() + budget_s
     try:
-        sets = _get_json("https://api.tcgdex.net/v2/en/sets")
+        sets = _get_json("https://api.tcgdex.net/v2/en/sets", timeout=10)
     except Exception as exc:  # noqa: BLE001
         print(f"    artisti: lista set errore: {exc}")
         return []
@@ -401,18 +404,18 @@ def build_artists(max_fetch: int = 110):
     by_art = {}
     fetched = 0
     for s in reversed(recent):
-        if fetched >= max_fetch:
+        if fetched >= max_fetch or time.monotonic() > deadline:
             break
         try:
-            full = _get_json(f"https://api.tcgdex.net/v2/en/sets/{s['id']}")
+            full = _get_json(f"https://api.tcgdex.net/v2/en/sets/{s['id']}", timeout=8)
         except Exception:  # noqa: BLE001
             continue
         cards = sorted(full.get("cards") or [], key=num_of, reverse=True)[:10]
         for c in cards:
-            if fetched >= max_fetch:
+            if fetched >= max_fetch or time.monotonic() > deadline:
                 break
             try:
-                fc = _get_json(f"https://api.tcgdex.net/v2/en/cards/{c['id']}")
+                fc = _get_json(f"https://api.tcgdex.net/v2/en/cards/{c['id']}", timeout=8)
             except Exception:  # noqa: BLE001
                 continue
             fetched += 1
