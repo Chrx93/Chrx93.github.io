@@ -78,17 +78,21 @@ const fmtTime = (ts) => {
 };
 
 const buyLinksFor = (item) => {
-  if (item.buyLinks) return item.buyLinks;
   const nm = item.name || '';
   const serial = item.serial || '';
-  const cm = item.game === 'onepiece'
-    ? 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(nm)
-    : 'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=' + encodeURIComponent(nm);
-  const ebay = 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`) + '&_sop=15';
-  const cardtrader = 'https://www.cardtrader.com/en/search?q=' + encodeURIComponent(nm);
-  const vinted = 'https://www.vinted.it/catalog?order=price_low_to_high&search_text=' + encodeURIComponent(`${nm} ${serial}`);
-  const auction = 'https://www.ebay.it/sch/i.html?_nkw=' + encodeURIComponent(`${nm} ${serial}`) + '&LH_Auction=1&_sop=1';
-  return { cardmarket: cm, ebay, cardtrader, vinted, auction };
+  const q = encodeURIComponent(`${nm} ${serial}`);
+  const base = {
+    cardmarket: item.game === 'onepiece'
+      ? 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(nm)
+      : 'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=' + encodeURIComponent(nm),
+    ebay: 'https://www.ebay.it/sch/i.html?_nkw=' + q + '&_sop=15',
+    cardtrader: 'https://www.cardtrader.com/en/search?q=' + encodeURIComponent(nm),
+    vinted: 'https://www.vinted.it/catalog?order=price_low_to_high&search_text=' + q,
+    auction: 'https://www.ebay.it/sch/i.html?_nkw=' + q + '&LH_Auction=1&_sop=1',
+    sold: 'https://www.ebay.it/sch/i.html?_nkw=' + q + '&LH_Sold=1&LH_Complete=1&_sop=13',
+  };
+  // i link del motore (game-aware) hanno priorita'; base riempie quelli mancanti (venduti, ecc.)
+  return { ...base, ...(item.buyLinks || {}) };
 };
 
 const MARKETS = [
@@ -241,7 +245,7 @@ function PriceFinder({ item }) {
           <View style={{ flex: 1 }}>
             <Text style={styles.bestPrice}>{fmt(bo.total)}</Text>
             <Text style={styles.bestSub} numberOfLines={1}>
-              eBay.it · {bo.seller || 'venditore'}{bo.ship ? ` · sped. ${fmt(bo.ship)} incl.` : ' · sped. inclusa'}
+              eBay.it · {bo.seller || 'venditore'}{bo.condition ? ` · ${bo.condition}` : ''}{bo.ship ? ` · sped. ${fmt(bo.ship)}` : ' · sped. incl.'}
             </Text>
           </View>
           <TouchableOpacity style={styles.bestBtn} onPress={() => Linking.openURL(bo.url)} activeOpacity={0.85}>
@@ -286,6 +290,13 @@ function PriceFinder({ item }) {
           <Text style={styles.auctionText}>
             🔨 Aste in corso su eBay{item.change7d >= 10 ? ' · sta salendo, possibile occasione!' : ''}
           </Text>
+        </TouchableOpacity>
+      ) : null}
+
+      {links.sold ? (
+        <TouchableOpacity style={styles.soldBtn} onPress={() => Linking.openURL(links.sold)} activeOpacity={0.85}>
+          <Ionicons name="stats-chart-outline" size={16} color={theme.text} />
+          <Text style={styles.soldText}>📉 Prezzi venduti (eBay) — quanto si vende davvero</Text>
         </TouchableOpacity>
       ) : null}
       <Text style={styles.disclaimer}>
@@ -366,7 +377,40 @@ function WhyWatch({ item }) {
   );
 }
 
-function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
+function TargetForm({ item, target, onSave }) {
+  const cur = toEur(item.prices);
+  const [below, setBelow] = useState(target && target.below != null ? String(target.below) : '');
+  const [above, setAbove] = useState(target && target.above != null ? String(target.above) : '');
+  const save = () => {
+    const b = parseFloat(String(below).replace(',', '.'));
+    const a = parseFloat(String(above).replace(',', '.'));
+    onSave(item.ref, { below: isNaN(b) ? null : b, above: isNaN(a) ? null : a });
+  };
+  let status = null;
+  if (cur != null && target) {
+    if (target.below != null && cur <= target.below) status = { t: `✅ Sotto la soglia d'acquisto ${fmt(target.below)} — buon momento per comprare`, c: theme.up };
+    else if (target.above != null && cur >= target.above) status = { t: `✅ Sopra la soglia di vendita ${fmt(target.above)} — valuta di vendere`, c: theme.up };
+    else if (target.below != null) status = { t: `Obiettivo acquisto ${fmt(target.below)} · ora ${fmt(cur)}`, c: theme.textDim };
+    else if (target.above != null) status = { t: `Obiettivo vendita ${fmt(target.above)} · ora ${fmt(cur)}`, c: theme.textDim };
+  }
+  return (
+    <View style={styles.targetBox}>
+      <Text style={styles.targetLabel}>🎯 Avvisami quando il prezzo…</Text>
+      <View style={styles.buyFormRow}>
+        <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={below} onChangeText={setBelow} placeholder="scende sotto €" placeholderTextColor={theme.textDim} />
+        <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={above} onChangeText={setAbove} placeholder="sale sopra €" placeholderTextColor={theme.textDim} />
+        <TouchableOpacity style={styles.buyConfirm} onPress={save} activeOpacity={0.85}>
+          <Text style={styles.buyConfirmText}>OK</Text>
+        </TouchableOpacity>
+      </View>
+      {status ? <Text style={[styles.targetStatus, { color: status.c }]}>{status.t}</Text> : (
+        <Text style={styles.targetHint}>Le carte seguite dal motore vengono controllate a ogni aggiornamento.</Text>
+      )}
+    </View>
+  );
+}
+
+function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, target, onSaveTarget }) {
   const priceVal = toEur(item.prices);
   const iconic = iconicFor(item.name);
   return (
@@ -440,6 +484,8 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio }) {
 
       <Text style={styles.sectionTitle}>💼 Compravendita</Text>
       <AddToPortfolio item={item} onAdd={onAddPortfolio} />
+
+      <TargetForm item={item} target={target} onSave={onSaveTarget} />
 
       <PriceFinder item={item} />
     </ScrollView>
@@ -1157,9 +1203,11 @@ export default function App() {
   const [rotation, setRotation] = useState(0);
   const [notifOn, setNotifOn] = useState(false);
   const [portfolio, setPortfolio] = useState([]);
+  const [targets, setTargets] = useState({}); // ref -> {below, above}
   const [lastChecked, setLastChecked] = useState(Date.now());
   const prevTab = useRef(0);
   const notifiedRef = useRef(new Set());
+  const targetNotifiedRef = useRef(new Set());
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
@@ -1174,6 +1222,22 @@ export default function App() {
     AsyncStorage.getItem('tcgradar.portfolio')
       .then(s => { if (s) setPortfolio(JSON.parse(s)); })
       .catch(() => {});
+    AsyncStorage.getItem('tcgradar.targets')
+      .then(s => { if (s) setTargets(JSON.parse(s)); })
+      .catch(() => {});
+  }, []);
+
+  const setTarget = useCallback((ref, next) => {
+    setTargets(prev => {
+      const upd = { ...prev };
+      if (next.below == null && next.above == null) delete upd[ref];
+      else upd[ref] = next;
+      AsyncStorage.setItem('tcgradar.targets', JSON.stringify(upd)).catch(() => {});
+      return upd;
+    });
+    // permetti di ri-notificare dopo una modifica della soglia
+    targetNotifiedRef.current.delete('below-' + ref);
+    targetNotifiedRef.current.delete('above-' + ref);
   }, []);
 
   const addToPortfolio = useCallback((item, buyPrice, qty) => {
@@ -1302,6 +1366,34 @@ export default function App() {
     } catch {}
   }, [savedLive, notifOn, data]);
 
+  // Soglie prezzo personali: notifica quando una carta scende sotto / sale sopra.
+  useEffect(() => {
+    if (!data || !data.items) return;
+    const byRef = {};
+    data.items.forEach(i => { byRef[i.ref] = i; });
+    const canN = notifOn && canNotify() && Notification.permission === 'granted';
+    Object.entries(targets).forEach(([ref, t]) => {
+      const it = byRef[ref];
+      if (!it) return;
+      const cur = toEur(it.prices);
+      if (cur == null) return;
+      const checks = [
+        { key: 'below-' + ref, hit: t.below != null && cur <= t.below, msg: `${it.name}: sceso a ${fmt(cur)} (soglia acquisto ${fmt(t.below)})` },
+        { key: 'above-' + ref, hit: t.above != null && cur >= t.above, msg: `${it.name}: salito a ${fmt(cur)} (soglia vendita ${fmt(t.above)})` },
+      ];
+      checks.forEach(c => {
+        if (c.hit) {
+          if (canN && !targetNotifiedRef.current.has(c.key)) {
+            targetNotifiedRef.current.add(c.key);
+            try { new Notification('🎯 TCG Radar — soglia raggiunta', { body: c.msg, icon: '/icon.png' }); } catch {}
+          }
+        } else {
+          targetNotifiedRef.current.delete(c.key);
+        }
+      });
+    });
+  }, [data, targets, notifOn]);
+
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
     if (prevTab.current === 2 && tab !== 2 && data) {
@@ -1331,6 +1423,8 @@ export default function App() {
           isSaved={isSaved(detail.ref)}
           onToggleSave={toggleSave}
           onAddPortfolio={addToPortfolio}
+          target={targets[detail.ref]}
+          onSaveTarget={setTarget}
         />
       </View>
     );
@@ -1620,6 +1714,17 @@ const styles = StyleSheet.create({
   },
   auctionBtnHot: { backgroundColor: theme.up },
   auctionText: { color: theme.bg, fontSize: font.sm, fontWeight: '700' },
+  soldBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card,
+    borderRadius: 10, paddingVertical: 12, marginTop: 8,
+  },
+  soldText: { color: theme.text, fontSize: font.sm, fontWeight: '600' },
+
+  targetBox: { backgroundColor: theme.card, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border, marginTop: 4 },
+  targetLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 8 },
+  targetStatus: { fontSize: font.sm, fontWeight: '600', marginTop: 8 },
+  targetHint: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8 },
 
   artStat: { color: theme.accent, fontSize: font.sm, fontWeight: '600', marginTop: 2 },
   artIntro: { color: theme.textDim, fontSize: font.xs, lineHeight: 17, marginBottom: 10 },

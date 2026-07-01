@@ -277,6 +277,7 @@ def ebay_best_offer(token: str, query: str, code: str = None):
                 "total": total,
                 "seller": (it.get("seller") or {}).get("username"),
                 "url": it.get("itemWebUrl"),
+                "condition": it.get("condition"),
             }
     return best
 
