@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, StatusBar, ScrollView, ActivityIndicator,
-  Image, Linking, TextInput, Platform,
+  Image, Linking, TextInput, Platform, BackHandler,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
@@ -187,16 +187,7 @@ function SignalBadge({ signal }) {
   );
 }
 
-function AlertBadge() {
-  return (
-    <View style={styles.alertBadge}>
-      <Text style={styles.alertText}>🔔 ALERT</Text>
-    </View>
-  );
-}
-
-const CardRow = React.memo(function CardRow({ item, onPress, showAlert, moved }) {
-  const isAlert = Math.abs(item.change7d) >= 10;
+const CardRow = React.memo(function CardRow({ item, onPress, moved }) {
   const priceVal = toEur(item.prices);
   const hasMoved = moved != null && Math.abs(moved) >= 3;
   return (
@@ -217,7 +208,7 @@ const CardRow = React.memo(function CardRow({ item, onPress, showAlert, moved })
                 🔔 {pct(moved)}
               </Text>
             </View>
-          ) : (isAlert && showAlert && <AlertBadge />)}
+          ) : null}
         </View>
         <Text style={styles.rowSub} numberOfLines={1}>{item.set}{item.serial ? ` · ${item.serial}` : ` · ${item.rarity}`}</Text>
         <Text style={[styles.rowChange, { color: changeColor(item.change7d) }]}>
@@ -489,11 +480,12 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, tar
 
       <WhyWatch item={item} />
 
-      <Text style={styles.sectionTitle}>Segnale</Text>
-      <View style={styles.signalRow}>
-        <SignalBadge signal={item.signal} />
-        <Text style={styles.noteText}>{item.note}</Text>
-      </View>
+      {item.note ? (
+        <>
+          <Text style={styles.sectionTitle}>Note</Text>
+          <Text style={styles.noteText}>{item.note}</Text>
+        </>
+      ) : null}
 
       <TouchableOpacity style={styles.saveBtn} onPress={() => onToggleSave(item)} activeOpacity={0.8}>
         <Ionicons name={isSaved ? 'checkmark-circle' : 'add-circle-outline'} size={18} color={theme.accent} />
@@ -618,7 +610,7 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
           <Text style={styles.listLabel}>Tutte le carte · variazione 7g</Text>
         </>
       }
-      renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert />}
+      renderItem={({ item }) => <CardRow item={item} onPress={onPress} />}
       contentContainerStyle={{ paddingBottom: 20 }}
       initialNumToRender={8}
       maxToRenderPerBatch={8}
@@ -672,7 +664,7 @@ function WatchlistTab({ data, onPress, refreshing, onRefresh, notifOn, onToggleN
           </View>
         </View>
       }
-      renderItem={({ item }) => <CardRow item={item} onPress={onPress} showAlert moved={item.movedPct} />}
+      renderItem={({ item }) => <CardRow item={item} onPress={onPress} moved={item.movedPct} />}
       contentContainerStyle={{ paddingBottom: 20 }}
       initialNumToRender={10}
       maxToRenderPerBatch={10}
@@ -1578,6 +1570,29 @@ export default function App() {
     setRefreshing(false);
   }, [load]);
 
+  // Torna indietro dal dettaglio con lo swipe/gesto del telefono (o tasto hardware).
+  // Sul web integriamo la cronologia: il gesto "scorri indietro" del browser chiude il dettaglio.
+  useEffect(() => {
+    if (!detail) return;
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
+      window.history.pushState({ tcgDetail: true }, '');
+      const onPop = () => setDetail(null);
+      window.addEventListener('popstate', onPop);
+      return () => window.removeEventListener('popstate', onPop);
+    }
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { setDetail(null); return true; });
+    return () => sub.remove();
+  }, [detail]);
+
+  const closeDetail = useCallback(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history
+      && window.history.state && window.history.state.tcgDetail) {
+      window.history.back(); // fa scattare popstate -> chiude il dettaglio
+    } else {
+      setDetail(null);
+    }
+  }, []);
+
   // Carte salvate arricchite coi dati live + variazione "dall'ultima visita".
   const savedLive = useMemo(() => {
     const liveByRef = {};
@@ -1680,7 +1695,7 @@ export default function App() {
         <StatusBar barStyle="light-content" backgroundColor={theme.bg} />
         <DetailScreen
           item={detail}
-          onBack={() => setDetail(null)}
+          onBack={closeDetail}
           isSaved={isSaved(detail.ref)}
           onToggleSave={toggleSave}
           onAddPortfolio={addToPortfolio}
@@ -1748,7 +1763,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     backgroundColor: theme.card, marginHorizontal: 12, marginTop: 10,
-    borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border,
+    borderRadius: 14, padding: 14, borderWidth: 1, borderColor: theme.border,
   },
   rowLeft: { flex: 1, marginRight: 12 },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -1760,8 +1775,6 @@ const styles = StyleSheet.create({
 
   badge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   badgeText: { fontSize: font.xs, fontWeight: '700' },
-  alertBadge: { backgroundColor: theme.accentDim, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  alertText: { color: theme.alert, fontSize: font.xs, fontWeight: '700' },
   movedPill: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   movedText: { fontSize: font.xs, fontWeight: '700' },
   watchBanner: { color: theme.text, fontSize: font.sm, fontWeight: '600', textAlign: 'center', paddingVertical: 12, paddingHorizontal: 16 },
@@ -1784,7 +1797,7 @@ const styles = StyleSheet.create({
 
   newsCard: {
     backgroundColor: theme.card, marginHorizontal: 12, marginTop: 10,
-    borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border,
+    borderRadius: 14, padding: 14, borderWidth: 1, borderColor: theme.border,
   },
   newsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   newsTag: { fontSize: font.sm },
