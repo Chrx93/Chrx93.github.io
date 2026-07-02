@@ -1120,6 +1120,51 @@ function SearchTab({ onPress, artists }) {
   );
 }
 
+function BackupSection({ onExport, onImport }) {
+  const [msg, setMsg] = useState('');
+  const [open, setOpen] = useState(false);
+  const [txt, setTxt] = useState('');
+  const doExport = async () => {
+    const data = onExport();
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(data);
+        setMsg('Backup copiato negli appunti ✓ — incollalo in un posto sicuro (note/email).');
+        return;
+      }
+    } catch {}
+    setTxt(data); setOpen(true); setMsg('Copia e salva il testo qui sotto.');
+  };
+  const doImport = () => {
+    setMsg(onImport(txt.trim()) ? 'Dati ripristinati ✓' : 'Testo di backup non valido.');
+  };
+  return (
+    <View style={styles.backupBox}>
+      <Text style={styles.listLabel}>💾 Backup dei tuoi dati</Text>
+      <Text style={styles.backupHint}>Portfolio, watchlist, soglie e vendite sono salvati solo su questo dispositivo. Esporta per non perderli o spostarli su un altro device.</Text>
+      <View style={styles.buyRow}>
+        <TouchableOpacity style={[styles.buy3, styles.buy3Primary]} onPress={doExport} activeOpacity={0.85}>
+          <Ionicons name="download-outline" size={16} color={theme.bg} />
+          <Text style={[styles.buy3Text, { color: theme.bg }]}>Esporta</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.buy3} onPress={() => setOpen(o => !o)} activeOpacity={0.85}>
+          <Ionicons name="cloud-upload-outline" size={16} color={theme.accent} />
+          <Text style={styles.buy3Text}>Importa</Text>
+        </TouchableOpacity>
+      </View>
+      {open ? (
+        <View style={{ marginTop: 10 }}>
+          <TextInput style={styles.backupInput} value={txt} onChangeText={setTxt} placeholder="Incolla qui il backup…" placeholderTextColor={theme.textDim} multiline />
+          <TouchableOpacity style={[styles.buyConfirm, { alignSelf: 'flex-start', marginTop: 8 }]} onPress={doImport} activeOpacity={0.85}>
+            <Text style={styles.buyConfirmText}>Ripristina</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+      {msg ? <Text style={styles.backupMsg}>{msg}</Text> : null}
+    </View>
+  );
+}
+
 function Donut({ segments, size = 92, stroke = 16 }) {
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
   const r = (size - stroke) / 2;
@@ -1143,7 +1188,7 @@ function Donut({ segments, size = 92, stroke = 16 }) {
   );
 }
 
-function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemoveSale, refreshing, onRefresh }) {
+function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemoveSale, onExport, onImport, refreshing, onRefresh }) {
   const [extra, setExtra] = useState({}); // prezzi live per carte non tracciate dal motore
   const [sellingId, setSellingId] = useState(null);
   const [sellPrice, setSellPrice] = useState('');
@@ -1217,6 +1262,9 @@ function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemo
         <Text style={styles.searchHint}>
           Il tuo portfolio è vuoto. Apri una carta e tocca “Ho comprato questa carta” per tracciare prezzo d'acquisto, valore attuale, guadagno e — quando vendi — il profitto realizzato.
         </Text>
+        <View style={{ alignSelf: 'stretch' }}>
+          <BackupSection onExport={onExport} onImport={onImport} />
+        </View>
       </ScrollView>
     );
   }
@@ -1306,7 +1354,8 @@ function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemo
         );
       }}
       ListFooterComponent={
-        closed.length ? (
+        <>
+          {closed.length ? (
           <View style={{ marginTop: 16 }}>
             <Text style={styles.listLabel}>Operazioni chiuse · realizzato {realized >= 0 ? '+' : ''}{fmt(realized)}</Text>
             {closed.map(s => (
@@ -1326,7 +1375,9 @@ function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemo
               </View>
             ))}
           </View>
-        ) : null
+          ) : null}
+          <BackupSection onExport={onExport} onImport={onImport} />
+        </>
       }
       contentContainerStyle={{ paddingBottom: 20 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}
@@ -1436,6 +1487,25 @@ export default function App() {
       AsyncStorage.setItem('tcgradar.sales', JSON.stringify(next)).catch(() => {});
       return next;
     });
+  }, []);
+
+  const exportData = useCallback(
+    () => JSON.stringify({ v: 1, ts: Date.now(), portfolio, sales, saved, seen, targets }),
+    [portfolio, sales, saved, seen, targets]
+  );
+  const importData = useCallback((text) => {
+    let d;
+    try { d = JSON.parse(text); } catch { return false; }
+    if (!d || typeof d !== 'object') return false;
+    const apply = (key, val, setter) => {
+      if (val !== undefined) { setter(val); AsyncStorage.setItem(key, JSON.stringify(val)).catch(() => {}); }
+    };
+    apply('tcgradar.portfolio', d.portfolio, setPortfolio);
+    apply('tcgradar.sales', d.sales, setSales);
+    apply('tcgradar.saved', d.saved, setSaved);
+    apply('tcgradar.seen', d.seen, setSeen);
+    apply('tcgradar.targets', d.targets, setTargets);
+    return true;
   }, []);
 
   const onToggleNotif = useCallback(async () => {
@@ -1642,7 +1712,7 @@ export default function App() {
 
       <View style={styles.content}>
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} onExport={exportData} onImport={importData} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} />}
@@ -1872,6 +1942,10 @@ const styles = StyleSheet.create({
   todayMain: { color: theme.text, fontSize: font.md, fontWeight: '600' },
   todaySub: { color: theme.textDim, fontSize: font.sm, marginTop: 5 },
   sellForm: { backgroundColor: theme.card, borderRadius: 10, padding: 12, marginHorizontal: 12, marginTop: -4, borderWidth: 1, borderColor: theme.accent },
+  backupBox: { marginHorizontal: 12, marginTop: 20, padding: 14, backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.border },
+  backupHint: { color: theme.textDim, fontSize: font.xs, lineHeight: 17, marginTop: 2, marginBottom: 10 },
+  backupInput: { color: theme.text, fontSize: font.sm, backgroundColor: theme.bg, borderWidth: 1, borderColor: theme.border, borderRadius: 8, padding: 10, minHeight: 70, textAlignVertical: 'top' },
+  backupMsg: { color: theme.accent, fontSize: font.sm, marginTop: 10, fontWeight: '600' },
   pfRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: theme.card,
     marginHorizontal: 12, marginTop: 10, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border,
