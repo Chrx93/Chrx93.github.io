@@ -73,3 +73,6 @@ jobs:
           path: dist
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1800000   # 30 min: sopravvive alle code di GitHub Pages
+          error_count: 30
