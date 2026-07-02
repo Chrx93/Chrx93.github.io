@@ -1180,7 +1180,7 @@ function Donut({ segments, size = 92, stroke = 16 }) {
   );
 }
 
-function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemoveSale, onExport, onImport, refreshing, onRefresh }) {
+function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell, onRemoveSale, onExport, onImport, refreshing, onRefresh }) {
   const [extra, setExtra] = useState({}); // prezzi live per carte non tracciate dal motore
   const [sellingId, setSellingId] = useState(null);
   const [sellPrice, setSellPrice] = useState('');
@@ -1298,6 +1298,12 @@ function PortfolioTab({ holdings, sales, data, onPress, onRemove, onSell, onRemo
               </View>
             </View>
           ) : null}
+          {pfHist && pfHist.length >= 2 ? (
+            <View style={styles.pfChartBox}>
+              <Text style={styles.allocTitle}>📈 Andamento del tuo portfolio</Text>
+              <Chart series={pfHist} height={150} />
+            </View>
+          ) : null}
         </>
       }
       renderItem={({ item: h }) => {
@@ -1388,6 +1394,7 @@ export default function App() {
   const [notifOn, setNotifOn] = useState(false);
   const [portfolio, setPortfolio] = useState([]);
   const [sales, setSales] = useState([]); // operazioni chiuse (vendite)
+  const [pfHist, setPfHist] = useState([]); // storico valore totale portfolio [[iso, valore]]
   const [targets, setTargets] = useState({}); // ref -> {below, above}
   const [lastChecked, setLastChecked] = useState(Date.now());
   const prevTab = useRef(0);
@@ -1412,6 +1419,9 @@ export default function App() {
       .catch(() => {});
     AsyncStorage.getItem('tcgradar.sales')
       .then(s => { if (s) setSales(JSON.parse(s)); })
+      .catch(() => {});
+    AsyncStorage.getItem('tcgradar.pfhist')
+      .then(s => { if (s) setPfHist(JSON.parse(s)); })
       .catch(() => {});
   }, []);
 
@@ -1609,6 +1619,33 @@ export default function App() {
     });
   }, [saved, data, seen]);
 
+  // Valore totale del portfolio ai prezzi live (fallback: prezzo d'acquisto).
+  const pfTotal = useMemo(() => {
+    const byRef = {};
+    (data && data.items ? data.items : []).forEach(i => { byRef[i.ref] = i; });
+    return portfolio.reduce((s, h) => {
+      const live = byRef[h.ref];
+      const cur = live ? toEur(live.prices) : null;
+      return s + (cur != null ? cur : h.buyPrice) * h.qty;
+    }, 0);
+  }, [portfolio, data]);
+
+  // Accumula lo storico del valore del portfolio: un punto al giorno (aggiorna l'ultimo se è di oggi).
+  useEffect(() => {
+    if (!data || !portfolio.length || pfTotal <= 0) return;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    setPfHist(prev => {
+      const val = Math.round(pfTotal * 100) / 100;
+      const last = prev[prev.length - 1];
+      const next = (last && String(last[0]).slice(0, 10) === todayKey)
+        ? [...prev.slice(0, -1), [new Date().toISOString(), val]]
+        : [...prev, [new Date().toISOString(), val]];
+      const trimmed = next.slice(-400);
+      AsyncStorage.setItem('tcgradar.pfhist', JSON.stringify(trimmed)).catch(() => {});
+      return trimmed;
+    });
+  }, [data, portfolio, pfTotal]);
+
   // Notifiche: avvisa quando una carta della watchlist si muove (app aperta/in background).
   useEffect(() => {
     if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data) return;
@@ -1727,7 +1764,7 @@ export default function App() {
 
       <View style={styles.content}>
         {tab === 0 && <HomeTab data={data} rotation={rotation} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} onExport={exportData} onImport={importData} refreshing={refreshing} onRefresh={onRefresh} />}
+        {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} pfHist={pfHist} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} onExport={exportData} onImport={importData} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} />}
@@ -1754,9 +1791,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: theme.border,
   },
   logo: { color: theme.accent, fontSize: font.lg, fontWeight: '700', letterSpacing: 1 },
-  pulse: { flexDirection: 'row', alignItems: 'center' },
+  pulse: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border,
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
+  },
   pulseLabel: { color: theme.textDim, fontSize: font.sm },
-  pulseValue: { fontSize: font.sm, fontWeight: '700' },
+  pulseValue: { fontSize: font.sm, fontWeight: '800' },
   content: { flex: 1 },
   listLabel: { color: theme.textDim, fontSize: font.xs, fontWeight: '600', marginTop: 14, marginBottom: 2, marginLeft: 14, letterSpacing: 0.3 },
 
@@ -1786,7 +1827,7 @@ const styles = StyleSheet.create({
   detailSub: { color: theme.textDim, fontSize: font.sm, marginTop: 4 },
   detailImage: { width: 240, height: 336, alignSelf: 'center', marginTop: 16, marginBottom: 8 },
   iconicTag: { color: theme.accent, fontSize: font.sm, fontWeight: '700', marginTop: 6 },
-  sectionTitle: { color: theme.textDim, fontSize: font.sm, fontWeight: '600', marginBottom: 8, marginTop: 18 },
+  sectionTitle: { color: theme.textDim, fontSize: font.xs, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8, marginTop: 20 },
 
   priceBig: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border },
   priceBigVal: { color: theme.accent, fontSize: font.xl, fontWeight: '800' },
@@ -1944,13 +1985,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
   },
   allocTitle: { color: theme.textDim, fontSize: font.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
+  pfChartBox: { marginHorizontal: 12, marginTop: 10, padding: 14, backgroundColor: theme.card, borderRadius: 14, borderWidth: 1, borderColor: theme.border },
   allocRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   allocDot: { width: 12, height: 12, borderRadius: 6 },
   allocLabel: { color: theme.text, fontSize: font.sm, flex: 1 },
   allocPct: { color: theme.textDim, fontSize: font.sm, fontWeight: '600' },
   todayStrip: {
-    marginHorizontal: 12, marginTop: 12, padding: 12,
-    backgroundColor: theme.surface, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
+    marginHorizontal: 12, marginTop: 12, padding: 13,
+    backgroundColor: theme.surface, borderRadius: 14, borderWidth: 1, borderColor: theme.border,
+    borderLeftWidth: 3, borderLeftColor: theme.accent,
   },
   todayMain: { color: theme.text, fontSize: font.md, fontWeight: '600' },
   todaySub: { color: theme.textDim, fontSize: font.sm, marginTop: 5 },
@@ -1961,7 +2004,7 @@ const styles = StyleSheet.create({
   backupMsg: { color: theme.accent, fontSize: font.sm, marginTop: 10, fontWeight: '600' },
   pfRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: theme.card,
-    marginHorizontal: 12, marginTop: 10, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border,
+    marginHorizontal: 12, marginTop: 10, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: theme.border,
   },
   pfPl: { fontSize: font.md, fontWeight: '700' },
   pfHint: { fontSize: font.xs, fontWeight: '600', marginTop: 2 },

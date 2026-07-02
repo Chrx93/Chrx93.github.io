@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, PanResponder } from 'react-native';
 import Svg, { Path, Polyline, Line, Circle, Text as SvgText } from 'react-native-svg';
 import { theme, font } from './theme';
 
@@ -28,9 +28,25 @@ function normalize(series) {
 const euro = (n) =>
   n == null ? '—' : n >= 100 ? `€${Math.round(n)}` : `€${n.toFixed(2)}`;
 
-export default function Chart({ series, height = 170 }) {
+const dateLabel = (t) =>
+  t ? new Date(t).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: '2-digit' }) : '';
+
+export default function Chart({ series, height = 180 }) {
   const [period, setPeriod] = useState('1m');
   const [width, setWidth] = useState(320);
+  const [touchX, setTouchX] = useState(null); // posizione del dito sul grafico (px)
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: (e) => setTouchX(e.nativeEvent.locationX),
+      onPanResponderMove: (e) => setTouchX(e.nativeEvent.locationX),
+      onPanResponderRelease: () => setTouchX(null),
+      onPanResponderTerminate: () => setTouchX(null),
+    })
+  ).current;
 
   const all = normalize(series);
   if (all.length < 2) {
@@ -85,18 +101,32 @@ export default function Chart({ series, height = 170 }) {
   const color = up ? theme.up : theme.down;
   const [lx, ly] = xy[xy.length - 1];
 
+  // Punto attivo sotto al dito (crosshair stile borsa)
+  let activeIdx = null;
+  if (touchX != null) {
+    const frac = (touchX - padX) / innerW;
+    activeIdx = Math.max(0, Math.min(pts.length - 1, Math.round(frac * (pts.length - 1))));
+  }
+  const dispIdx = activeIdx != null ? activeIdx : pts.length - 1;
+  const dispVal = pts[dispIdx].v;
+  const dispT = pts[dispIdx].t;
+
   return (
     <View>
       <View style={styles.head}>
-        <Text style={styles.price}>{euro(last)}</Text>
-        <View style={[styles.chgPill, { backgroundColor: up ? '#13351f' : '#3a1514' }]}>
-          <Text style={[styles.chg, { color }]}>
-            {up ? '▲' : '▼'} {Math.abs(change).toFixed(1)}% · {sel.label}
-          </Text>
-        </View>
+        <Text style={styles.price}>{euro(dispVal)}</Text>
+        {activeIdx != null ? (
+          <View style={[styles.chgPill, { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }]}>
+            <Text style={[styles.chg, { color: theme.textDim }]}>{dispT ? dateLabel(dispT) : `punto ${dispIdx + 1}`}</Text>
+          </View>
+        ) : (
+          <View style={[styles.chgPill, { backgroundColor: up ? '#13351f' : '#3a1514' }]}>
+            <Text style={[styles.chg, { color }]}>{up ? '▲' : '▼'} {Math.abs(change).toFixed(1)}% · {sel.label}</Text>
+          </View>
+        )}
       </View>
 
-      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} {...pan.panHandlers}>
         <Svg width={w} height={height}>
           {/* griglia */}
           {[0, 0.5, 1].map((f) => {
@@ -110,10 +140,19 @@ export default function Chart({ series, height = 170 }) {
           <SvgText x={padX} y={padTop + 4} fill={theme.textDim} fontSize="9">{euro(max)}</SvgText>
           <SvgText x={padX} y={baseY} fill={theme.textDim} fontSize="9">{euro(min)}</SvgText>
           {/* area + linea */}
-          <Path d={areaPath} fill={color} fillOpacity={0.12} />
+          <Path d={areaPath} fill={color} fillOpacity={0.14} />
           <Polyline points={linePts} fill="none" stroke={color}
-            strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          <Circle cx={lx} cy={ly} r={3.5} fill={color} />
+            strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
+          {/* crosshair stile borsa */}
+          {activeIdx != null ? (
+            <>
+              <Line x1={xy[activeIdx][0]} y1={padTop} x2={xy[activeIdx][0]} y2={baseY}
+                stroke={theme.text} strokeWidth={1} strokeDasharray="2,3" opacity={0.6} />
+              <Circle cx={xy[activeIdx][0]} cy={xy[activeIdx][1]} r={5.5} fill={color} stroke={theme.bg} strokeWidth={2} />
+            </>
+          ) : (
+            <Circle cx={lx} cy={ly} r={3.5} fill={color} />
+          )}
         </Svg>
       </View>
 
@@ -128,20 +167,22 @@ export default function Chart({ series, height = 170 }) {
           );
         })}
       </View>
+      <Text style={styles.hint}>Scorri il dito sul grafico per vedere prezzo e data di ogni punto.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border, borderRadius: 10, marginVertical: 8 },
+  empty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border, borderRadius: 12, marginVertical: 8 },
   emptyText: { color: theme.textDim, fontSize: font.sm },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   price: { color: theme.text, fontSize: font.xl, fontWeight: '800' },
-  chgPill: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  chgPill: { borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
   chg: { fontSize: font.sm, fontWeight: '700' },
   periods: { flexDirection: 'row', gap: 6, marginTop: 10, justifyContent: 'center' },
-  pBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: theme.border },
+  pBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 9, borderWidth: 1, borderColor: theme.border },
   pBtnActive: { backgroundColor: theme.accentDim, borderColor: theme.accent },
   pTxt: { color: theme.textDim, fontSize: font.sm, fontWeight: '600' },
   pTxtActive: { color: theme.text },
+  hint: { color: theme.textDim, fontSize: font.xs, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
 });
