@@ -378,9 +378,16 @@ const RECO_META = {
   osserva: { label: '🟡 Osserva — segnale neutro', color: theme.hypeText, bg: '#2a2410' },
 };
 
-function RecoBanner({ reco }) {
+function RecoBanner({ reco, since }) {
   if (!reco) return null;
   const m = RECO_META[reco.action] || RECO_META.osserva;
+  let sinceLine = null;
+  if (since && since.since && (reco.action === 'compra' || reco.action === 'vendi')) {
+    let d = since.since;
+    try { d = new Date(since.since).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }); } catch {}
+    const chg = since.changePct;
+    sinceLine = `In questo segnale dal ${d}${chg != null ? ` · da allora ${chg >= 0 ? '+' : ''}${chg}%` : ''}`;
+  }
   return (
     <>
       <Text style={styles.sectionTitle}>Segnale · quando muoverti</Text>
@@ -389,6 +396,7 @@ function RecoBanner({ reco }) {
         {reco.reasons && reco.reasons.length
           ? reco.reasons.map((r, i) => <Text key={i} style={styles.recoReason}>• {r}</Text>)
           : <Text style={styles.recoReason}>Nessun segnale forte al momento — meglio aspettare.</Text>}
+        {sinceLine ? <Text style={styles.recoTrack}>📅 {sinceLine}</Text> : null}
         <Text style={styles.recoNote}>Sintesi di segnali reali (prezzo sotto mercato, minimi/massimi storici, momentum, notizie). Non è una previsione garantita: decidi tu.</Text>
       </View>
     </>
@@ -463,7 +471,7 @@ function TargetForm({ item, target, onSave }) {
   );
 }
 
-function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, target, onSaveTarget }) {
+function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, target, onSaveTarget, onSeePrints }) {
   const priceVal = toEur(item.prices);
   const iconic = iconicFor(item.name);
   return (
@@ -477,6 +485,12 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, tar
       <Text style={styles.detailSub}>{item.set} · {item.rarity}{item.serial ? ` · ${item.serial}` : ''}</Text>
       {iconic ? <Text style={styles.iconicTag}>👑 Personaggio iconico</Text> : null}
       {item.illustrator ? <Text style={styles.illTag}>🎨 Illustratore: {item.illustrator}</Text> : null}
+      {onSeePrints ? (
+        <TouchableOpacity style={styles.printsBtn} onPress={() => onSeePrints(item.name)} activeOpacity={0.7}>
+          <Ionicons name="copy-outline" size={14} color={theme.accent} />
+          <Text style={styles.printsText}>Vedi tutte le stampe / alt-art di questa carta</Text>
+        </TouchableOpacity>
+      ) : null}
 
       {item.image && (
         <Image source={{ uri: item.image }} style={styles.detailImage} resizeMode="contain" />
@@ -522,7 +536,7 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, tar
         </View>
       ) : null}
 
-      {item.reco ? <RecoBanner reco={item.reco} /> : <WhyWatch item={item} />}
+      {item.reco ? <RecoBanner reco={item.reco} since={item.recoSince} /> : <WhyWatch item={item} />}
 
       {item.note ? (
         <>
@@ -989,9 +1003,14 @@ function CatalogBrowser({ game, onOpen }) {
   );
 }
 
-function SearchTab({ onPress, artists }) {
+function SearchTab({ onPress, artists, seed }) {
   const [q, setQ] = useState('');
   const [browseMode, setBrowseMode] = useState('set');
+
+  // Precompila la ricerca quando si arriva da "Vedi tutte le stampe".
+  useEffect(() => {
+    if (seed && seed.q) { setSrc('all'); setQ(seed.q); }
+  }, [seed]); // eslint-disable-line react-hooks/exhaustive-deps
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -1019,7 +1038,7 @@ function SearchTab({ onPress, artists }) {
       if (src !== 'op' && isNum) {
         tasks.push(fetch('https://api.tcgdex.net/v2/en/cards?localId=' + term)
           .then(r => r.json())
-          .then(a => (Array.isArray(a) ? a : []).slice(0, 20).map(c => ({
+          .then(a => (Array.isArray(a) ? a : []).slice(0, 50).map(c => ({
             key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name,
             sub: 'Pokémon · #' + (c.localId || ''),
             thumb: c.image ? c.image + '/low.png' : null,
@@ -1029,7 +1048,7 @@ function SearchTab({ onPress, artists }) {
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : [])
             .filter(c => c && c.name && words.every(w => c.name.toLowerCase().includes(w)))
-            .slice(0, 20).map(c => ({
+            .slice(0, 50).map(c => ({
               key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name,
               sub: 'Pokémon · #' + (c.localId || ''),
               thumb: c.image ? c.image + '/low.png' : null,
@@ -1048,7 +1067,7 @@ function SearchTab({ onPress, artists }) {
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : [])
             .filter(c => c && c.card_name && words.every(w => c.card_name.toLowerCase().includes(w)))
-            .slice(0, 20).map((c, i) => ({
+            .slice(0, 50).map((c, i) => ({
               key: 'op' + c.card_set_id + i, src: 'op', raw: c, name: c.card_name,
               sub: 'One Piece · ' + c.card_set_id, thumb: c.card_image || null,
             }))).catch(() => []));
@@ -1056,7 +1075,7 @@ function SearchTab({ onPress, artists }) {
 
       try {
         const lists = await Promise.all(tasks);
-        if (!cancelled) setResults(lists.flat().slice(0, 30));
+        if (!cancelled) setResults(lists.flat().slice(0, 80));
       } catch (e) {
         if (!cancelled) { setError('Errore di rete, riprova.'); setResults([]); }
       }
@@ -1457,9 +1476,11 @@ export default function App() {
   const [pfHist, setPfHist] = useState([]); // storico valore totale portfolio [[iso, valore]]
   const [targets, setTargets] = useState({}); // ref -> {below, above}
   const [lastChecked, setLastChecked] = useState(Date.now());
+  const [searchSeed, setSearchSeed] = useState(null); // {q, n} per aprire la ricerca precompilata
   const prevTab = useRef(0);
   const notifiedRef = useRef(new Set());
   const targetNotifiedRef = useRef(new Set());
+  const recoNotifiedRef = useRef(new Set());
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
@@ -1767,6 +1788,34 @@ export default function App() {
     }).catch(() => {});
   }, [data, notifOn]);
 
+  // Alert automatico: avvisa quando una carta SEGUITA o POSSEDUTA entra in COMPRA/VENDI.
+  useEffect(() => {
+    if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data || !data.items) return;
+    const byRef = {};
+    data.items.forEach(i => { byRef[i.ref] = i; });
+    const myRefs = new Set([...saved.map(s => s.ref), ...portfolio.map(h => h.ref)]);
+    myRefs.forEach(ref => {
+      const it = byRef[ref];
+      if (!it || !it.reco) return;
+      const act = it.reco.action;
+      if (act === 'compra' || act === 'vendi') {
+        const key = ref + '-' + act;
+        if (!recoNotifiedRef.current.has(key)) {
+          recoNotifiedRef.current.add(key);
+          recoNotifiedRef.current.delete(ref + '-' + (act === 'compra' ? 'vendi' : 'compra'));
+          const reason = (it.reco.reasons && it.reco.reasons[0]) || '';
+          try {
+            new Notification(act === 'compra' ? '🟢 Segnale d’ACQUISTO' : '🔴 Segnale di VENDITA',
+              { body: `${it.name} — ${reason}`, icon: '/icon.png' });
+          } catch {}
+        }
+      } else {
+        recoNotifiedRef.current.delete(ref + '-compra');
+        recoNotifiedRef.current.delete(ref + '-vendi');
+      }
+    });
+  }, [data, saved, portfolio, notifOn]);
+
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
     if (prevTab.current === 2 && tab !== 2 && data) {
@@ -1798,6 +1847,7 @@ export default function App() {
           onAddPortfolio={addToPortfolio}
           target={targets[detail.ref]}
           onSaveTarget={setTarget}
+          onSeePrints={(name) => { setSearchSeed({ q: name, n: Date.now() }); closeDetail(); setTab(4); }}
         />
       </View>
     );
@@ -1827,7 +1877,7 @@ export default function App() {
         {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} pfHist={pfHist} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} onExport={exportData} onImport={importData} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} />}
+        {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} seed={searchSeed} />}
       </View>
 
       <View style={styles.tabbar}>
@@ -1887,6 +1937,8 @@ const styles = StyleSheet.create({
   detailSub: { color: theme.textDim, fontSize: font.sm, marginTop: 4 },
   detailImage: { width: 240, height: 336, alignSelf: 'center', marginTop: 16, marginBottom: 8 },
   iconicTag: { color: theme.accent, fontSize: font.sm, fontWeight: '700', marginTop: 6 },
+  printsBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, alignSelf: 'flex-start', borderWidth: 1, borderColor: theme.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  printsText: { color: theme.accent, fontSize: font.sm, fontWeight: '600' },
   sectionTitle: { color: theme.textDim, fontSize: font.xs, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8, marginTop: 20 },
 
   priceBig: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.border },
@@ -2090,6 +2142,7 @@ const styles = StyleSheet.create({
   recoBox: { borderRadius: 12, padding: 14, borderWidth: 1.5 },
   recoLabel: { fontSize: font.md, fontWeight: '800', marginBottom: 8 },
   recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
+  recoTrack: { color: theme.text, fontSize: font.sm, fontWeight: '600', marginTop: 8 },
   recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },
   whyBox: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.accentDim },
   whyItem: { color: theme.text, fontSize: font.sm, lineHeight: 22 },

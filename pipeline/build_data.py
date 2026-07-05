@@ -37,6 +37,7 @@ WATCHLIST = ROOT / "watchlist.json"
 HISTORY = ROOT / "history.json"
 TRANSLATIONS = ROOT / "translations.json"
 ARTISTS = ROOT / "artists.json"
+SIGNALS = ROOT / "signals.json"
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -301,9 +302,14 @@ NEWS_FEEDS = [
     ("YouTube", 'Pokemon OR "One Piece" TCG site:youtube.com', "US", "video", "en-US", "US", "US:en"),
     ("Reddit", 'Pokemon OR "One Piece" TCG site:reddit.com', "US", "forum", "en-US", "US", "US:en"),
     ("eBay trend", 'Pokemon "One Piece" card sold price record', "US", "market", "en-US", "US", "US:en"),
+    # Feed MIRATI ai fattori che muovono i prezzi (piu' segnale)
+    ("Tornei", 'Pokemon OR "One Piece" TCG tournament regional championship results', "US", "market", "en-US", "US", "US:en"),
+    ("Uscite set", 'Pokemon OR "One Piece" TCG new set release preorder', "US", "news", "en-US", "US", "US:en"),
+    ("Anime", '"One Piece" new arc OR Pokemon anime announcement trading card', "US", "news", "en-US", "US", "US:en"),
+    ("Ristampe", 'Pokemon OR "One Piece" TCG reprint restock shortage', "US", "market", "en-US", "US", "US:en"),
 ]
 
-PER_FEED = 9
+PER_FEED = 8
 
 
 def fetch_news():
@@ -878,6 +884,28 @@ def main() -> None:
     n_buy = sum(1 for it in items if it["reco"]["action"] == "compra")
     n_sell = sum(1 for it in items if it["reco"]["action"] == "vendi")
     print(f"[TCG Radar] Segnali: {n_buy} COMPRA, {n_sell} VENDI su {len(items)} carte")
+
+    # "Backtest" leggero: da quando dura il segnale attuale e come è andato il prezzo da allora.
+    signals = {}
+    if SIGNALS.exists():
+        try:
+            signals = json.loads(SIGNALS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            signals = {}
+    today = NOW.date().isoformat()
+    for it in items:
+        ref = it["ref"]
+        act = it["reco"]["action"]
+        eu = (it.get("prices") or {}).get("eu")
+        prev = signals.get(ref)
+        if not prev or prev.get("action") != act:
+            signals[ref] = {"action": act, "since": today, "price": eu}
+        s = signals[ref]
+        chg = None
+        if s.get("price") and eu:
+            chg = round((eu - s["price"]) / s["price"] * 100, 1)
+        it["recoSince"] = {"action": s["action"], "since": s["since"], "price": s.get("price"), "changePct": chg}
+    SIGNALS.write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
 
     for n in news:
         t = n["title"].lower()

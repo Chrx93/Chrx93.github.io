@@ -37,6 +37,7 @@ jobs:
             pipeline/history.json
             pipeline/translations.json
             pipeline/artists.json
+            pipeline/signals.json
           key: tcg-history-${{ github.run_id }}
           restore-keys: |
             tcg-history-
