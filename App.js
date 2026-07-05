@@ -372,6 +372,50 @@ function factorsFor(item) {
   return f;
 }
 
+const RECO_META = {
+  compra: { label: '🟢 Buon momento per COMPRARE', color: theme.up, bg: '#12331e' },
+  vendi: { label: '🔴 Valuta di VENDERE', color: theme.down, bg: '#3a1614' },
+  osserva: { label: '🟡 Osserva — segnale neutro', color: theme.hypeText, bg: '#2a2410' },
+};
+
+function RecoBanner({ reco }) {
+  if (!reco) return null;
+  const m = RECO_META[reco.action] || RECO_META.osserva;
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Segnale · quando muoverti</Text>
+      <View style={[styles.recoBox, { borderColor: m.color, backgroundColor: m.bg }]}>
+        <Text style={[styles.recoLabel, { color: m.color }]}>{m.label}</Text>
+        {reco.reasons && reco.reasons.length
+          ? reco.reasons.map((r, i) => <Text key={i} style={styles.recoReason}>• {r}</Text>)
+          : <Text style={styles.recoReason}>Nessun segnale forte al momento — meglio aspettare.</Text>}
+        <Text style={styles.recoNote}>Sintesi di segnali reali (prezzo sotto mercato, minimi/massimi storici, momentum, notizie). Non è una previsione garantita: decidi tu.</Text>
+      </View>
+    </>
+  );
+}
+
+function BuyNowSection({ cards, onPress }) {
+  if (!cards || !cards.length) return null;
+  return (
+    <View style={[styles.rampBox, { borderColor: theme.up }]}>
+      <Text style={[styles.rampTitle, { color: theme.up }]}>🟢 DA COMPRARE ORA · segnale d'acquisto</Text>
+      {cards.map(item => (
+        <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
+          {item.image ? <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
+            : <View style={[styles.radarThumb, styles.thumbEmpty]} />}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.radarName} numberOfLines={1}>{iconicFor(item.name) ? '👑 ' : ''}{item.name}</Text>
+            <Text style={[styles.radarReason, { color: theme.up }]} numberOfLines={1}>{(item.reco && item.reco.reasons && item.reco.reasons[0]) || 'segnale d’acquisto'}</Text>
+          </View>
+          <Text style={styles.radarPrice}>{fmt(toEur(item.prices))}</Text>
+        </TouchableOpacity>
+      ))}
+      <Text style={styles.radarNote}>Verdetto da segnali reali (sotto mercato, minimi storici, notizie). Non è una garanzia — apri la carta per i dettagli.</Text>
+    </View>
+  );
+}
+
 function WhyWatch({ item }) {
   const factors = factorsFor(item);
   if (!factors.length) return null;
@@ -478,7 +522,7 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, tar
         </View>
       ) : null}
 
-      <WhyWatch item={item} />
+      {item.reco ? <RecoBanner reco={item.reco} /> : <WhyWatch item={item} />}
 
       {item.note ? (
         <>
@@ -581,6 +625,11 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
       tDown: down.slice().sort((a, b) => a.change7d - b.change7d)[0],
     };
   }, [data]);
+  const buyNowCards = useMemo(() => {
+    const byRef = {};
+    (data.items || []).forEach(i => { byRef[i.ref] = i; });
+    return (data.buyNow || []).map(r => byRef[r]).filter(Boolean);
+  }, [data]);
   const radarCards = useMemo(() => {
     const byRef = {};
     (data.items || []).forEach(i => { byRef[i.ref] = i; });
@@ -605,6 +654,7 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
               </Text>
             ) : null}
           </View>
+          <BuyNowSection cards={buyNowCards} onPress={onPress} />
           <RampSection cards={ramp} onPress={onPress} />
           <RadarSection cards={radarCards} onPress={onPress} />
           <Text style={styles.listLabel}>Tutte le carte · variazione 7g</Text>
@@ -733,12 +783,22 @@ function NewsTab({ news, lastUpdate, lastChecked, refreshing, onRefresh }) {
             </View>
             <Text style={styles.newsTitle}>{item.titleIt || item.title}</Text>
             {item.titleIt ? <Text style={styles.newsOrig} numberOfLines={1}>originale: {item.title}</Text> : null}
-            {item.url ? (
-              <View style={styles.newsDir}>
-                <Ionicons name="open-outline" size={14} color={theme.textDim} />
-                <Text style={[styles.newsDirText, { color: theme.textDim }]}>Tocca per leggere</Text>
-              </View>
-            ) : null}
+            <View style={styles.newsDir}>
+              {item.dir === 'up' || item.dir === 'down' ? (
+                <>
+                  <Ionicons name={item.dir === 'up' ? 'trending-up' : 'trending-down'} size={14} color={item.dir === 'up' ? theme.up : theme.down} />
+                  <Text style={[styles.newsDirText, { color: item.dir === 'up' ? theme.up : theme.down }]}>
+                    {item.dir === 'up' ? 'Segnale rialzista' : 'Segnale ribassista'}
+                  </Text>
+                  <Text style={[styles.newsDirText, { color: theme.textDim }]}>· tocca per leggere</Text>
+                </>
+              ) : item.url ? (
+                <>
+                  <Ionicons name="open-outline" size={14} color={theme.textDim} />
+                  <Text style={[styles.newsDirText, { color: theme.textDim }]}>Tocca per leggere</Text>
+                </>
+              ) : null}
+            </View>
           </TouchableOpacity>
         );
       }}
@@ -2027,6 +2087,10 @@ const styles = StyleSheet.create({
   catCardPrice: { color: theme.accent, fontSize: font.xs, fontWeight: '700', marginTop: 1 },
   sortLabel: { color: theme.textDim, fontSize: font.xs, alignSelf: 'center', marginRight: 2 },
 
+  recoBox: { borderRadius: 12, padding: 14, borderWidth: 1.5 },
+  recoLabel: { fontSize: font.md, fontWeight: '800', marginBottom: 8 },
+  recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
+  recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },
   whyBox: { backgroundColor: theme.card, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: theme.accentDim },
   whyItem: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
   whyNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8 },

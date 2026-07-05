@@ -377,6 +377,95 @@ def card_key(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Sentiment notizie + motore di segnale (COMPRA / TIENI / VENDI) trasparente
+# ---------------------------------------------------------------------------
+# Parole che indicano domanda/scarsità (rialzista) o offerta/rischio (ribassista).
+BULL_WORDS = (
+    "sold out", "sold-out", "shortage", "hard to find", "tournament", "championship",
+    "regional", "worlds", "meta", "chase", "record", "grail", "hype", "surge", "spike",
+    "rally", "anime", "exclusive", "limited", "psa 10", "gem mint", "demand", "restock sold",
+    "esaurito", "impennata", "rincaro", "torneo", "campionato", "introvabile",
+    "高騰", "優勝", "人気", "品切れ",  # 高騰 優勝 人気 品切れ
+)
+BEAR_WORDS = (
+    "reprint", "reprinted", "oversupply", "restock", "crash", "plummet", "banned",
+    "rotation", "counterfeit", "fake", "scam", "cooling off", "price drop", "overprinted",
+    "ristampa", "crollo", "ribasso", "truffa", "falsi", "sovrapprezzo",
+)
+
+ICONIC_KEYS = (
+    "pikachu", "charizard", "gengar", "mewtwo", "eevee", "umbreon", "espeon", "sylveon",
+    "rayquaza", "lugia", "gardevoir", "lucario", "greninja", "snorlax", "gyarados",
+    "luffy", "zoro", "nami", "sanji", "ace", "law", "shanks", "yamato", "robin",
+    "doflamingo", "katakuri", "crocodile", "mihawk", "roger",
+)
+
+
+def news_dir(title: str):
+    t = (title or "").lower()
+    bull = sum(1 for w in BULL_WORDS if w in t)
+    bear = sum(1 for w in BEAR_WORDS if w in t)
+    if bull > bear:
+        return "up"
+    if bear > bull:
+        return "down"
+    return None
+
+
+def is_iconic(name: str) -> bool:
+    n = (name or "").lower()
+    return any(k in n for k in ICONIC_KEYS)
+
+
+def compute_reco(item, bull_titles, bear_titles):
+    """Verdetto trasparente compra/tieni/vendi da segnali REALI (no previsione)."""
+    key = card_key(item["name"])
+    eu = (item.get("prices") or {}).get("eu")
+    mom = item.get("change7d") or 0
+    bo = item.get("bestOffer") or {}
+    rng = item.get("range") or {}
+    buy, sell, reasons = 0.0, 0.0, []
+
+    # 1) In vendita sotto la media di mercato adesso (occasione d'acquisto)
+    if bo.get("total") and eu and bo["total"] < eu * 0.75:
+        buy += 2; reasons.append(f"\U0001F4B0 in vendita ora sotto la media (da ~€{bo['total']:.0f})")
+
+    # 2) Posizione nello storico (vicino ai minimi = zona d'acquisto; ai massimi = valuta vendita)
+    if rng.get("high") and rng.get("low") and rng["high"] > rng["low"] and eu is not None:
+        pos = (eu - rng["low"]) / (rng["high"] - rng["low"])
+        if pos <= 0.25:
+            buy += 2; reasons.append("\U0001F4C9 vicino ai minimi dello storico")
+        elif pos >= 0.85:
+            sell += 2; reasons.append("\U0001F4C8 vicino ai massimi dello storico")
+
+    # 3) Momentum
+    if mom >= 25:
+        sell += 1; reasons.append("\U0001F680 forte rialzo recente (occhio: spesso conviene monetizzare)")
+    elif 5 <= mom < 25:
+        buy += 1; reasons.append("\U0001F4C8 trend in salita")
+    elif mom <= -12 and is_iconic(item["name"]):
+        buy += 1; reasons.append("\U0001FA78 forte calo su carta iconica (possibile occasione)")
+
+    # 4) Notizie (rialziste/ribassiste che citano la carta)
+    if any(key in t for t in bull_titles):
+        buy += 2; reasons.append("\U0001F4F0 notizie recenti positive")
+    if any(key in t for t in bear_titles):
+        sell += 2; reasons.append("\U0001F4F0 notizie recenti negative")
+
+    # 5) Personaggio iconico = domanda strutturale (piccolo peso a favore)
+    if is_iconic(item["name"]):
+        buy += 0.5
+
+    if buy - sell >= 2.5:
+        action = "compra"
+    elif sell - buy >= 2.5:
+        action = "vendi"
+    else:
+        action = "osserva"
+    return {"action": action, "buy": round(buy, 1), "sell": round(sell, 1), "reasons": reasons[:4]}
+
+
+# ---------------------------------------------------------------------------
 # Studio ARTISTI: quali illustratori hanno le carte di maggior valore.
 # Campiona i rari (numeri alti) dei set Pokémon recenti, prende illustratore +
 # prezzo Cardmarket, aggrega per artista. Dati reali; cresce nel tempo (cache).
@@ -581,6 +670,12 @@ def main() -> None:
     cards = watchlist.get("cards", [])
     news = fetch_news() or watchlist.get("news", [])
 
+    # Sentiment: ogni notizia diventa rialzista/ribassista/neutra
+    for n in news:
+        n["dir"] = news_dir(n.get("title", ""))
+    bull_titles = [n["title"].lower() for n in news if n.get("dir") == "up" and n.get("title")]
+    bear_titles = [n["title"].lower() for n in news if n.get("dir") == "down" and n.get("title")]
+
     # Traduci in italiano i titoli delle notizie USA e Giappone (Europa e' gia' IT)
     translations = {}
     if TRANSLATIONS.exists():
@@ -769,9 +864,20 @@ def main() -> None:
             reasons.append("da tenere d'occhio")
         item["inNews"] = in_news
         item["radarReason"] = " · ".join(reasons)
+        item["reco"] = compute_reco(item, bull_titles, bear_titles)
         radar.append((mom + (15 if in_news else 0), item["ref"]))
     radar.sort(reverse=True)
     radar_refs = [r for _, r in radar[:12]]
+
+    # "Da comprare ora": carte col verdetto COMPRA, ordinate per forza del segnale
+    buy_now = sorted(
+        (it for it in items if it["reco"]["action"] == "compra"),
+        key=lambda it: it["reco"]["buy"], reverse=True,
+    )
+    buy_now_refs = [it["ref"] for it in buy_now[:8]]
+    n_buy = sum(1 for it in items if it["reco"]["action"] == "compra")
+    n_sell = sum(1 for it in items if it["reco"]["action"] == "vendi")
+    print(f"[TCG Radar] Segnali: {n_buy} COMPRA, {n_sell} VENDI su {len(items)} carte")
 
     for n in news:
         t = n["title"].lower()
@@ -792,6 +898,7 @@ def main() -> None:
         "marketPulse": market_pulse,
         "fxUsdEur": USD_EUR,
         "radar": radar_refs,
+        "buyNow": buy_now_refs,
         "items": items,
         "news": news,
         "artists": artists,
