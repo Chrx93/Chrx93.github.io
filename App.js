@@ -384,6 +384,7 @@ const QUALITY_META = {
   media: { label: '◐ segnale medio', color: theme.hypeText },
   debole: { label: '⚠️ segnale debole', color: theme.down },
 };
+const QUALITY_SHORT = { forte: '💪 forte', media: '◐ media', debole: '⚠️ debole' };
 
 function RecoBanner({ reco, since }) {
   if (!reco) return null;
@@ -427,10 +428,17 @@ function BuyNowSection({ cards, onPress }) {
             <Text style={styles.radarName} numberOfLines={1}>{iconicFor(item.name) ? '👑 ' : ''}{item.name}</Text>
             <Text style={[styles.radarReason, { color: theme.up }]} numberOfLines={1}>{(item.reco && item.reco.reasons && item.reco.reasons[0]) || 'segnale d’acquisto'}</Text>
           </View>
-          <Text style={styles.radarPrice}>{fmt(toEur(item.prices))}</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.radarPrice}>{fmt(toEur(item.prices))}</Text>
+            {item.reco && item.reco.quality ? (
+              <Text style={[styles.qualityMini, { color: QUALITY_META[item.reco.quality].color, borderColor: QUALITY_META[item.reco.quality].color }]}>
+                {QUALITY_SHORT[item.reco.quality]}
+              </Text>
+            ) : null}
+          </View>
         </TouchableOpacity>
       ))}
-      <Text style={styles.radarNote}>Verdetto da segnali reali (sotto mercato, minimi storici, notizie). Non è una garanzia — apri la carta per i dettagli.</Text>
+      <Text style={styles.radarNote}>Verdetto da segnali reali (sotto mercato, minimi storici, notizie); il badge indica la forza del segnale. Non è una garanzia — apri la carta per i dettagli.</Text>
     </View>
   );
 }
@@ -1030,6 +1038,8 @@ function SearchTab({ onPress, artists, seed }) {
   const [src, setSrc] = useState('all'); // 'all' | 'op' | 'pkm'
   const [refreshing, setRefreshing] = useState(false);
   const [nonce, setNonce] = useState(0);
+  const [rFilter, setRFilter] = useState(null); // rarità selezionata nei risultati
+  const [sortP, setSortP] = useState('rel');     // 'rel' | 'desc' | 'asc' (prezzo)
 
   useEffect(() => {
     const term = q.trim();
@@ -1057,7 +1067,7 @@ function SearchTab({ onPress, artists, seed }) {
 
       // --- POKÉMON (TCGdex) ---
       const pkBrief = (c) => ({
-        key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name,
+        key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name, rarity: c.rarity || null,
         sub: 'Pokémon · #' + (c.localId || '') + (c.rarity ? ' · ' + c.rarity : ''),
         thumb: c.image ? c.image + '/low.png' : null,
       });
@@ -1082,7 +1092,7 @@ function SearchTab({ onPress, artists, seed }) {
       const opMap = (c) => {
         const p = parseFloat(String(c.market_price || '').replace(/[^0-9.]/g, '')) || 0;
         return {
-          key: 'op' + c.card_set_id, src: 'op', raw: c, name: c.card_name, _p: p,
+          key: 'op' + c.card_set_id, src: 'op', raw: c, name: c.card_name, _p: p, rarity: c.rarity || null,
           sub: 'One Piece · ' + c.card_set_id + (c.rarity ? ' · ' + c.rarity : '') + (p ? ' · $' + p : ''),
           thumb: c.card_image || null,
         };
@@ -1132,6 +1142,17 @@ function SearchTab({ onPress, artists, seed }) {
     { key: 'pkm', label: '⚡ Pokémon' },
   ];
 
+  // Filtri sui risultati: compaiono solo se i dati li supportano (rarità/prezzo
+  // ci sono per One Piece e per le carte aperte da codice; per i Pokémon cercati
+  // per nome il brief TCGdex non porta la rarità → nessun chip, niente UI rotta).
+  const rarities = [...new Set(results.map(r => r.rarity).filter(Boolean))];
+  const activeRarity = rarities.includes(rFilter) ? rFilter : null;
+  const hasPrices = results.some(r => r._p > 0);
+  let shown = activeRarity ? results.filter(r => r.rarity === activeRarity) : results;
+  if (hasPrices && sortP !== 'rel') {
+    shown = [...shown].sort((a, b) => (sortP === 'desc' ? (b._p || 0) - (a._p || 0) : (a._p || 0) - (b._p || 0)));
+  }
+
   return (
     <ScrollView
       style={{ paddingHorizontal: 12, paddingTop: 12 }}
@@ -1174,9 +1195,38 @@ function SearchTab({ onPress, artists, seed }) {
             <Text style={styles.searchHint}>Nessun risultato per “{q}”.</Text>
           )}
           {!loading && !error && results.length > 0 && (
-            <Text style={styles.searchHint}>{results.length} risultati — tutte le stampe/varianti (rare e alt-art comprese)</Text>
+            <Text style={styles.searchHint}>
+              {shown.length}{activeRarity ? ` di ${results.length}` : ''} risultati — tutte le stampe/varianti (rare e alt-art comprese)
+            </Text>
           )}
-          {results.map(s => (
+          {!loading && !error && rarities.length >= 2 && (
+            <View style={styles.srcChips}>
+              <TouchableOpacity style={[styles.chip, !activeRarity && styles.chipOn]} onPress={() => setRFilter(null)} activeOpacity={0.7}>
+                <Text style={[styles.chipTxt, !activeRarity && styles.chipTxtOn]}>Tutte le rarità</Text>
+              </TouchableOpacity>
+              {rarities.map(r => {
+                const on = r === activeRarity;
+                return (
+                  <TouchableOpacity key={r} style={[styles.chip, on && styles.chipOn]} onPress={() => setRFilter(on ? null : r)} activeOpacity={0.7}>
+                    <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{r}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {!loading && !error && hasPrices && (
+            <View style={styles.srcChips}>
+              {[['rel', 'Rilevanza'], ['desc', 'Prezzo ↓'], ['asc', 'Prezzo ↑']].map(([k, lab]) => {
+                const on = k === sortP;
+                return (
+                  <TouchableOpacity key={k} style={[styles.chip, on && styles.chipOn]} onPress={() => setSortP(k)} activeOpacity={0.7}>
+                    <Text style={[styles.chipTxt, on && styles.chipTxtOn]}>{lab}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {shown.map(s => (
             <TouchableOpacity key={s.key} style={styles.sugg} onPress={() => openCard(s)} activeOpacity={0.7} disabled={opening}>
               {s.thumb ? (
                 <Image source={{ uri: s.thumb }} style={styles.suggThumb} resizeMode="contain" />
@@ -2175,6 +2225,7 @@ const styles = StyleSheet.create({
   recoHead: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 },
   recoLabel: { fontSize: font.md, fontWeight: '800' },
   recoQuality: { fontSize: font.xs, fontWeight: '700', borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, marginLeft: 8 },
+  qualityMini: { fontSize: font.xs, fontWeight: '700', borderWidth: 1, borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1, marginTop: 3 },
   recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
   recoTrack: { color: theme.text, fontSize: font.sm, fontWeight: '600', marginTop: 8 },
   recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },
