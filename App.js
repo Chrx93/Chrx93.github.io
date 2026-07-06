@@ -1039,54 +1039,69 @@ function SearchTab({ onPress, artists, seed }) {
     setError(null);
     setSearched(true);
     const handle = setTimeout(async () => {
+      const PK_CAP = 150, OP_CAP = 150;
       const stop = ['di', 'the', 'one', 'piece', 'card', '&'];
       const isNum = /^[0-9]+$/.test(term);
-      const opCode = (term.toUpperCase().match(/(OP|ST|EB|P)\d{2}-\d{3}/) || [])[0];
-      const words = term.toLowerCase().split(/\s+/).filter(w => w.length >= 2 && !stop.includes(w));
-      const longest = words.reduce((a, b) => (b.length > a.length ? b : a), '');
+      // Codice One Piece: OPxx-xxx / STxx-xxx / EBxx-xxx / promo P-xxx.
+      const opCode = (term.toUpperCase().match(/(?:OP|ST|EB)\d{2}-\d{3}|P-?\d{2,4}/) || [])[0];
+      // Codice carta Pokémon (id TCGdex): set+numero es. swsh7-215, sv3pt5-199, base1-4.
+      const pkmId = (!opCode && !isNum && !term.includes(' ') && /^[a-z0-9]+-[a-z0-9]*\d[a-z0-9]*$/i.test(term) && /[a-z]/i.test(term.split('-')[0])) ? term : null;
+      // Parole per la ricerca per NOME: via parentesi/punti (le stampe One Piece
+      // hanno "Nome (024)" → il "(024)" non deve diventare filtro obbligatorio).
+      const cleaned = term.toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/[._]/g, ' ');
+      const words = cleaned.split(/\s+/).filter(w => w.length >= 2 && !stop.includes(w));
+      const nameWords = words.filter(w => /[a-z]/i.test(w) && !/^\d+$/.test(w));
+      const longest = nameWords.reduce((a, b) => (b.length > a.length ? b : a), '');
+      const numTok = (term.match(/\b\d{1,4}\b/) || [])[0] || null; // "umbreon 215" → 215
       const tasks = [];
 
-      if (src !== 'op' && isNum) {
+      // --- POKÉMON (TCGdex) ---
+      const pkBrief = (c) => ({
+        key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name,
+        sub: 'Pokémon · #' + (c.localId || '') + (c.rarity ? ' · ' + c.rarity : ''),
+        thumb: c.image ? c.image + '/low.png' : null,
+      });
+      if (src !== 'op' && pkmId) {
+        tasks.push(fetch('https://api.tcgdex.net/v2/en/cards/' + pkmId)
+          .then(r => (r.ok ? r.json() : null))
+          .then(c => (c && c.id ? [pkBrief(c)] : [])).catch(() => []));
+      } else if (src !== 'op' && isNum) {
         tasks.push(fetch('https://api.tcgdex.net/v2/en/cards?localId=' + term)
           .then(r => r.json())
-          .then(a => (Array.isArray(a) ? a : []).slice(0, 50).map(c => ({
-            key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name,
-            sub: 'Pokémon · #' + (c.localId || ''),
-            thumb: c.image ? c.image + '/low.png' : null,
-          }))).catch(() => []));
+          .then(a => (Array.isArray(a) ? a : []).slice(0, PK_CAP).map(pkBrief)).catch(() => []));
       } else if (src !== 'op' && longest) {
         tasks.push(fetch('https://api.tcgdex.net/v2/en/cards?name=' + encodeURIComponent(longest))
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : [])
-            .filter(c => c && c.name && words.every(w => c.name.toLowerCase().includes(w)))
-            .slice(0, 50).map(c => ({
-              key: 'pk' + c.id, src: 'pkm', id: c.id, name: c.name,
-              sub: 'Pokémon · #' + (c.localId || ''),
-              thumb: c.image ? c.image + '/low.png' : null,
-            }))).catch(() => []));
+            .filter(c => c && c.name && nameWords.every(w => c.name.toLowerCase().includes(w))
+              && (!numTok || String(c.localId) === numTok))
+            .slice(0, PK_CAP).map(pkBrief)).catch(() => []));
       }
 
+      // --- ONE PIECE (optcgapi) ---
+      const opMap = (c) => {
+        const p = parseFloat(String(c.market_price || '').replace(/[^0-9.]/g, '')) || 0;
+        return {
+          key: 'op' + c.card_set_id, src: 'op', raw: c, name: c.card_name, _p: p,
+          sub: 'One Piece · ' + c.card_set_id + (c.rarity ? ' · ' + c.rarity : '') + (p ? ' · $' + p : ''),
+          thumb: c.card_image || null,
+        };
+      };
       if (src !== 'pkm' && opCode) {
         tasks.push(fetch('https://optcgapi.com/api/sets/card/' + opCode + '/')
           .then(r => r.json())
-          .then(d => (Array.isArray(d) ? d : [d]).filter(Boolean).map((c, i) => ({
-            key: 'op' + c.card_set_id + i, src: 'op', raw: c, name: c.card_name,
-            sub: 'One Piece · ' + c.card_set_id, thumb: c.card_image || null,
-          }))).catch(() => []));
+          .then(d => (Array.isArray(d) ? d : [d]).filter(Boolean).map(opMap)).catch(() => []));
       } else if (src !== 'pkm' && longest) {
         tasks.push(fetch('https://optcgapi.com/api/sets/filtered/?card_name=' + encodeURIComponent(longest))
           .then(r => r.json())
           .then(a => (Array.isArray(a) ? a : [])
-            .filter(c => c && c.card_name && words.every(w => c.card_name.toLowerCase().includes(w)))
-            .slice(0, 50).map((c, i) => ({
-              key: 'op' + c.card_set_id + i, src: 'op', raw: c, name: c.card_name,
-              sub: 'One Piece · ' + c.card_set_id, thumb: c.card_image || null,
-            }))).catch(() => []));
+            .filter(c => c && c.card_name && nameWords.every(w => c.card_name.toLowerCase().includes(w)))
+            .map(opMap).sort((a, b) => b._p - a._p).slice(0, OP_CAP)).catch(() => []));
       }
 
       try {
         const lists = await Promise.all(tasks);
-        if (!cancelled) setResults(lists.flat().slice(0, 80));
+        if (!cancelled) setResults(lists.flat().slice(0, 250));
       } catch (e) {
         if (!cancelled) { setError('Errore di rete, riprova.'); setResults([]); }
       }
@@ -1127,7 +1142,7 @@ function SearchTab({ onPress, artists, seed }) {
         <Ionicons name="search" size={16} color={theme.textDim} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Cerca Pokémon o One Piece..."
+          placeholder="Nome, numero o codice (es. OP01-024, swsh7-215)..."
           placeholderTextColor={theme.textDim}
           value={q}
           onChangeText={setQ}
@@ -1158,6 +1173,9 @@ function SearchTab({ onPress, artists, seed }) {
           {!loading && !error && results.length === 0 && (
             <Text style={styles.searchHint}>Nessun risultato per “{q}”.</Text>
           )}
+          {!loading && !error && results.length > 0 && (
+            <Text style={styles.searchHint}>{results.length} risultati — tutte le stampe/varianti (rare e alt-art comprese)</Text>
+          )}
           {results.map(s => (
             <TouchableOpacity key={s.key} style={styles.sugg} onPress={() => openCard(s)} activeOpacity={0.7} disabled={opening}>
               {s.thumb ? (
@@ -1177,7 +1195,7 @@ function SearchTab({ onPress, artists, seed }) {
         </>
       ) : src === 'all' ? (
         <Text style={styles.searchHint}>
-          Scrivi un nome (es. charizard, luffy) o un numero — oppure scegli 🏴‍☠️ One Piece o ⚡ Pokémon qui sopra per sfogliare tutto il catalogo per set (e gli artisti).
+          Cerca per nome (es. charizard, luffy), numero, "nome + numero" (es. umbreon 215) o codice carta (One Piece OP01-024 · Pokémon swsh7-215). Trovi tutte le stampe/varianti, comprese rare e alt-art. Oppure scegli 🏴‍☠️ One Piece o ⚡ Pokémon per sfogliare il catalogo per set (e gli artisti).
         </Text>
       ) : (
         <>
@@ -1858,7 +1876,10 @@ export default function App() {
           onAddPortfolio={addToPortfolio}
           target={targets[detail.ref]}
           onSaveTarget={setTarget}
-          onSeePrints={(name) => { setSearchSeed({ q: name, n: Date.now() }); closeDetail(); setTab(4); }}
+          onSeePrints={(name) => {
+            const clean = String(name).replace(/\([^)]*\)/g, ' ').replace(/[._]/g, ' ').replace(/\s+/g, ' ').trim();
+            setSearchSeed({ q: clean, n: Date.now() }); closeDetail(); setTab(4);
+          }}
         />
       </View>
     );
