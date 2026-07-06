@@ -423,6 +423,50 @@ def is_iconic(name: str) -> bool:
     return any(k in n for k in ICONIC_KEYS)
 
 
+def momentum_quality(tf, mom, in_bull, in_bear):
+    """Qualita' di un momentum di prezzo: distingue un trend affidabile dal rumore.
+
+    Usa SOLO dati reali che abbiamo: variazioni su 1/7/30 giorni (persistenza e
+    anti-picco) + coerenza col sentiment delle notizie. NON usa volume/venduti
+    perche' quel dato non ce l'abbiamo: niente numeri finti (linea di onesta').
+
+    Ritorna (grade, note): grade in {"forte","debole",None}, note = spiegazione it.
+    """
+    if abs(mom) < 5:
+        return None, None            # momentum irrilevante: non e' il driver
+    tf = tf or {}
+    d1, d30 = tf.get("d1"), tf.get("d30")
+    up = mom > 0
+    pro, contro = [], []
+
+    # Persistenza sul lungo periodo (30g): il trend regge o e' un rimbalzo?
+    if d30 is not None and abs(d30) >= 3:
+        if (d30 > 0) == up:
+            pro.append("confermato anche sui 30g")
+        else:
+            contro.append("controtendenza sui 30g (piu' un rimbalzo)")
+
+    # Anti-picco: quasi tutto il movimento concentrato in 1 giorno = sospetto.
+    if d1 is not None and abs(mom) >= 8 and (d1 > 0) == up and abs(d1) >= abs(mom) * 0.8:
+        contro.append("salto concentrato in 1 giorno, cautela")
+
+    # Coerenza con le notizie che citano la carta.
+    if up and in_bull:
+        pro.append("in linea con notizie positive")
+    elif up and in_bear:
+        contro.append("ma le notizie sono negative")
+    elif (not up) and in_bear:
+        pro.append("in linea con notizie negative")
+    elif (not up) and in_bull:
+        contro.append("ma le notizie sono positive")
+
+    if pro and not contro:
+        return "forte", pro[0]
+    if contro:
+        return "debole", contro[0]
+    return None, None
+
+
 def compute_reco(item, bull_titles, bear_titles):
     """Verdetto trasparente compra/tieni/vendi da segnali REALI (no previsione)."""
     key = card_key(item["name"])
@@ -430,6 +474,8 @@ def compute_reco(item, bull_titles, bear_titles):
     mom = item.get("change7d") or 0
     bo = item.get("bestOffer") or {}
     rng = item.get("range") or {}
+    in_bull = any(key in t for t in bull_titles)
+    in_bear = any(key in t for t in bear_titles)
     buy, sell, reasons = 0.0, 0.0, []
 
     # 1) In vendita sotto la media di mercato adesso (occasione d'acquisto)
@@ -444,18 +490,28 @@ def compute_reco(item, bull_titles, bear_titles):
         elif pos >= 0.85:
             sell += 2; reasons.append("\U0001F4C8 vicino ai massimi dello storico")
 
-    # 3) Momentum
+    # 3) Momentum, PESATO per la sua qualita'. Un rialzo "di qualita'"
+    #    (persistente sui 30g, non un picco di 1 giorno, coerente con le notizie)
+    #    conta di piu' verso COMPRA; uno "debole" conta meno, cosi' un finto pump
+    #    non accende un COMPRA. La nota spiega il perche' in chiaro.
+    mom_grade = None
     if mom >= 25:
-        sell += 1; reasons.append("\U0001F680 forte rialzo recente (occhio: spesso conviene monetizzare)")
+        sell += 1
+        _, note = momentum_quality(item.get("tf"), mom, in_bull, in_bear)
+        r = "\U0001F680 forte rialzo recente (occhio: spesso conviene monetizzare)"
+        reasons.append(f"{r} · {note}" if note else r)
     elif 5 <= mom < 25:
-        buy += 1; reasons.append("\U0001F4C8 trend in salita")
+        mom_grade, note = momentum_quality(item.get("tf"), mom, in_bull, in_bear)
+        buy += 1.5 if mom_grade == "forte" else 0.5 if mom_grade == "debole" else 1.0
+        r = "\U0001F4C8 trend in salita"
+        reasons.append(f"{r} · {note}" if note else r)
     elif mom <= -12 and is_iconic(item["name"]):
         buy += 1; reasons.append("\U0001FA78 forte calo su carta iconica (possibile occasione)")
 
     # 4) Notizie (rialziste/ribassiste che citano la carta)
-    if any(key in t for t in bull_titles):
+    if in_bull:
         buy += 2; reasons.append("\U0001F4F0 notizie recenti positive")
-    if any(key in t for t in bear_titles):
+    if in_bear:
         sell += 2; reasons.append("\U0001F4F0 notizie recenti negative")
 
     # 5) Personaggio iconico = domanda strutturale (piccolo peso a favore)
@@ -468,7 +524,23 @@ def compute_reco(item, bull_titles, bear_titles):
         action = "vendi"
     else:
         action = "osserva"
-    return {"action": action, "buy": round(buy, 1), "sell": round(sell, 1), "reasons": reasons[:4]}
+
+    # Forza del segnale per la UI: quanto e' netto lo sbilanciamento buy/sell.
+    # Declassata se il verdetto poggia su un rialzo di qualita' dubbia.
+    margin = abs(buy - sell)
+    if action == "osserva":
+        quality = None
+    elif margin >= 4:
+        quality = "forte"
+    elif margin >= 3:
+        quality = "media"
+    else:
+        quality = "debole"
+    if quality == "forte" and mom_grade == "debole":
+        quality = "media"
+
+    return {"action": action, "buy": round(buy, 1), "sell": round(sell, 1),
+            "quality": quality, "reasons": reasons[:4]}
 
 
 # ---------------------------------------------------------------------------

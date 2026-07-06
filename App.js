@@ -378,9 +378,17 @@ const RECO_META = {
   osserva: { label: '🟡 Osserva — segnale neutro', color: theme.hypeText, bg: '#2a2410' },
 };
 
+// Forza del segnale: quanto è netto e affidabile lo sbilanciamento buy/sell.
+const QUALITY_META = {
+  forte: { label: '💪 segnale forte', color: theme.up },
+  media: { label: '◐ segnale medio', color: theme.hypeText },
+  debole: { label: '⚠️ segnale debole', color: theme.down },
+};
+
 function RecoBanner({ reco, since }) {
   if (!reco) return null;
   const m = RECO_META[reco.action] || RECO_META.osserva;
+  const q = reco.quality ? QUALITY_META[reco.quality] : null;
   let sinceLine = null;
   if (since && since.since && (reco.action === 'compra' || reco.action === 'vendi')) {
     let d = since.since;
@@ -392,7 +400,10 @@ function RecoBanner({ reco, since }) {
     <>
       <Text style={styles.sectionTitle}>Segnale · quando muoverti</Text>
       <View style={[styles.recoBox, { borderColor: m.color, backgroundColor: m.bg }]}>
-        <Text style={[styles.recoLabel, { color: m.color }]}>{m.label}</Text>
+        <View style={styles.recoHead}>
+          <Text style={[styles.recoLabel, { color: m.color }]}>{m.label}</Text>
+          {q ? <Text style={[styles.recoQuality, { color: q.color, borderColor: q.color }]}>{q.label}</Text> : null}
+        </View>
         {reco.reasons && reco.reasons.length
           ? reco.reasons.map((r, i) => <Text key={i} style={styles.recoReason}>• {r}</Text>)
           : <Text style={styles.recoReason}>Nessun segnale forte al momento — meglio aspettare.</Text>}
@@ -2140,7 +2151,9 @@ const styles = StyleSheet.create({
   sortLabel: { color: theme.textDim, fontSize: font.xs, alignSelf: 'center', marginRight: 2 },
 
   recoBox: { borderRadius: 12, padding: 14, borderWidth: 1.5 },
-  recoLabel: { fontSize: font.md, fontWeight: '800', marginBottom: 8 },
+  recoHead: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 },
+  recoLabel: { fontSize: font.md, fontWeight: '800' },
+  recoQuality: { fontSize: font.xs, fontWeight: '700', borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, marginLeft: 8 },
   recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
   recoTrack: { color: theme.text, fontSize: font.sm, fontWeight: '600', marginTop: 8 },
   recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },
