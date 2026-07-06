@@ -37,7 +37,9 @@ WATCHLIST = ROOT / "watchlist.json"
 HISTORY = ROOT / "history.json"
 TRANSLATIONS = ROOT / "translations.json"
 ARTISTS = ROOT / "artists.json"
+ARTISTS_HIST = ROOT / "artists_hist.json"  # {artista: [[iso, media], ...]} trend nel tempo
 SIGNALS = ROOT / "signals.json"
+PSA10 = ROOT / "psa10.json"                # cache stime PSA 10 (eBay), riuso tra i run
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -281,6 +283,52 @@ def ebay_best_offer(token: str, query: str, code: str = None):
                 "condition": it.get("condition"),
             }
     return best
+
+
+# Per il PSA 10 vogliamo TENERE i gradati: dal filtro spazzatura tolgo psa/bgs/cgc/graded.
+PSA10_JUNK = tuple(j for j in EBAY_JUNK if j.strip() not in ("psa", "bgs", "cgc", "graded"))
+
+
+def ebay_psa10_eur(token: str, query: str):
+    """Stima del valore PSA 10 in EUR dalla mediana (trimmed) degli annunci ATTIVI
+    'PSA 10' su eBay US (piu' slab gradati), convertita in EUR. 1 chiamata.
+    Ritorna {value, count} o None. Onesto: senza un campione minimo (>=5) non
+    stimo, cosi' non mostro un numero fragile costruito su 1-2 annunci."""
+    import requests
+
+    try:
+        resp = requests.get(
+            "https://api.ebay.com/buy/browse/v1/item_summary/search",
+            headers={"Authorization": f"Bearer {token}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"},
+            params={"q": f"{query} PSA 10", "limit": 50, "sort": "price",
+                    "filter": "buyingOptions:{FIXED_PRICE}"},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        items = resp.json().get("itemSummaries", []) or []
+    except Exception as exc:  # noqa: BLE001
+        print(f"    eBay PSA10 errore: {exc}")
+        return None
+    vals = []
+    for it in items:
+        title = (it.get("title") or "").lower()
+        if "psa 10" not in title and "psa10" not in title:
+            continue
+        if any(j in (" " + title + " ") for j in PSA10_JUNK):
+            continue
+        price = it.get("price", {})
+        if price.get("currency") != "USD":
+            continue
+        try:
+            vals.append(float(price["value"]))
+        except (KeyError, ValueError, TypeError):
+            continue
+    if len(vals) < 5:  # campione troppo piccolo: meglio nessun numero che uno fragile
+        return None
+    vals.sort()
+    k = max(1, len(vals) // 5)          # scarta ~20% estremi (come il prezzo raw trimmed)
+    trimmed = vals[k:-k] or vals
+    return {"value": round(to_eur(statistics.median(trimmed)), 2), "count": len(vals)}
 
 
 def ebay_search_url(query: str) -> str:
@@ -614,6 +662,42 @@ def build_artists(max_fetch: int = 70, budget_s: float = 70.0):
     artists.sort(key=lambda a: (a["avg"], a["count"]), reverse=True)
     print(f"[TCG Radar] Artisti: {len(artists)} con 2+ carte (da {fetched} campionate)")
     return artists[:15]
+
+
+def update_artist_trend(artists):
+    """Trend nel tempo del valore medio per artista (dato REALE che si accumula).
+
+    Un punto al giorno (media del giorno) in artists_hist.json, conservato tra i
+    run via cache Actions come history.json. Aggiunge a ogni artista trendPct
+    (variazione dal primo punto disponibile), trendDays e una mini-serie 'spark'.
+    All'inizio trendPct=None finche' non si hanno >=2 giorni: onesto, cresce coi dati.
+    """
+    ART_HIST_LEN = 120  # ~4 mesi di punti giornalieri
+    hist = {}
+    if ARTISTS_HIST.exists():
+        try:
+            hist = json.loads(ARTISTS_HIST.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            hist = {}
+    today = NOW.date().isoformat()
+    for a in artists:
+        key = a["name"].strip().lower()
+        series = hist.get(key, [])
+        if series and series[-1][0] == today:   # un solo punto al giorno
+            series[-1] = [today, a["avg"]]
+        else:
+            series.append([today, a["avg"]])
+        series = series[-ART_HIST_LEN:]
+        hist[key] = series
+        base = series[0][1] if series else None
+        if len(series) >= 2 and base:
+            a["trendPct"] = round((series[-1][1] - base) / base * 100, 1)
+        else:
+            a["trendPct"] = None
+        a["trendDays"] = len(series)
+        a["spark"] = [round(v, 2) for _, v in series[-12:]]
+    ARTISTS_HIST.write_text(json.dumps(hist, ensure_ascii=False, indent=2), encoding="utf-8")
+    return artists
 
 
 # ---------------------------------------------------------------------------
@@ -992,6 +1076,37 @@ def main() -> None:
             artists = []
     if artists:
         ARTISTS.write_text(json.dumps(artists, ensure_ascii=False, indent=2), encoding="utf-8")
+        artists = update_artist_trend(artists)  # trend del valore medio nel tempo
+
+    # Stima PSA 10 (EUR) per le carte piu' di valore: 1 chiamata eBay ciascuna,
+    # con budget di tempo + cache, NON bloccante. Se manca il token o l'API e'
+    # lenta, si riusa la cache / si salta e restano i link ai prezzi graded reali.
+    psa10_cache = {}
+    if PSA10.exists():
+        try:
+            psa10_cache = json.loads(PSA10.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            psa10_cache = {}
+    if token is not None:
+        top_val = sorted(
+            (it for it in items if (it.get("prices") or {}).get("eu")),
+            key=lambda it: it["prices"]["eu"], reverse=True,
+        )[:12]
+        deadline = time.monotonic() + 45.0
+        done = 0
+        for it in top_val:
+            if time.monotonic() > deadline:
+                break
+            q = f'{it["name"]} {it.get("serial") or ""}'.strip()
+            est = ebay_psa10_eur(token, q)
+            if est:
+                psa10_cache[it["ref"]] = est
+                done += 1
+        PSA10.write_text(json.dumps(psa10_cache, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[TCG Radar] PSA 10: {done} stime aggiornate (top {len(top_val)} per valore)")
+    for it in items:
+        if it["ref"] in psa10_cache:
+            it["psa10"] = psa10_cache[it["ref"]]
 
     data = {
         "lastUpdate": NOW.isoformat(),

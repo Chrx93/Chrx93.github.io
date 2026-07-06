@@ -295,6 +295,25 @@ function PriceFinder({ item }) {
       ) : null}
 
       <Text style={styles.sectionTitle}>🏅 Conviene gradarla? (PSA 10)</Text>
+      {item.psa10 && item.psa10.value ? (() => {
+        const eu = toEur(item.prices);
+        const est = item.psa10.value;
+        const gain = eu ? est - eu - 20 : null; // margine netto stimato (−~€20 gradazione)
+        const worth = gain != null && gain > 0;
+        return (
+          <View style={[styles.psaBox, { borderColor: worth ? theme.up : theme.border }]}>
+            <Text style={styles.psaEst}>PSA 10 stimato ~{fmt(est)}<Text style={styles.psaCount}>  · da {item.psa10.count} annunci (eBay US)</Text></Text>
+            {eu ? (
+              <Text style={[styles.psaRoi, { color: worth ? theme.up : theme.textDim }]}>
+                {worth
+                  ? `Raw ~${fmt(eu)} → gradata ~${fmt(est)}: potenziale +${fmt(gain)} netto (dopo ~€20 di gradazione)`
+                  : `Raw ~${fmt(eu)}: al momento gradarla non sembra convenire (margine sotto ~€20 di costo)`}
+              </Text>
+            ) : null}
+            <Text style={styles.psaNote}>Stima dalla mediana degli annunci PSA 10 attivi — non è un prezzo garantito.</Text>
+          </View>
+        );
+      })() : null}
       <View style={styles.gradeRow}>
         <TouchableOpacity style={styles.gradeBtn} onPress={() => Linking.openURL(links.psa10)} activeOpacity={0.85}>
           <Ionicons name="ribbon-outline" size={15} color={theme.accent} />
@@ -858,7 +877,14 @@ function ArtistsView({ artists, onOpen }) {
           <Ionicons name="chevron-back" size={16} color={theme.accent} />
           <Text style={styles.catBackText} numberOfLines={1}>Tutti gli artisti · {sel.name}</Text>
         </TouchableOpacity>
-        <Text style={styles.artStat}>{sel.count} carte di valore · media {fmt(sel.avg)} · max {fmt(sel.max)}</Text>
+        <Text style={styles.artStat}>
+          {sel.count} carte di valore · media {fmt(sel.avg)} · max {fmt(sel.max)}
+          {sel.trendPct != null ? (
+            <Text style={{ color: sel.trendPct >= 0 ? theme.up : theme.down, fontWeight: '700' }}>
+              {'  '}{sel.trendPct >= 0 ? '↑' : '↓'} {Math.abs(sel.trendPct)}% in {sel.trendDays}g
+            </Text>
+          ) : null}
+        </Text>
         <View style={[styles.catGrid, { marginTop: 10 }]}>
           {sel.cards.map((c, i) => (
             <TouchableOpacity key={i} style={styles.catCard} onPress={() => open(c.id)} activeOpacity={0.7} disabled={opening}>
@@ -876,13 +902,20 @@ function ArtistsView({ artists, onOpen }) {
   return (
     <View style={{ marginTop: 12 }}>
       <Text style={styles.catTitle}>🎨 Artisti per valore delle carte</Text>
-      <Text style={styles.artIntro}>Illustratori i cui rari recenti valgono di più: il disegno conta. Campione dai set recenti, cresce nel tempo.</Text>
+      <Text style={styles.artIntro}>Illustratori i cui rari recenti valgono di più: il disegno conta. Campione dai set recenti; il trend ↑/↓ misura la variazione del valore medio da quando lo seguiamo (cresce coi giorni).</Text>
       {list.map((a, i) => (
         <TouchableOpacity key={i} style={styles.artRow} onPress={() => setSel(a)} activeOpacity={0.7}>
           <Text style={styles.artRank}>{i + 1}</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.artName} numberOfLines={1}>{a.name}</Text>
-            <Text style={styles.artSub}>{a.count} carte · media {fmt(a.avg)} · max {fmt(a.max)}</Text>
+            <Text style={styles.artSub}>
+              {a.count} carte · media {fmt(a.avg)} · max {fmt(a.max)}
+              {a.trendPct != null ? (
+                <Text style={{ color: a.trendPct >= 0 ? theme.up : theme.down, fontWeight: '700' }}>
+                  {'  '}{a.trendPct >= 0 ? '↑' : '↓'} {Math.abs(a.trendPct)}% ({a.trendDays}g)
+                </Text>
+              ) : null}
+            </Text>
             <View style={styles.artBarBg}><View style={[styles.artBarFill, { width: `${Math.max(6, (a.avg / maxAvg) * 100)}%` }]} /></View>
           </View>
           <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
@@ -2267,6 +2300,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: theme.accent, borderRadius: 10, paddingVertical: 12,
   },
   gradeBtnText: { color: theme.accent, fontSize: font.sm, fontWeight: '700' },
+  psaBox: { borderRadius: 12, borderWidth: 1.5, padding: 12, marginBottom: 10, backgroundColor: theme.card },
+  psaEst: { color: theme.text, fontSize: font.md, fontWeight: '800' },
+  psaCount: { color: theme.textDim, fontSize: font.xs, fontWeight: '600' },
+  psaRoi: { fontSize: font.sm, fontWeight: '700', marginTop: 5, lineHeight: 20 },
+  psaNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 6 },
 
   targetBox: { backgroundColor: theme.card, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: theme.border, marginTop: 4 },
   targetLabel: { color: theme.textDim, fontSize: font.xs, marginBottom: 8 },
