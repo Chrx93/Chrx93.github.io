@@ -1638,6 +1638,7 @@ export default function App() {
   const notifiedRef = useRef(new Set());
   const targetNotifiedRef = useRef(new Set());
   const recoNotifiedRef = useRef(new Set());
+  const dealNotifiedRef = useRef(new Set());
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
@@ -1972,6 +1973,31 @@ export default function App() {
       }
     });
   }, [data, saved, portfolio, notifOn]);
+
+  // 💥 Alert Occasioni: annuncio eBay reale ad almeno −30% dal valore di mercato
+  // (su TUTTE le carte tracciate). Max 3 notifiche per aggiornamento: niente spam.
+  useEffect(() => {
+    if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data || !data.items) return;
+    const deals = data.items
+      .filter(i => i.bestOffer && i.bestOffer.total && toEur(i.prices) && i.bestOffer.total <= toEur(i.prices) * 0.7)
+      .sort((a, b) => (a.bestOffer.total / toEur(a.prices)) - (b.bestOffer.total / toEur(b.prices)));
+    const dealRefs = new Set(deals.map(d => d.ref));
+    // se un'occasione sparisce, libero la chiave: una futura nuova occasione ri-notifica
+    [...dealNotifiedRef.current].forEach(ref => { if (!dealRefs.has(ref)) dealNotifiedRef.current.delete(ref); });
+    let sent = 0;
+    for (const it of deals) {
+      if (sent >= 3) break;
+      if (dealNotifiedRef.current.has(it.ref)) continue;
+      dealNotifiedRef.current.add(it.ref);
+      const eu = toEur(it.prices);
+      const disc = Math.round((1 - it.bestOffer.total / eu) * 100);
+      try {
+        new Notification('💥 Occasione sotto mercato',
+          { body: `${it.name} in vendita a ${fmt(it.bestOffer.total)} (−${disc}% dal mercato ~${fmt(eu)})`, icon: '/icon.png' });
+      } catch {}
+      sent += 1;
+    }
+  }, [data, notifOn]);
 
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
