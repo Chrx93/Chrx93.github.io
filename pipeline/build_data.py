@@ -1088,22 +1088,26 @@ def main() -> None:
         except json.JSONDecodeError:
             psa10_cache = {}
     if token is not None:
-        top_val = sorted(
-            (it for it in items if (it.get("prices") or {}).get("eu")),
-            key=lambda it: it["prices"]["eu"], reverse=True,
-        )[:12]
-        deadline = time.monotonic() + 45.0
+        # Candidati: prima gli ICONICI, poi per valore (il mercato PSA 10 e' piu'
+        # liquido su questi → piu' probabile avere un campione sano di annunci).
+        cand = [it for it in items if (it.get("prices") or {}).get("eu")]
+        cand.sort(key=lambda it: (is_iconic(it["name"]), it["prices"]["eu"]), reverse=True)
+        cand = cand[:16]
+        deadline = time.monotonic() + 60.0
         done = 0
-        for it in top_val:
+        for it in cand:
             if time.monotonic() > deadline:
                 break
-            q = f'{it["name"]} {it.get("serial") or ""}'.strip()
-            est = ebay_psa10_eur(token, q)
+            # Query pulita: via i qualificatori tra parentesi e la parte "/totale"
+            # del numero (es. "107/111"→"107"; il codice One Piece "OP05-119" resta).
+            nm = it["name"].split("(")[0].strip()
+            num = str(it.get("serial") or "").split("/")[0].strip()
+            est = ebay_psa10_eur(token, (nm + " " + num).strip())
             if est:
                 psa10_cache[it["ref"]] = est
                 done += 1
         PSA10.write_text(json.dumps(psa10_cache, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"[TCG Radar] PSA 10: {done} stime aggiornate (top {len(top_val)} per valore)")
+        print(f"[TCG Radar] PSA 10: {done} nuove stime (su {len(cand)} candidati iconici/valore)")
     for it in items:
         if it["ref"] in psa10_cache:
             it["psa10"] = psa10_cache[it["ref"]]
