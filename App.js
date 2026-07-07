@@ -434,6 +434,33 @@ function RecoBanner({ reco, since }) {
   );
 }
 
+function DealsSection({ cards, onPress }) {
+  if (!cards || !cards.length) return null;
+  return (
+    <View style={[styles.rampBox, { borderColor: theme.accent }]}>
+      <Text style={[styles.rampTitle, { color: theme.accent }]}>💥 OCCASIONI SOTTO MERCATO · annunci reali adesso</Text>
+      {cards.map(item => {
+        const eu = toEur(item.prices);
+        const disc = Math.round((1 - item.bestOffer.total / eu) * 100);
+        return (
+          <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
+            {item.image ? <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
+              : <View style={[styles.radarThumb, styles.thumbEmpty]} />}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.radarName} numberOfLines={1}>{iconicFor(item.name) ? '👑 ' : ''}{item.name}</Text>
+              <Text style={[styles.radarReason, { color: theme.accent }]} numberOfLines={1}>
+                in vendita a {fmt(item.bestOffer.total)} · mercato ~{fmt(eu)}
+              </Text>
+            </View>
+            <Text style={[styles.radarPrice, { color: theme.up }]}>−{disc}%</Text>
+          </TouchableOpacity>
+        );
+      })}
+      <Text style={styles.radarNote}>Annunci eBay reali sotto il valore di mercato: occasioni d'acquisto concrete — verifica condizioni e autenticità nell'annuncio.</Text>
+    </View>
+  );
+}
+
 function BuyNowSection({ cards, onPress }) {
   if (!cards || !cards.length) return null;
   return (
@@ -682,6 +709,11 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
     (data.items || []).forEach(i => { byRef[i.ref] = i; });
     return (data.buyNow || []).map(r => byRef[r]).filter(Boolean);
   }, [data]);
+  // Occasioni concrete ADESSO: annuncio reale ad almeno -20% dal valore di mercato.
+  const deals = useMemo(() => (data.items || [])
+    .filter(i => i.bestOffer && i.bestOffer.total && toEur(i.prices) && i.bestOffer.total <= toEur(i.prices) * 0.8)
+    .sort((a, b) => (a.bestOffer.total / toEur(a.prices)) - (b.bestOffer.total / toEur(b.prices)))
+    .slice(0, 5), [data]);
   const radarCards = useMemo(() => {
     const byRef = {};
     (data.items || []).forEach(i => { byRef[i.ref] = i; });
@@ -706,6 +738,12 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
               </Text>
             ) : null}
           </View>
+          {data.signalStats && data.signalStats.buyN > 0 && data.signalStats.buyAvg != null ? (
+            <Text style={styles.trackLine}>
+              🎯 Track record: {data.signalStats.buyN} segnali COMPRA attivi · in media {data.signalStats.buyAvg >= 0 ? '+' : ''}{data.signalStats.buyAvg}% da quando accesi
+            </Text>
+          ) : null}
+          <DealsSection cards={deals} onPress={onPress} />
           <BuyNowSection cards={buyNowCards} onPress={onPress} />
           <RampSection cards={ramp} onPress={onPress} />
           <RadarSection cards={radarCards} onPress={onPress} />
@@ -1073,6 +1111,7 @@ function SearchTab({ onPress, artists, seed }) {
   const [nonce, setNonce] = useState(0);
   const [rFilter, setRFilter] = useState(null); // rarità selezionata nei risultati
   const [sortP, setSortP] = useState('rel');     // 'rel' | 'desc' | 'asc' (prezzo)
+  const [cap, setCap] = useState(60);            // render incrementale (fluidità)
 
   useEffect(() => {
     const term = q.trim();
@@ -1144,7 +1183,7 @@ function SearchTab({ onPress, artists, seed }) {
 
       try {
         const lists = await Promise.all(tasks);
-        if (!cancelled) setResults(lists.flat().slice(0, 250));
+        if (!cancelled) { setResults(lists.flat().slice(0, 250)); setCap(60); }
       } catch (e) {
         if (!cancelled) { setError('Errore di rete, riprova.'); setResults([]); }
       }
@@ -1185,6 +1224,7 @@ function SearchTab({ onPress, artists, seed }) {
   if (hasPrices && sortP !== 'rel') {
     shown = [...shown].sort((a, b) => (sortP === 'desc' ? (b._p || 0) - (a._p || 0) : (a._p || 0) - (b._p || 0)));
   }
+  const visible = shown.slice(0, cap); // render incrementale: prime 60, poi "mostra altri"
 
   return (
     <ScrollView
@@ -1259,7 +1299,7 @@ function SearchTab({ onPress, artists, seed }) {
               })}
             </View>
           )}
-          {shown.map(s => (
+          {visible.map(s => (
             <TouchableOpacity key={s.key} style={styles.sugg} onPress={() => openCard(s)} activeOpacity={0.7} disabled={opening}>
               {s.thumb ? (
                 <Image source={{ uri: s.thumb }} style={styles.suggThumb} resizeMode="contain" />
@@ -1275,6 +1315,11 @@ function SearchTab({ onPress, artists, seed }) {
               <Ionicons name="chevron-forward" size={16} color={theme.textDim} />
             </TouchableOpacity>
           ))}
+          {shown.length > cap ? (
+            <TouchableOpacity style={styles.moreBtn} onPress={() => setCap(c => c + 60)} activeOpacity={0.7}>
+              <Text style={styles.moreBtnText}>Mostra altri ({shown.length - cap} rimanenti)</Text>
+            </TouchableOpacity>
+          ) : null}
         </>
       ) : src === 'all' ? (
         <Text style={styles.searchHint}>
@@ -2259,6 +2304,9 @@ const styles = StyleSheet.create({
   recoLabel: { fontSize: font.md, fontWeight: '800' },
   recoQuality: { fontSize: font.xs, fontWeight: '700', borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, marginLeft: 8 },
   qualityMini: { fontSize: font.xs, fontWeight: '700', borderWidth: 1, borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1, marginTop: 3 },
+  trackLine: { color: theme.textDim, fontSize: font.xs, fontWeight: '600', marginHorizontal: 12, marginBottom: 8, fontStyle: 'italic' },
+  moreBtn: { alignItems: 'center', paddingVertical: 12, marginTop: 4, borderWidth: 1, borderColor: theme.border, borderRadius: 12 },
+  moreBtnText: { color: theme.accent, fontSize: font.sm, fontWeight: '700' },
   recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
   recoTrack: { color: theme.text, fontSize: font.sm, fontWeight: '600', marginTop: 8 },
   recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },

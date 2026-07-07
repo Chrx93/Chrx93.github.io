@@ -23,6 +23,7 @@ Uso:
 import base64
 import datetime
 import json
+from concurrent.futures import ThreadPoolExecutor
 import os
 import pathlib
 import random
@@ -365,17 +366,27 @@ def fetch_news():
     import email.utils
     import xml.etree.ElementTree as ET
 
-    seen = set()
-    news = []
-    for label, query, region, kind, hl, gl, ceid in NEWS_FEEDS:
+    # Scarico tutti i feed IN PARALLELO (I/O bound), poi li leggo nell'ordine
+    # di NEWS_FEEDS cosi' la dedup dei titoli resta deterministica.
+    def _feed_root(feed):
+        label, query, _, _, hl, gl, ceid = feed
         url = ("https://news.google.com/rss/search?q="
                + urllib.parse.quote(query) + f"&hl={hl}&gl={gl}&ceid={ceid}")
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=20) as resp:
-                root = ET.fromstring(resp.read().decode("utf-8", "ignore"))
+                return ET.fromstring(resp.read().decode("utf-8", "ignore"))
         except Exception as exc:  # noqa: BLE001
             print(f"    news '{label}' errore: {exc}")
+            return None
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        roots = list(ex.map(_feed_root, NEWS_FEEDS))
+
+    seen = set()
+    news = []
+    for (label, query, region, kind, hl, gl, ceid), root in zip(NEWS_FEEDS, roots):
+        if root is None:
             continue
         count = 0
         for item in root.findall(".//item"):
@@ -616,36 +627,56 @@ def build_artists(max_fetch: int = 70, budget_s: float = 70.0):
         except ValueError:
             return 0
 
+    # Fetch IN PARALLELO (prima i set, poi le carte candidate): stesso budget,
+    # ma il campionamento finisce in pochi secondi invece che ~1 minuto.
+    def _set_full(s):
+        if time.monotonic() > deadline:
+            return None
+        try:
+            return _get_json(f"https://api.tcgdex.net/v2/en/sets/{s['id']}", timeout=8)
+        except Exception:  # noqa: BLE001
+            return None
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        fulls = list(ex.map(_set_full, reversed(recent)))
+
+    cand_ids = []
+    for full in fulls:
+        if not full:
+            continue
+        for c in sorted(full.get("cards") or [], key=num_of, reverse=True)[:10]:
+            cand_ids.append(c["id"])
+    cand_ids = cand_ids[:max_fetch]
+
+    def _card_full(cid):
+        if time.monotonic() > deadline:
+            return None
+        try:
+            return _get_json(f"https://api.tcgdex.net/v2/en/cards/{cid}", timeout=8)
+        except Exception:  # noqa: BLE001
+            return None
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        cards_full = list(ex.map(_card_full, cand_ids))
+
     by_art = {}
     fetched = 0
-    for s in reversed(recent):
-        if fetched >= max_fetch or time.monotonic() > deadline:
-            break
-        try:
-            full = _get_json(f"https://api.tcgdex.net/v2/en/sets/{s['id']}", timeout=8)
-        except Exception:  # noqa: BLE001
+    for fc in cards_full:
+        if not fc:
             continue
-        cards = sorted(full.get("cards") or [], key=num_of, reverse=True)[:10]
-        for c in cards:
-            if fetched >= max_fetch or time.monotonic() > deadline:
-                break
-            try:
-                fc = _get_json(f"https://api.tcgdex.net/v2/en/cards/{c['id']}", timeout=8)
-            except Exception:  # noqa: BLE001
-                continue
-            fetched += 1
-            ill = fc.get("illustrator")
-            price = ((fc.get("pricing") or {}).get("cardmarket") or {}).get("trend")
-            if not ill or not price:
-                continue
-            img = fc.get("image")
-            key = ill.strip().lower()  # accorpa "Takuyoa" e "takuyoa"
-            entry = by_art.setdefault(key, {"name": ill, "cards": []})
-            entry["cards"].append({
-                "id": fc.get("id"), "name": fc.get("name"), "price": round(price, 2),
-                "image": (img + "/low.png") if img else None,
-                "set": (fc.get("set") or {}).get("name", ""),
-            })
+        fetched += 1
+        ill = fc.get("illustrator")
+        price = ((fc.get("pricing") or {}).get("cardmarket") or {}).get("trend")
+        if not ill or not price:
+            continue
+        img = fc.get("image")
+        key = ill.strip().lower()  # accorpa "Takuyoa" e "takuyoa"
+        entry = by_art.setdefault(key, {"name": ill, "cards": []})
+        entry["cards"].append({
+            "id": fc.get("id"), "name": fc.get("name"), "price": round(price, 2),
+            "image": (img + "/low.png") if img else None,
+            "set": (fc.get("set") or {}).get("name", ""),
+        })
 
     artists = []
     for entry in by_art.values():
@@ -869,6 +900,31 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             print(f"[TCG Radar] eBay non disponibile ({exc}).")
 
+    # --- PREFETCH PARALLELO: tutte le chiamate di rete per carta partono insieme
+    # (TCGdex / eBay / optcgapi sono I/O bound). Il loop sotto resta sequenziale
+    # ma legge dai risultati gia' pronti: stesso output, run molto piu' corto =
+    # dati piu' freschi a ogni ciclo. Le funzioni di fetch gestiscono gia' gli
+    # errori internamente (ritornano None), quindi il prefetch non puo' bloccare.
+    t0 = time.monotonic()
+    pk_pre, op_usd_pre, op_best_pre, op_meta_pre = {}, {}, {}, {}
+
+    def _prefetch(card):
+        ref = card["ref"]
+        game = card.get("game")
+        if game == "pokemon" and card.get("pokemontcg_id") and not FORCE_DEMO:
+            pk_pre[ref] = tcgdex_fetch(card["pokemontcg_id"])
+        elif game == "onepiece":
+            if token is not None:
+                q = card.get("ebay_query", card["name"])
+                code = card.get("ebay_code")
+                op_usd_pre[ref] = ebay_price_usd(token, q, code)
+                op_best_pre[ref] = ebay_best_offer(token, q, code)
+            op_meta_pre[ref] = optcg_fetch(card.get("ebay_code"))
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(_prefetch, cards))
+    print(f"[TCG Radar] Prefetch di {len(cards)} carte in {time.monotonic()-t0:.1f}s")
+
     history = load_history()
     items = []
     changes = []
@@ -886,9 +942,9 @@ def main() -> None:
         best_offer = None  # annuncio piu' economico su eBay.it
         illustrator = None
 
-        # --- Pokemon: TCGdex (Cardmarket EUR) ---
+        # --- Pokemon: TCGdex (Cardmarket EUR), gia' prefetchato ---
         if game == "pokemon" and card.get("pokemontcg_id") and not FORCE_DEMO:
-            info = tcgdex_fetch(card["pokemontcg_id"])
+            info = pk_pre.get(ref)
             if info and (info["usd"] is not None or info["eur"] is not None):
                 usd, e = info["usd"], info["eur"]
                 if usd and e and (e > usd * 5 or usd > e * 5):
@@ -910,17 +966,17 @@ def main() -> None:
                     cm_tf = {"d1": _chg(info["cm_avg1"]), "d7": _chg(info["cm_avg7"]),
                              "d30": _chg(info["cm_avg30"])}
 
-        # --- One Piece: eBay USA -> EUR ---
+        # --- One Piece: eBay USA -> EUR, gia' prefetchato ---
         elif game == "onepiece" and token is not None:
-            usd = ebay_price_usd(token, card.get("ebay_query", card["name"]), card.get("ebay_code"))
+            usd = op_usd_pre.get(ref)
             if usd is not None:
                 eur = to_eur(usd)
                 source = "eBay->EUR"
-            best_offer = ebay_best_offer(token, card.get("ebay_query", card["name"]), card.get("ebay_code"))
+            best_offer = op_best_pre.get(ref)
 
-        # immagine + seriale One Piece da optcgapi
+        # immagine + seriale One Piece da optcgapi (gia' prefetchato)
         if game == "onepiece":
-            oc = optcg_fetch(card.get("ebay_code"))
+            oc = op_meta_pre.get(ref)
             if oc:
                 image = oc["image"] or image
                 serial = oc["serial"] or serial
@@ -1063,6 +1119,17 @@ def main() -> None:
         it["recoSince"] = {"action": s["action"], "since": s["since"], "price": s.get("price"), "changePct": chg}
     SIGNALS.write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # Track record REALE del motore: come stanno andando i segnali attivi da
+    # quando si sono accesi (media dei changePct accumulati — dati, non promesse).
+    buy_ch = [it["recoSince"]["changePct"] for it in items
+              if it["reco"]["action"] == "compra" and it["recoSince"].get("changePct") is not None]
+    sell_ch = [it["recoSince"]["changePct"] for it in items
+               if it["reco"]["action"] == "vendi" and it["recoSince"].get("changePct") is not None]
+    signal_stats = {
+        "buyN": len(buy_ch), "buyAvg": round(statistics.mean(buy_ch), 1) if buy_ch else None,
+        "sellN": len(sell_ch), "sellAvg": round(statistics.mean(sell_ch), 1) if sell_ch else None,
+    }
+
     for n in news:
         t = n["title"].lower()
         n["cards"] = [item["ref"] for item in items if card_key(item["name"]) in t]
@@ -1093,21 +1160,40 @@ def main() -> None:
         cand = [it for it in items if (it.get("prices") or {}).get("eu")]
         cand.sort(key=lambda it: (is_iconic(it["name"]), it["prices"]["eu"]), reverse=True)
         cand = cand[:16]
+
+        # Quota eBay intelligente: le stime PSA 10 non cambiano ogni 30 minuti →
+        # ricalcolo SOLO quelle piu' vecchie di 6 ore. Risparmio ~700 call/giorno.
+        def _stale(ref):
+            e = psa10_cache.get(ref)
+            if not e or not e.get("ts"):
+                return True
+            try:
+                age = (NOW - datetime.datetime.fromisoformat(e["ts"])).total_seconds()
+            except ValueError:
+                return True
+            return age > 6 * 3600
+
+        todo = [it for it in cand if _stale(it["ref"])]
         deadline = time.monotonic() + 60.0
-        done = 0
-        for it in cand:
+
+        def _est(it):
             if time.monotonic() > deadline:
-                break
+                return it["ref"], None
             # Query pulita: via i qualificatori tra parentesi e la parte "/totale"
             # del numero (es. "107/111"→"107"; il codice One Piece "OP05-119" resta).
             nm = it["name"].split("(")[0].strip()
             num = str(it.get("serial") or "").split("/")[0].strip()
-            est = ebay_psa10_eur(token, (nm + " " + num).strip())
-            if est:
-                psa10_cache[it["ref"]] = est
-                done += 1
+            return it["ref"], ebay_psa10_eur(token, (nm + " " + num).strip())
+
+        done = 0
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            for ref, est in ex.map(_est, todo):
+                if est:
+                    est["ts"] = NOW.isoformat()
+                    psa10_cache[ref] = est
+                    done += 1
         PSA10.write_text(json.dumps(psa10_cache, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"[TCG Radar] PSA 10: {done} nuove stime (su {len(cand)} candidati iconici/valore)")
+        print(f"[TCG Radar] PSA 10: {done} stime aggiornate ({len(todo)} scadute su {len(cand)} candidati)")
     for it in items:
         if it["ref"] in psa10_cache:
             it["psa10"] = psa10_cache[it["ref"]]
@@ -1118,6 +1204,7 @@ def main() -> None:
         "fxUsdEur": USD_EUR,
         "radar": radar_refs,
         "buyNow": buy_now_refs,
+        "signalStats": signal_stats,
         "items": items,
         "news": news,
         "artists": artists,
