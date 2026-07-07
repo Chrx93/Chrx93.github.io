@@ -124,6 +124,8 @@ function mapTcgdexCard(c) {
   if (usd && eur && (eur > usd * 5 || usd > eur * 5)) eur = null;
   let tf = null;
   let history = [];
+  let chart = null;
+  let chartNote = null;
   if (cm && eur != null && eur >= 5) {
     const chg = (avg) => {
       if (!avg) return null;
@@ -132,6 +134,17 @@ function mapTcgdexCard(c) {
     };
     tf = { d1: chg(cm.avg1), d7: chg(cm.avg7), d30: chg(cm.avg30) };
     history = [cm.avg30, cm.avg7, eur].filter(x => x != null);
+    // Grafico REALE ma a bassa risoluzione: medie Cardmarket 30g→7g→1g→oggi.
+    // Serve a capire al volo se la carta sale o scende prima di seguirla.
+    const day = 24 * 3600 * 1000;
+    const nowT = Date.now();
+    const pts = [[30, cm.avg30], [7, cm.avg7], [1, cm.avg1], [0, eur]]
+      .filter(([, v]) => v != null && v > 0)
+      .map(([d, v]) => [new Date(nowT - d * day).toISOString(), Math.round(v * 100) / 100]);
+    if (pts.length >= 2) {
+      chart = pts;
+      chartNote = 'Andamento reale dalle medie Cardmarket (30g → 7g → 1g → oggi): indicativo, a bassa risoluzione.';
+    }
   }
   const setObj = c.set || {};
   const total = (setObj.cardCount && setObj.cardCount.official) || '';
@@ -149,6 +162,8 @@ function mapTcgdexCard(c) {
     tf,
     prices: { eu: eur, us: usd },
     history,
+    chart,
+    chartNote,
     note: `${setObj.name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
     signal: 'FATTO',
     illustrator: c.illustrator || null,
@@ -171,9 +186,35 @@ function mapOptcgCard(c) {
     tf: null,
     prices: { eu: usd != null ? Math.round(usd * USD_EUR * 100) / 100 : null, us: usd },
     history: [],
+    chart: null,
+    chartNote: 'Per One Piece lo storico è disponibile solo per le carte seguite dal radar (nessuna fonte storica gratuita per le altre stampe).',
     note: `${c.set_name || ''}${c.rarity ? ' · ' + c.rarity : ''}`,
     signal: 'FATTO',
   };
+}
+
+// Se la carta cercata è una delle carte SEGUITE dal radar, apro direttamente
+// quella: storico vero accumulato, verdetto compra/vendi, miglior prezzo, PSA10.
+function enrichFromTracked(card, items) {
+  if (!card || !items || !items.length) return card;
+  let hit = null;
+  if (card.game === 'pokemon' && card.image) {
+    // stesso URL immagine TCGdex = esattamente la stessa stampa
+    hit = items.find(i => i.game === 'pokemon' && i.image === card.image);
+  } else if (card.game === 'onepiece' && card.serial) {
+    // stesso codice + prezzo compatibile (evita di attaccare lo storico della
+    // versione base a una Parallel/Alt-Art che vale 10 volte tanto)
+    const eu = (card.prices && card.prices.eu) || null;
+    hit = items.find(i => {
+      if (i.game !== 'onepiece' || i.serial !== card.serial) return false;
+      const teu = toEur(i.prices);
+      if (!eu || !teu) return false;
+      const ratio = eu / teu;
+      return ratio >= 0.25 && ratio <= 3;
+    });
+  }
+  if (!hit) return card;
+  return { ...hit, image: card.image || hit.image, chartNote: '📡 Carta seguita dal radar: storico reale accumulato e verdetto completi.' };
 }
 
 function SignalBadge({ signal }) {
@@ -563,6 +604,7 @@ function DetailScreen({ item, onBack, isSaved, onToggleSave, onAddPortfolio, tar
 
       <Text style={styles.sectionTitle}>Andamento prezzo</Text>
       <Chart series={item.chart || item.history} />
+      {item.chartNote ? <Text style={styles.chartNote}>{item.chartNote}</Text> : null}
 
       {item.tf && (
         <>
@@ -1842,6 +1884,13 @@ export default function App() {
     }
   }, []);
 
+  // Dalla RICERCA: se la carta è una di quelle seguite dal radar, apro la
+  // versione tracciata (grafico con storico vero + verdetto + miglior prezzo).
+  const openFromSearch = useCallback(
+    (card) => setDetail(enrichFromTracked(card, data && data.items)),
+    [data]
+  );
+
   // Carte salvate arricchite coi dati live + variazione "dall'ultima visita".
   const savedLive = useMemo(() => {
     const liveByRef = {};
@@ -2063,7 +2112,7 @@ export default function App() {
         {tab === 1 && <PortfolioTab holdings={portfolio} sales={sales} pfHist={pfHist} data={data} onPress={setDetail} onRemove={removeFromPortfolio} onSell={sellHolding} onRemoveSale={removeSale} onExport={exportData} onImport={importData} refreshing={refreshing} onRefresh={onRefresh} />}
         {tab === 2 && <WatchlistTab data={savedLive} onPress={setDetail} refreshing={refreshing} onRefresh={onRefresh} notifOn={notifOn} onToggleNotif={onToggleNotif} />}
         {tab === 3 && <NewsTab news={data.news} lastUpdate={data.lastUpdate} lastChecked={lastChecked} refreshing={refreshing} onRefresh={onRefresh} />}
-        {tab === 4 && <SearchTab onPress={setDetail} artists={data.artists} seed={searchSeed} />}
+        {tab === 4 && <SearchTab onPress={openFromSearch} artists={data.artists} seed={searchSeed} />}
       </View>
 
       <View style={styles.tabbar}>
@@ -2333,6 +2382,7 @@ const styles = StyleSheet.create({
   trackLine: { color: theme.textDim, fontSize: font.xs, fontWeight: '600', marginHorizontal: 12, marginBottom: 8, fontStyle: 'italic' },
   moreBtn: { alignItems: 'center', paddingVertical: 12, marginTop: 4, borderWidth: 1, borderColor: theme.border, borderRadius: 12 },
   moreBtnText: { color: theme.accent, fontSize: font.sm, fontWeight: '700' },
+  chartNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 6, lineHeight: 16 },
   recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
   recoTrack: { color: theme.text, fontSize: font.sm, fontWeight: '600', marginTop: 8 },
   recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },
