@@ -41,6 +41,8 @@ ARTISTS = ROOT / "artists.json"
 ARTISTS_HIST = ROOT / "artists_hist.json"  # {artista: [[iso, media], ...]} trend nel tempo
 SIGNALS = ROOT / "signals.json"
 PSA10 = ROOT / "psa10.json"                # cache stime PSA 10 (eBay), riuso tra i run
+PULSE_HIST = ROOT / "pulse_hist.json"      # [[iso, marketPulse], ...] polso del mercato nel tempo
+DEALS_HIST = ROOT / "deals_hist.json"      # {ref: [date, ...]} giorni in cui la carta era sotto mercato
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -1066,6 +1068,18 @@ def main() -> None:
 
     market_pulse = round(statistics.mean(changes), 1) if changes else 0.0
 
+    # Polso del mercato NEL TEMPO: accumulo un punto per run (cache Actions,
+    # come history.json) -> in Home si vede se il mercato carte sale o scende.
+    pulse_hist = []
+    if PULSE_HIST.exists():
+        try:
+            pulse_hist = json.loads(PULSE_HIST.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pulse_hist = []
+    pulse_hist.append([NOW.isoformat(), market_pulse])
+    pulse_hist = pulse_hist[-1000:]  # ~20 giorni a 30 min
+    PULSE_HIST.write_text(json.dumps(pulse_hist, ensure_ascii=False), encoding="utf-8")
+
     # --- Radar: pool ampio (top 12) che la app fa ruotare in Home ---
     titles = [n["title"].lower() for n in news]
     radar = []
@@ -1129,6 +1143,27 @@ def main() -> None:
         "buyN": len(buy_ch), "buyAvg": round(statistics.mean(buy_ch), 1) if buy_ch else None,
         "sellN": len(sell_ch), "sellAvg": round(statistics.mean(sell_ch), 1) if sell_ch else None,
     }
+
+    # Storico OCCASIONI: in quali giorni una carta e' stata vista sotto mercato
+    # (-20%+). Cosi' distinguo "va spesso in svendita, puoi aspettare" da
+    # "occasione rara, muoviti". Un giorno conta una volta sola.
+    deals_hist = {}
+    if DEALS_HIST.exists():
+        try:
+            deals_hist = json.loads(DEALS_HIST.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            deals_hist = {}
+    for it in items:
+        bo = it.get("bestOffer") or {}
+        eu = (it.get("prices") or {}).get("eu")
+        if bo.get("total") and eu and bo["total"] <= eu * 0.8:
+            dates = deals_hist.setdefault(it["ref"], [])
+            if today not in dates:
+                dates.append(today)
+            deals_hist[it["ref"]] = dates[-45:]  # finestra ~45 giorni
+        if it["ref"] in deals_hist and deals_hist[it["ref"]]:
+            it["dealDays"] = len(deals_hist[it["ref"]])
+    DEALS_HIST.write_text(json.dumps(deals_hist, ensure_ascii=False, indent=2), encoding="utf-8")
 
     for n in news:
         t = n["title"].lower()
@@ -1205,6 +1240,7 @@ def main() -> None:
         "radar": radar_refs,
         "buyNow": buy_now_refs,
         "signalStats": signal_stats,
+        "pulseHist": downsample(pulse_hist, 90),
         "items": items,
         "news": news,
         "artists": artists,

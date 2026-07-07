@@ -291,6 +291,13 @@ function PriceFinder({ item }) {
       ) : (
         <Text style={styles.tfNote}>Prezzo più basso eBay non disponibile ora — apri le ricerche qui sotto.</Text>
       )}
+      {item.dealDays ? (
+        <Text style={styles.tfNote}>
+          {item.dealDays >= 4
+            ? `📊 Vista sotto mercato in ${item.dealDays} giorni recenti: capita spesso, puoi permetterti di aspettare l'occasione giusta.`
+            : `📊 Sotto mercato in ${item.dealDays === 1 ? 'un solo giorno' : item.dealDays + ' giorni'} di recente: occasione poco frequente.`}
+        </Text>
+      ) : null}
 
       {(() => {
         const sell = toEur(item.prices);
@@ -490,7 +497,7 @@ function DealsSection({ cards, onPress }) {
             <View style={{ flex: 1 }}>
               <Text style={styles.radarName} numberOfLines={1}>{iconicFor(item.name) ? '👑 ' : ''}{item.name}</Text>
               <Text style={[styles.radarReason, { color: theme.accent }]} numberOfLines={1}>
-                in vendita a {fmt(item.bestOffer.total)} · mercato ~{fmt(eu)}
+                in vendita a {fmt(item.bestOffer.total)} · mercato ~{fmt(eu)}{item.dealDays >= 4 ? ` · spesso in offerta (${item.dealDays}g)` : item.dealDays === 1 ? ' · occasione nuova' : ''}
               </Text>
             </View>
             <Text style={[styles.radarPrice, { color: theme.up }]}>−{disc}%</Text>
@@ -784,6 +791,13 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
             <Text style={styles.trackLine}>
               🎯 Track record: {data.signalStats.buyN} segnali COMPRA attivi · in media {data.signalStats.buyAvg >= 0 ? '+' : ''}{data.signalStats.buyAvg}% da quando accesi
             </Text>
+          ) : null}
+          {data.pulseHist && data.pulseHist.length >= 2 ? (
+            <View style={[styles.pfChartBox, { marginTop: 0, marginBottom: 10 }]}>
+              <Text style={styles.allocTitle}>📊 Polso del mercato nel tempo</Text>
+              <Chart series={data.pulseHist} height={130} unit="%" />
+              <Text style={styles.radarNote}>Media della variazione 7g di tutte le carte seguite, a ogni aggiornamento: sopra lo zero il mercato sale, sotto scende.</Text>
+            </View>
           ) : null}
           <DealsSection cards={deals} onPress={onPress} />
           <BuyNowSection cards={buyNowCards} onPress={onPress} />
@@ -1154,6 +1168,7 @@ function SearchTab({ onPress, artists, seed }) {
   const [rFilter, setRFilter] = useState(null); // rarità selezionata nei risultati
   const [sortP, setSortP] = useState('rel');     // 'rel' | 'desc' | 'asc' (prezzo)
   const [cap, setCap] = useState(60);            // render incrementale (fluidità)
+  const [compare, setCompare] = useState(null);  // null | 'loading' | righe confronto stampe
 
   useEffect(() => {
     const term = q.trim();
@@ -1225,7 +1240,7 @@ function SearchTab({ onPress, artists, seed }) {
 
       try {
         const lists = await Promise.all(tasks);
-        if (!cancelled) { setResults(lists.flat().slice(0, 250)); setCap(60); }
+        if (!cancelled) { setResults(lists.flat().slice(0, 250)); setCap(60); setCompare(null); }
       } catch (e) {
         if (!cancelled) { setError('Errore di rete, riprova.'); setResults([]); }
       }
@@ -1267,6 +1282,22 @@ function SearchTab({ onPress, artists, seed }) {
     shown = [...shown].sort((a, b) => (sortP === 'desc' ? (b._p || 0) - (a._p || 0) : (a._p || 0) - (b._p || 0)));
   }
   const visible = shown.slice(0, cap); // render incrementale: prime 60, poi "mostra altri"
+
+  // Confronto stampe: prezzi € delle prime 12 stampe (per i Pokémon serve il
+  // full-fetch TCGdex, in parallelo), ordinate per valore -> quale versione comprare.
+  const runCompare = async () => {
+    setCompare('loading');
+    const rows = await Promise.all(shown.slice(0, 12).map(async s => {
+      const base = { key: s.key, name: s.name, sub: s.sub, thumb: s.thumb, open: s };
+      if (s.src === 'op') return { ...base, eu: s._p ? Math.round(s._p * USD_EUR * 100) / 100 : null };
+      try {
+        const c = await (await fetch('https://api.tcgdex.net/v2/en/cards/' + s.id)).json();
+        return { ...base, eu: (c && c.id) ? toEur(mapTcgdexCard(c).prices) : null };
+      } catch { return { ...base, eu: null }; }
+    }));
+    rows.sort((a, b) => (b.eu || 0) - (a.eu || 0));
+    setCompare(rows);
+  };
 
   return (
     <ScrollView
@@ -1341,6 +1372,34 @@ function SearchTab({ onPress, artists, seed }) {
               })}
             </View>
           )}
+          {!loading && !error && shown.length >= 2 ? (
+            compare === 'loading' ? <ActivityIndicator color={theme.accent} style={{ marginVertical: 10 }} />
+            : Array.isArray(compare) ? (
+              <View style={styles.compareBox}>
+                <View style={styles.compareHead}>
+                  <Text style={styles.allocTitle}>⚖️ Confronto stampe · € di mercato</Text>
+                  <TouchableOpacity onPress={() => setCompare(null)}>
+                    <Ionicons name="close-circle" size={18} color={theme.textDim} />
+                  </TouchableOpacity>
+                </View>
+                {compare.map(r => (
+                  <TouchableOpacity key={'cmp' + r.key} style={styles.compareRow} onPress={() => openCard(r.open)} activeOpacity={0.7} disabled={opening}>
+                    {r.thumb ? <Image source={{ uri: r.thumb }} style={styles.suggThumb} resizeMode="contain" /> : <View style={[styles.suggThumb, styles.thumbEmpty]} />}
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.suggName} numberOfLines={1}>{r.name}</Text>
+                      <Text style={styles.suggSub} numberOfLines={1}>{r.sub}</Text>
+                    </View>
+                    <Text style={styles.comparePrice}>{r.eu != null ? fmt(r.eu) : '—'}</Text>
+                  </TouchableOpacity>
+                ))}
+                <Text style={styles.radarNote}>Prime {compare.length} stampe dei risultati ordinate per valore, per scegliere QUALE versione comprare. Fonti reali: Cardmarket/TCGplayer (Pokémon) · mercato optcgapi (One Piece).</Text>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.moreBtn} onPress={runCompare} activeOpacity={0.7}>
+                <Text style={styles.moreBtnText}>⚖️ Confronta le stampe (prezzi €)</Text>
+              </TouchableOpacity>
+            )
+          ) : null}
           {visible.map(s => (
             <TouchableOpacity key={s.key} style={styles.sugg} onPress={() => openCard(s)} activeOpacity={0.7} disabled={opening}>
               {s.thumb ? (
@@ -1954,19 +2013,18 @@ export default function App() {
   }, [savedLive, notifOn, data]);
 
   // Soglie prezzo personali: notifica quando una carta scende sotto / sale sopra.
+  // Vale per le carte del motore E per quelle cercate/salvate non tracciate:
+  // per queste il prezzo si legge on-demand (TCGdex/optcgapi) a ogni refresh.
   useEffect(() => {
     if (!data || !data.items) return;
     const byRef = {};
     data.items.forEach(i => { byRef[i.ref] = i; });
     const canN = notifOn && canNotify() && Notification.permission === 'granted';
-    Object.entries(targets).forEach(([ref, t]) => {
-      const it = byRef[ref];
-      if (!it) return;
-      const cur = toEur(it.prices);
+    const check = (ref, t, name, cur) => {
       if (cur == null) return;
       const checks = [
-        { key: 'below-' + ref, hit: t.below != null && cur <= t.below, msg: `${it.name}: sceso a ${fmt(cur)} (soglia acquisto ${fmt(t.below)})` },
-        { key: 'above-' + ref, hit: t.above != null && cur >= t.above, msg: `${it.name}: salito a ${fmt(cur)} (soglia vendita ${fmt(t.above)})` },
+        { key: 'below-' + ref, hit: t.below != null && cur <= t.below, msg: `${name}: sceso a ${fmt(cur)} (soglia acquisto ${fmt(t.below)})` },
+        { key: 'above-' + ref, hit: t.above != null && cur >= t.above, msg: `${name}: salito a ${fmt(cur)} (soglia vendita ${fmt(t.above)})` },
       ];
       checks.forEach(c => {
         if (c.hit) {
@@ -1978,8 +2036,33 @@ export default function App() {
           targetNotifiedRef.current.delete(c.key);
         }
       });
+    };
+    let cancelled = false;
+    const pending = [];
+    Object.entries(targets).forEach(([ref, t]) => {
+      const it = byRef[ref];
+      if (it) { check(ref, t, it.name, toEur(it.prices)); return; }
+      const s = saved.find(x => x.ref === ref);
+      if (s) pending.push([ref, t, s]);
     });
-  }, [data, targets, notifOn]);
+    pending.slice(0, 8).forEach(async ([ref, t, s]) => {
+      try {
+        let cur = null;
+        if (s.game === 'onepiece' && s.serial) {
+          const a = await (await fetch('https://optcgapi.com/api/sets/card/' + s.serial + '/')).json();
+          const arr = (Array.isArray(a) ? a : [a]).filter(Boolean);
+          const hit = arr.find(c => c.card_name === s.name) || arr[0];
+          const usd = hit ? parseFloat(String(hit.market_price || '').replace(/[^0-9.]/g, '')) : NaN;
+          if (!isNaN(usd)) cur = Math.round(usd * USD_EUR * 100) / 100;
+        } else if (s.game === 'pokemon') {
+          const c = await (await fetch('https://api.tcgdex.net/v2/en/cards/' + ref)).json();
+          if (c && c.id) cur = toEur(mapTcgdexCard(c).prices);
+        }
+        if (!cancelled) check(ref, t, s.name, cur);
+      } catch {}
+    });
+    return () => { cancelled = true; };
+  }, [data, targets, notifOn, saved]);
 
   // Digest giornaliero: una notifica al giorno (alla prima apertura) coi movimenti top.
   useEffect(() => {
@@ -2383,6 +2466,10 @@ const styles = StyleSheet.create({
   moreBtn: { alignItems: 'center', paddingVertical: 12, marginTop: 4, borderWidth: 1, borderColor: theme.border, borderRadius: 12 },
   moreBtnText: { color: theme.accent, fontSize: font.sm, fontWeight: '700' },
   chartNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 6, lineHeight: 16 },
+  compareBox: { backgroundColor: theme.card, borderRadius: 14, borderWidth: 1, borderColor: theme.accent, padding: 10, marginTop: 4, marginBottom: 6 },
+  compareHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  compareRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+  comparePrice: { color: theme.accent, fontSize: font.sm, fontWeight: '800', marginLeft: 8 },
   recoReason: { color: theme.text, fontSize: font.sm, lineHeight: 22 },
   recoTrack: { color: theme.text, fontSize: font.sm, fontWeight: '600', marginTop: 8 },
   recoNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 8, lineHeight: 16 },

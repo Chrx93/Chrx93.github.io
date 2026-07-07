@@ -31,7 +31,11 @@ const euro = (n) =>
 const dateLabel = (t) =>
   t ? new Date(t).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: '2-digit' }) : '';
 
-export default function Chart({ series, height = 180 }) {
+export default function Chart({ series, height = 180, unit = '€' }) {
+  // unit '%' per serie percentuali (es. polso del mercato), '€' per i prezzi
+  const fmtVal = unit === '%'
+    ? (n) => (n == null ? '—' : `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`)
+    : euro;
   const [period, setPeriod] = useState('1m');
   const [width, setWidth] = useState(320);
   const [touchX, setTouchX] = useState(null); // posizione del dito sul grafico (px)
@@ -114,7 +118,7 @@ export default function Chart({ series, height = 180 }) {
   return (
     <View>
       <View style={styles.head}>
-        <Text style={styles.price}>{euro(dispVal)}</Text>
+        <Text style={styles.price}>{fmtVal(dispVal)}</Text>
         {activeIdx != null ? (
           <View style={[styles.chgPill, { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }]}>
             <Text style={[styles.chg, { color: theme.textDim }]}>{dispT ? dateLabel(dispT) : `punto ${dispIdx + 1}`}</Text>
@@ -137,8 +141,8 @@ export default function Chart({ series, height = 180 }) {
             );
           })}
           {/* etichette min/max */}
-          <SvgText x={padX} y={padTop + 4} fill={theme.textDim} fontSize="9">{euro(max)}</SvgText>
-          <SvgText x={padX} y={baseY} fill={theme.textDim} fontSize="9">{euro(min)}</SvgText>
+          <SvgText x={padX} y={padTop + 4} fill={theme.textDim} fontSize="9">{fmtVal(max)}</SvgText>
+          <SvgText x={padX} y={baseY} fill={theme.textDim} fontSize="9">{fmtVal(min)}</SvgText>
           {/* area + linea */}
           <Path d={areaPath} fill={color} fillOpacity={0.14} />
           <Polyline points={linePts} fill="none" stroke={color}

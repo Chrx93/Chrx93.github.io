@@ -40,6 +40,8 @@ jobs:
             pipeline/artists_hist.json
             pipeline/signals.json
             pipeline/psa10.json
+            pipeline/pulse_hist.json
+            pipeline/deals_hist.json
           key: tcg-history-${{ github.run_id }}
           restore-keys: |
             tcg-history-
