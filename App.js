@@ -13,7 +13,11 @@ import { theme, font } from './theme';
 import sampleData from './sample.json';
 
 const DATA_URL = 'https://chrx93.github.io/data.json'; // dati live pubblicati
-const USD_EUR = 0.92; // cambio indicativo per stime in-app (le carte del motore sono gia' in EUR)
+// Cambio USD->EUR per stime in-app (ricerca/catalogo/confronto): parte da un
+// valore indicativo e viene aggiornato col cambio BCE reale del motore
+// (data.fxUsdEur) appena i dati arrivano. FIX: prima era fisso a 0.92 (~5% di
+// errore sui prezzi convertiti).
+let USD_EUR = 0.92;
 
 const TAB_META = [
   { label: 'Home', icon: 'home', iconOutline: 'home-outline' },
@@ -390,10 +394,17 @@ function AddToPortfolio({ item, onAdd }) {
   const cur = toEur(item.prices);
   const [price, setPrice] = useState(cur != null ? String(cur) : '');
   const [qty, setQty] = useState('1');
+  const [fees, setFees] = useState('');   // spese reali del lotto (sped./commissioni)
+  const [target, setTarget] = useState(''); // obiettivo di rivendita €/pezzo
   const confirm = () => {
     const p = parseFloat(String(price).replace(',', '.'));
     const q = parseInt(qty, 10) || 1;
-    if (!isNaN(p) && p > 0) { onAdd(item, p, q); setDone(true); setOpen(false); }
+    const f = parseFloat(String(fees).replace(',', '.'));
+    const t = parseFloat(String(target).replace(',', '.'));
+    if (!isNaN(p) && p > 0) {
+      onAdd(item, p, q, isNaN(f) || f < 0 ? 0 : f, isNaN(t) || t <= 0 ? null : t);
+      setDone(true); setOpen(false);
+    }
   };
   if (done) {
     return (
@@ -417,10 +428,16 @@ function AddToPortfolio({ item, onAdd }) {
       <View style={styles.buyFormRow}>
         <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={price} onChangeText={setPrice} placeholder="€ pagato" placeholderTextColor={theme.textDim} />
         <TextInput style={[styles.buyInput, { flex: 0.5 }]} keyboardType="number-pad" value={qty} onChangeText={setQty} placeholder="qtà" placeholderTextColor={theme.textDim} />
+      </View>
+      <Text style={styles.buyFormLabel}>Spese del lotto (sped./comm., opzionale) · Obiettivo di rivendita €/pezzo (opzionale)</Text>
+      <View style={styles.buyFormRow}>
+        <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={fees} onChangeText={setFees} placeholder="€ spese" placeholderTextColor={theme.textDim} />
+        <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={target} onChangeText={setTarget} placeholder="€ obiettivo" placeholderTextColor={theme.textDim} />
         <TouchableOpacity style={styles.buyConfirm} onPress={confirm} activeOpacity={0.85}>
           <Text style={styles.buyConfirmText}>Salva</Text>
         </TouchableOpacity>
       </View>
+      <Text style={styles.disclaimer}>Con l'obiettivo impostato ricevi l'avviso quando il mercato lo raggiunge (rivendita reale, netto commissioni ~13%).</Text>
     </View>
   );
 }
@@ -489,6 +506,10 @@ const SELL_FEES = 0.13;
 function exitAdvice(h, cur, tracked) {
   if (cur == null || !h.buyPrice) return null;
   const pl = ((cur - h.buyPrice) / h.buyPrice) * 100;
+  // L'obiettivo di rivendita che HAI impostato batte ogni altra regola.
+  if (h.target && cur >= h.target) {
+    return { level: 2, color: theme.up, msg: `🎯 OBIETTIVO RAGGIUNTO (${fmt(h.target)}): mercato ~${fmt(cur)} · netto ~${fmt(Math.round(cur * (1 - SELL_FEES) * 100) / 100)}/pezzo` };
+  }
   const peak = h.peak && h.peak > cur ? h.peak : null;
   const offPeak = peak ? ((cur - peak) / peak) * 100 : 0;
   const teu = tracked ? toEur(tracked.prices) : null;
@@ -1593,7 +1614,7 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
 
   let invested = 0, value = 0;
   holdings.forEach(h => {
-    invested += h.buyPrice * h.qty;
+    invested += h.buyPrice * h.qty + (h.fees || 0); // costo REALE: prezzo + spese
     const c = currentOf(h);
     value += (c != null ? c : h.buyPrice) * h.qty;
   });
@@ -1686,7 +1707,7 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
       }
       renderItem={({ item: h }) => {
         const cur = currentOf(h);
-        const hpl = cur != null ? (cur - h.buyPrice) * h.qty : null;
+        const hpl = cur != null ? (cur - h.buyPrice) * h.qty - (h.fees || 0) : null; // P/L reale con spese
         const hpct = (cur != null && h.buyPrice > 0) ? ((cur - h.buyPrice) / h.buyPrice) * 100 : null;
         const advice = exitAdvice(h, cur, liveByRef[h.ref]);
         const selling = sellingId === h.id;
@@ -1698,8 +1719,11 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
                   : <View style={[styles.thumb, styles.thumbEmpty]}><Ionicons name="image-outline" size={20} color={theme.textDim} /></View>}
                 <View style={{ flex: 1, marginRight: 8 }}>
                   <Text style={styles.rowName} numberOfLines={1}>{h.name}{h.qty > 1 ? ` ×${h.qty}` : ''}</Text>
-                  <Text style={styles.rowSub} numberOfLines={1}>pagata {fmt(h.buyPrice)} · ora {cur != null ? fmt(cur) : '—'}</Text>
+                  <Text style={styles.rowSub} numberOfLines={1}>pagata {fmt(h.buyPrice)}{h.fees ? ` +${fmt(h.fees)} spese` : ''} · ora {cur != null ? fmt(cur) : '—'}</Text>
                   {advice ? <Text style={[styles.pfHint, { color: advice.color }]} numberOfLines={2}>{advice.msg}</Text> : null}
+                  {h.target && cur != null && cur < h.target ? (
+                    <Text style={styles.rowSub} numberOfLines={1}>🎯 obiettivo {fmt(h.target)} · manca {pct(((h.target - cur) / cur) * 100)}</Text>
+                  ) : null}
                 </View>
               </TouchableOpacity>
               <View style={{ alignItems: 'flex-end' }}>
@@ -1786,6 +1810,7 @@ export default function App() {
   const targetNotifiedRef = useRef(new Set());
   const recoNotifiedRef = useRef(new Set());
   const dealNotifiedRef = useRef(new Set());
+  const exitNotifiedRef = useRef(new Set());
 
   useEffect(() => {
     AsyncStorage.getItem('tcgradar.saved')
@@ -1824,11 +1849,13 @@ export default function App() {
     targetNotifiedRef.current.delete('above-' + ref);
   }, []);
 
-  const addToPortfolio = useCallback((item, buyPrice, qty) => {
+  const addToPortfolio = useCallback((item, buyPrice, qty, fees, target) => {
     const holding = {
       id: item.ref + '-' + Date.now(),
       ref: item.ref, name: item.name, game: item.game, image: item.image, serial: item.serial,
       buyPrice: Number(buyPrice) || 0, qty: Number(qty) || 1, ts: Date.now(),
+      fees: Number(fees) || 0,                       // spese reali del lotto
+      target: Number(target) > 0 ? Number(target) : null, // obiettivo di rivendita €/pezzo
     };
     setPortfolio(prev => {
       const next = [holding, ...prev];
@@ -1854,7 +1881,8 @@ export default function App() {
           id: 'sale-' + Date.now(),
           ref: h.ref, name: h.name, game: h.game, image: h.image, serial: h.serial,
           buyPrice: h.buyPrice, sellPrice: sp, qty: h.qty,
-          realized: Math.round((sp - h.buyPrice) * h.qty * 100) / 100,
+          // profitto REALE: al netto delle spese registrate all'acquisto
+          realized: Math.round(((sp - h.buyPrice) * h.qty - (h.fees || 0)) * 100) / 100,
           buyTs: h.ts, sellTs: Date.now(),
         };
         setSales(prevS => {
@@ -1934,19 +1962,39 @@ export default function App() {
 
   const isSaved = useCallback((ref) => saved.some(s => s.ref === ref), [saved]);
 
+  const freshLoadedRef = useRef(false);
   const load = useCallback(async () => {
     try {
       const res = await fetch(DATA_URL + '?t=' + Date.now());
       const json = await res.json();
+      if (json && json.fxUsdEur > 0.5 && json.fxUsdEur < 1.5) USD_EUR = json.fxUsdEur;
+      freshLoadedRef.current = true;
       setData(json);
+      // Avvio istantaneo per la prossima apertura: salvo l'ultimo dato buono.
+      AsyncStorage.setItem('tcgradar.lastdata', JSON.stringify(json)).catch(() => {});
     } catch {
-      setData(sampleData);
+      setData(prev => (prev && prev.items && prev.items.length ? prev : sampleData));
     }
     setRotation(r => r + 1);
     setLastChecked(Date.now());
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Avvio ISTANTANEO: mostro subito l'ultimo dato salvato sul dispositivo
+  // mentre arriva quello fresco dalla rete (che poi lo sostituisce).
+  useEffect(() => {
+    AsyncStorage.getItem('tcgradar.lastdata').then(s => {
+      if (!s || freshLoadedRef.current) return;
+      try {
+        const j = JSON.parse(s);
+        if (j && j.items && j.items.length && !freshLoadedRef.current) {
+          if (j.fxUsdEur > 0.5 && j.fxUsdEur < 1.5) USD_EUR = j.fxUsdEur;
+          setData(j);
+        }
+      } catch {}
+    }).catch(() => {});
+  }, []);
 
   // Auto-aggiornamento mentre l'app è aperta (ogni 5 min) e al rientro sull'app.
   useEffect(() => {
@@ -2003,7 +2051,10 @@ export default function App() {
     return saved.map(s => {
       const live = liveByRef[s.ref];
       const merged = live
-        ? { ...s, prices: live.prices, change7d: live.change7d, tf: live.tf, chart: live.chart, history: live.history, image: live.image || s.image, inNews: live.inNews, bestOffer: live.bestOffer, buyLinks: live.buyLinks || s.buyLinks }
+        ? { ...s, prices: live.prices, change7d: live.change7d, tf: live.tf, chart: live.chart, history: live.history, image: live.image || s.image, inNews: live.inNews, bestOffer: live.bestOffer, buyLinks: live.buyLinks || s.buyLinks,
+            // FIX: senza questi campi il dettaglio aperto dalla watchlist non
+            // mostrava verdetto/backtest/min-max/PSA10/occasioni della carta tracciata
+            reco: live.reco, recoSince: live.recoSince, range: live.range, psa10: live.psa10, dealDays: live.dealDays }
         : s;
       const cur = toEur(merged.prices);
       const base = seen[s.ref];
@@ -2195,6 +2246,27 @@ export default function App() {
       sent += 1;
     }
   }, [data, notifOn]);
+
+  // 🎯 Rivendita reale: avvisa quando una TUA posizione raggiunge l'obiettivo
+  // di rivendita o entra in zona vendita (piano di uscita).
+  useEffect(() => {
+    if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data || !data.items || !portfolio.length) return;
+    const byRef = {};
+    data.items.forEach(i => { byRef[i.ref] = i; });
+    portfolio.forEach(h => {
+      const tracked = byRef[h.ref];
+      const cur = tracked ? toEur(tracked.prices) : null;
+      const advice = exitAdvice(h, cur, tracked);
+      if (advice && advice.level === 2) {
+        if (!exitNotifiedRef.current.has(h.id)) {
+          exitNotifiedRef.current.add(h.id);
+          try { new Notification('💰 Momento di vendere?', { body: `${h.name} — ${advice.msg}`, icon: '/icon.png' }); } catch {}
+        }
+      } else {
+        exitNotifiedRef.current.delete(h.id);
+      }
+    });
+  }, [data, portfolio, notifOn]);
 
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {
