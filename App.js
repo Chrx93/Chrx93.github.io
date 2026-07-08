@@ -302,6 +302,11 @@ function PriceFinder({ item }) {
             : `📊 Sotto mercato in ${item.dealDays === 1 ? 'un solo giorno' : item.dealDays + ' giorni'} di recente: occasione poco frequente.`}
         </Text>
       ) : null}
+      {item.listings != null ? (
+        <Text style={styles.tfNote}>
+          💧 Liquidità: ~{item.listings} annunci attivi (eBay) — {item.listings >= 30 ? 'alta: entri ed esci facilmente' : item.listings >= 10 ? 'media' : 'bassa: vendere può richiedere tempo o sconti'}
+        </Text>
+      ) : null}
 
       {(() => {
         const sell = toEur(item.prices);
@@ -517,8 +522,9 @@ function exitAdvice(h, cur, tracked) {
   const nearHigh = rng && rng.high > rng.low && teu != null
     ? (teu - rng.low) / (rng.high - rng.low) >= 0.85 : false;
   const engineSell = !!(tracked && tracked.reco && tracked.reco.action === 'vendi');
+  const lowLiq = tracked && tracked.listings != null && tracked.listings < 10;
   if (pl >= 30 && (nearHigh || engineSell)) {
-    return { level: 2, color: theme.down, msg: `🔴 ZONA VENDITA: +${pl.toFixed(0)}%${nearHigh ? ' · vicino ai massimi storici' : ''}${engineSell ? ' · segnale VENDI del radar' : ''}` };
+    return { level: 2, color: theme.down, msg: `🔴 ZONA VENDITA: +${pl.toFixed(0)}%${nearHigh ? ' · vicino ai massimi storici' : ''}${engineSell ? ' · segnale VENDI del radar' : ''}${lowLiq ? ' · liquidità bassa: muoviti per tempo' : ''}` };
   }
   if (pl > 5 && offPeak <= -10) {
     return { level: 1, color: theme.hypeText, msg: `⚠️ −${Math.abs(offPeak).toFixed(0)}% dal picco: valuta di incassare +${pl.toFixed(0)}% prima che rientri` };
@@ -555,6 +561,33 @@ function DealsSection({ cards, onPress }) {
         );
       })}
       <Text style={styles.radarNote}>Annunci eBay reali sotto il valore di mercato: occasioni d'acquisto concrete — verifica condizioni e autenticità nell'annuncio.</Text>
+    </View>
+  );
+}
+
+function CalendarSection({ calendar }) {
+  if (!calendar || !calendar.length) return null;
+  const dayMs = 86400000;
+  const todayT = Date.parse(new Date().toISOString().slice(0, 10));
+  const withDays = calendar
+    .map(c => ({ ...c, days: Math.round((Date.parse(c.date) - todayT) / dayMs) }))
+    .filter(c => !isNaN(c.days));
+  const upcoming = withDays.filter(c => c.days >= 0).sort((a, b) => a.days - b.days);
+  const recent = withDays.filter(c => c.days < 0 && c.days >= -90).sort((a, b) => b.days - a.days);
+  const rows = [...upcoming, ...recent].slice(0, 5);
+  if (!rows.length) return null;
+  return (
+    <View style={[styles.rampBox, { borderColor: theme.border }]}>
+      <Text style={[styles.rampTitle, { color: theme.text }]}>📅 CATALIZZATORI · uscite set (date reali)</Text>
+      {rows.map(c => (
+        <View key={c.id} style={styles.calRow}>
+          <Text style={styles.calName} numberOfLines={1}>⚡ {c.name}{c.count ? ` · ${c.count} carte` : ''}</Text>
+          <Text style={[styles.calWhen, { color: c.days >= 0 ? theme.up : theme.textDim }]}>
+            {c.days === 0 ? 'esce OGGI' : c.days > 0 ? `tra ${c.days}g` : `uscito ${-c.days}g fa`}
+          </Text>
+        </View>
+      ))}
+      <Text style={styles.radarNote}>Le uscite muovono i prezzi: hype prima del lancio, offerta alta subito dopo. Solo Pokémon (per One Piece non esistono date ufficiali da fonti gratuite). Non è una previsione.</Text>
     </View>
   );
 }
@@ -849,6 +882,7 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
               <Text style={styles.radarNote}>Media della variazione 7g di tutte le carte seguite, a ogni aggiornamento: sopra lo zero il mercato sale, sotto scende.</Text>
             </View>
           ) : null}
+          <CalendarSection calendar={data.calendar} />
           <DealsSection cards={deals} onPress={onPress} />
           <BuyNowSection cards={buyNowCards} onPress={onPress} />
           <RampSection cards={ramp} onPress={onPress} />
@@ -2603,6 +2637,9 @@ const styles = StyleSheet.create({
   moreBtn: { alignItems: 'center', paddingVertical: 12, marginTop: 4, borderWidth: 1, borderColor: theme.border, borderRadius: 12 },
   moreBtnText: { color: theme.accent, fontSize: font.sm, fontWeight: '700' },
   chartNote: { color: theme.textDim, fontSize: font.xs, fontStyle: 'italic', marginTop: 6, lineHeight: 16 },
+  calRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 },
+  calName: { color: theme.text, fontSize: font.sm, fontWeight: '600', flex: 1, marginRight: 8 },
+  calWhen: { fontSize: font.sm, fontWeight: '800' },
   compareBox: { backgroundColor: theme.card, borderRadius: 14, borderWidth: 1, borderColor: theme.accent, padding: 10, marginTop: 4, marginBottom: 6 },
   compareHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   compareRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },

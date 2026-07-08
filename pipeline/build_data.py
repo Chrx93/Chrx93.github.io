@@ -202,19 +202,30 @@ def _alnum(s: str) -> str:
 
 
 def ebay_price_usd(token: str, query: str, code: str = None):
-    """Stima prezzo USD da eBay (annunci attivi). Mediana 'trimmed'."""
+    """Stima prezzo USD da eBay (annunci attivi). Mediana 'trimmed'.
+
+    Ritorna (usd, n_annunci): n_annunci = quanti annunci attivi matchano la
+    ricerca = proxy di LIQUIDITA' (gratis: e' nella stessa risposta).
+    FIX robustezza: prima un errore di rete qui faceva crashare la pipeline
+    (nessun try/except, a differenza di ebay_best_offer)."""
     import requests
 
     code_norm = _alnum(code) if code else None
-    resp = requests.get(
-        "https://api.ebay.com/buy/browse/v1/item_summary/search",
-        headers={"Authorization": f"Bearer {token}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"},
-        params={"q": query, "category_ids": "183454", "limit": 100,
-                "filter": "buyingOptions:{FIXED_PRICE}"},
-        timeout=30,
-    )
-    resp.raise_for_status()
-    items = resp.json().get("itemSummaries", []) or []
+    try:
+        resp = requests.get(
+            "https://api.ebay.com/buy/browse/v1/item_summary/search",
+            headers={"Authorization": f"Bearer {token}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"},
+            params={"q": query, "category_ids": "183454", "limit": 100,
+                    "filter": "buyingOptions:{FIXED_PRICE}"},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        j = resp.json()
+    except Exception as exc:  # noqa: BLE001
+        print(f"    eBay prezzo errore: {exc}")
+        return None, None
+    total = j.get("total")
+    items = j.get("itemSummaries", []) or []
     prices = []
     for it in items:
         title = (it.get("title") or "").lower()
@@ -229,11 +240,11 @@ def ebay_price_usd(token: str, query: str, code: str = None):
             except (KeyError, ValueError, TypeError):
                 pass
     if not prices:
-        return None
+        return None, total
     prices.sort()
     n = len(prices)
     core = prices[int(n * 0.2):int(n * 0.8)] if n >= 6 else prices
-    return round(statistics.median(core or prices), 2)
+    return round(statistics.median(core or prices), 2), total
 
 
 def ebay_best_offer(token: str, query: str, code: str = None):
@@ -733,6 +744,43 @@ def update_artist_trend(artists):
     return artists
 
 
+def build_calendar(max_sets: int = 12):
+    """Calendario CATALIZZATORI: uscite set Pokemon con releaseDate REALE da
+    TCGdex (in arrivo e appena usciti — muovono i prezzi: hype prima, offerta
+    alta dopo). One Piece: le fonti gratuite non danno date -> escluso, onesto.
+    ~12 fetch paralleli, budget implicito nei timeout."""
+    try:
+        sets = _get_json("https://api.tcgdex.net/v2/en/sets", timeout=10)
+    except Exception as exc:  # noqa: BLE001
+        print(f"    calendario: errore lista set: {exc}")
+        return []
+    if not isinstance(sets, list):
+        return []
+
+    def _full(s):
+        try:
+            return _get_json(f"https://api.tcgdex.net/v2/en/sets/{s['id']}", timeout=8)
+        except Exception:  # noqa: BLE001
+            return None
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        fulls = list(ex.map(_full, sets[-max_sets:]))
+
+    out = []
+    for f in fulls:
+        if not f or not f.get("releaseDate"):
+            continue
+        out.append({
+            "game": "pokemon", "id": f.get("id"), "name": f.get("name"),
+            "date": f["releaseDate"],
+            "logo": (f.get("logo") + ".png") if f.get("logo") else None,
+            "count": (f.get("cardCount") or {}).get("official"),
+        })
+    out.sort(key=lambda x: x["date"], reverse=True)
+    print(f"[TCG Radar] Calendario: {len(out)} set con data reale")
+    return out[:10]
+
+
 # ---------------------------------------------------------------------------
 # Traduzione titoli notizie -> italiano (Google translate gtx, gratis, no key)
 # ---------------------------------------------------------------------------
@@ -908,7 +956,7 @@ def main() -> None:
     # dati piu' freschi a ogni ciclo. Le funzioni di fetch gestiscono gia' gli
     # errori internamente (ritornano None), quindi il prefetch non puo' bloccare.
     t0 = time.monotonic()
-    pk_pre, op_usd_pre, op_best_pre, op_meta_pre = {}, {}, {}, {}
+    pk_pre, op_usd_pre, op_liq_pre, op_best_pre, op_meta_pre = {}, {}, {}, {}, {}
 
     def _prefetch(card):
         ref = card["ref"]
@@ -919,7 +967,7 @@ def main() -> None:
             if token is not None:
                 q = card.get("ebay_query", card["name"])
                 code = card.get("ebay_code")
-                op_usd_pre[ref] = ebay_price_usd(token, q, code)
+                op_usd_pre[ref], op_liq_pre[ref] = ebay_price_usd(token, q, code)
                 op_best_pre[ref] = ebay_best_offer(token, q, code)
             op_meta_pre[ref] = optcg_fetch(card.get("ebay_code"))
 
@@ -942,6 +990,7 @@ def main() -> None:
         source = "demo"
         cm_tf = None  # variazioni Cardmarket reali (Pokemon)
         best_offer = None  # annuncio piu' economico su eBay.it
+        listings = None    # n. annunci attivi eBay (proxy liquidita', solo One Piece)
         illustrator = None
 
         # --- Pokemon: TCGdex (Cardmarket EUR), gia' prefetchato ---
@@ -975,6 +1024,7 @@ def main() -> None:
                 eur = to_eur(usd)
                 source = "eBay->EUR"
             best_offer = op_best_pre.get(ref)
+            listings = op_liq_pre.get(ref)  # liquidita': quanti annunci attivi
 
         # immagine + seriale One Piece da optcgapi (gia' prefetchato)
         if game == "onepiece":
@@ -1061,6 +1111,7 @@ def main() -> None:
             "buyLinks": {"cardmarket": cm_url, "ebay": ebay_url, "cardtrader": ct_url,
                          "vinted": vinted_url, "auction": auction_url},
             "bestOffer": best_offer,
+            "listings": listings,
             "illustrator": illustrator,
             "range": rng,
         })
@@ -1180,6 +1231,8 @@ def main() -> None:
         ARTISTS.write_text(json.dumps(artists, ensure_ascii=False, indent=2), encoding="utf-8")
         artists = update_artist_trend(artists)  # trend del valore medio nel tempo
 
+    calendar = build_calendar() if not FORCE_DEMO else []
+
     # Stima PSA 10 (EUR) per le carte piu' di valore: 1 chiamata eBay ciascuna,
     # con budget di tempo + cache, NON bloccante. Se manca il token o l'API e'
     # lenta, si riusa la cache / si salta e restano i link ai prezzi graded reali.
@@ -1241,6 +1294,7 @@ def main() -> None:
         "buyNow": buy_now_refs,
         "signalStats": signal_stats,
         "pulseHist": downsample(pulse_hist, 90),
+        "calendar": calendar,
         "items": items,
         "news": news,
         "artists": artists,
