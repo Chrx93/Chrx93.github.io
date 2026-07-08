@@ -952,6 +952,8 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
           {data.signalStats && data.signalStats.buyN > 0 && data.signalStats.buyAvg != null ? (
             <Text style={styles.trackLine}>
               🎯 Track record: {data.signalStats.buyN} segnali COMPRA attivi · in media {data.signalStats.buyAvg >= 0 ? '+' : ''}{data.signalStats.buyAvg}% da quando accesi
+              {data.signalStats.closedBuyN ? ` · ${data.signalStats.closedBuyN} chiusi: media ${data.signalStats.closedBuyAvg >= 0 ? '+' : ''}${data.signalStats.closedBuyAvg}%, azzeccati ${data.signalStats.closedBuyWin}%` : ''}
+              {data.signalStats.closedSellN ? ` · VENDI azzeccati ${data.signalStats.closedSellWin}%` : ''}
             </Text>
           ) : null}
           {data.pulseHist && data.pulseHist.length >= 2 ? (
@@ -1755,6 +1757,18 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
     return acc;
   }, { sell: 0, watch: 0 });
 
+  // Tu vs mercato: variazione del TUO portfolio (dalla curva accumulata, ~7g)
+  // confrontata col polso del mercato (media 7g delle carte seguite).
+  let pfVs = null;
+  if (pfHist && pfHist.length >= 2) {
+    const last = pfHist[pfHist.length - 1];
+    const cutoff = Date.parse(last[0]) - 7 * 864e5;
+    let base = pfHist[0];
+    for (const pnt of pfHist) { if (Date.parse(pnt[0]) <= cutoff) base = pnt; else break; }
+    const days = Math.max(1, Math.round((Date.parse(last[0]) - Date.parse(base[0])) / 864e5));
+    if (base[1] > 0 && days >= 2) pfVs = { pct: ((last[1] - base[1]) / base[1]) * 100, days };
+  }
+
   if (!holdings.length && !closed.length) {
     return (
       <ScrollView contentContainerStyle={styles.emptyBox}
@@ -1795,6 +1809,11 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
           {(exitCounts.sell + exitCounts.watch) > 0 ? (
             <Text style={styles.trackLine}>
               🎯 Piano di uscita: {exitCounts.sell} in zona vendita · {exitCounts.watch} da tenere d'occhio — regole pratiche (presa-profitto 20% · trailing −10% dal picco · stop −20%), non previsioni.
+            </Text>
+          ) : null}
+          {pfVs && data && data.marketPulse != null ? (
+            <Text style={styles.trackLine}>
+              📊 Tu vs mercato: portfolio {pct(pfVs.pct)} in {pfVs.days}g · mercato {pct(data.marketPulse)} (7g) — {pfVs.pct >= data.marketPulse ? 'stai battendo il mercato' : 'sotto il mercato: guadagni solo se sale tutto?'}
             </Text>
           ) : null}
           {segs.length ? (
@@ -2382,6 +2401,32 @@ export default function App() {
       }
     });
   }, [data, portfolio, notifOn]);
+
+  // ⏰ Avviso pre-uscita set: una notifica quando mancano ≤7 giorni e una il
+  // giorno dell'uscita (dedup persistito: niente ripetizioni tra sessioni).
+  useEffect(() => {
+    if (!notifOn || !canNotify() || Notification.permission !== 'granted' || !data || !data.calendar || !data.calendar.length) return;
+    AsyncStorage.getItem('tcgradar.calnotif').then(s => {
+      let seen = {};
+      try { seen = s ? JSON.parse(s) : {}; } catch {}
+      const todayT = Date.parse(new Date().toISOString().slice(0, 10));
+      let changed = false;
+      data.calendar.forEach(c => {
+        const days = Math.round((Date.parse(c.date) - todayT) / 864e5);
+        if (isNaN(days)) return;
+        const stage = days === 0 ? 'today' : (days > 0 && days <= 7 ? 'week' : null);
+        if (!stage || seen[c.id] === stage || (stage === 'week' && seen[c.id])) return;
+        seen[c.id] = stage; changed = true;
+        try {
+          new Notification('📅 Uscita set in arrivo', {
+            body: days === 0 ? `${c.name} esce OGGI` : `${c.name} esce tra ${days} giorni — i prezzi si muovono prima delle uscite`,
+            icon: '/icon.png',
+          });
+        } catch {}
+      });
+      if (changed) AsyncStorage.setItem('tcgradar.calnotif', JSON.stringify(seen)).catch(() => {});
+    }).catch(() => {});
+  }, [data, notifOn]);
 
   // Quando ESCO dalla watchlist, registro i prezzi attuali come "visti" (per il prossimo confronto).
   useEffect(() => {

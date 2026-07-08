@@ -44,6 +44,7 @@ PSA10 = ROOT / "psa10.json"                # cache stime PSA 10 (eBay), riuso tr
 PULSE_HIST = ROOT / "pulse_hist.json"      # [[iso, marketPulse], ...] polso del mercato nel tempo
 DEALS_HIST = ROOT / "deals_hist.json"      # {ref: [date, ...]} giorni in cui la carta era sotto mercato
 SPREADS_HIST = ROOT / "spreads_hist.json"  # {ref: [[date, ratio], ...]} spread base<->premium nel tempo
+SIGNALS_CLOSED = ROOT / "signals_closed.json"  # esiti REALI dei segnali chiusi (durata + rendimento)
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -1207,12 +1208,32 @@ def main() -> None:
         except json.JSONDecodeError:
             signals = {}
     today = NOW.date().isoformat()
+
+    # Ledger dei segnali CHIUSI: quando un COMPRA/VENDI si spegne, l'esito
+    # (durata + rendimento) non va perso — e' la prova se il motore funziona.
+    closed_signals = []
+    if SIGNALS_CLOSED.exists():
+        try:
+            closed_signals = json.loads(SIGNALS_CLOSED.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            closed_signals = []
+
     for it in items:
         ref = it["ref"]
         act = it["reco"]["action"]
         eu = (it.get("prices") or {}).get("eu")
         prev = signals.get(ref)
         if not prev or prev.get("action") != act:
+            if prev and prev.get("price") and eu and prev.get("action") in ("compra", "vendi"):
+                try:
+                    days_open = (NOW.date() - datetime.date.fromisoformat(prev["since"])).days
+                except ValueError:
+                    days_open = None
+                closed_signals.append({
+                    "ref": ref, "action": prev["action"], "since": prev["since"],
+                    "days": days_open,
+                    "retPct": round((eu - prev["price"]) / prev["price"] * 100, 1),
+                })
             signals[ref] = {"action": act, "since": today, "price": eu}
         s = signals[ref]
         chg = None
@@ -1220,6 +1241,8 @@ def main() -> None:
             chg = round((eu - s["price"]) / s["price"] * 100, 1)
         it["recoSince"] = {"action": s["action"], "since": s["since"], "price": s.get("price"), "changePct": chg}
     SIGNALS.write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
+    closed_signals = closed_signals[-200:]
+    SIGNALS_CLOSED.write_text(json.dumps(closed_signals, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Track record REALE del motore: come stanno andando i segnali attivi da
     # quando si sono accesi (media dei changePct accumulati — dati, non promesse).
@@ -1231,6 +1254,17 @@ def main() -> None:
         "buyN": len(buy_ch), "buyAvg": round(statistics.mean(buy_ch), 1) if buy_ch else None,
         "sellN": len(sell_ch), "sellAvg": round(statistics.mean(sell_ch), 1) if sell_ch else None,
     }
+    # Esiti dei segnali CHIUSI: per un COMPRA vinto = prezzo salito mentre era
+    # acceso; per un VENDI vinto = prezzo sceso dopo (hai venduto in tempo).
+    cb = [c["retPct"] for c in closed_signals if c["action"] == "compra"]
+    cs = [c["retPct"] for c in closed_signals if c["action"] == "vendi"]
+    if cb:
+        signal_stats["closedBuyN"] = len(cb)
+        signal_stats["closedBuyAvg"] = round(statistics.mean(cb), 1)
+        signal_stats["closedBuyWin"] = round(100 * sum(1 for v in cb if v > 0) / len(cb))
+    if cs:
+        signal_stats["closedSellN"] = len(cs)
+        signal_stats["closedSellWin"] = round(100 * sum(1 for v in cs if v < 0) / len(cs))
 
     # Storico OCCASIONI: in quali giorni una carta e' stata vista sotto mercato
     # (-20%+). Cosi' distinguo "va spesso in svendita, puoi aspettare" da

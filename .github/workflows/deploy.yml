@@ -43,6 +43,7 @@ jobs:
             pipeline/pulse_hist.json
             pipeline/deals_hist.json
             pipeline/spreads_hist.json
+            pipeline/signals_closed.json
           key: tcg-history-${{ github.run_id }}
           restore-keys: |
             tcg-history-
