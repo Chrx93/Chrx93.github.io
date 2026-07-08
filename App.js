@@ -307,6 +307,14 @@ function PriceFinder({ item }) {
           💧 Liquidità: ~{item.listings} annunci attivi (eBay) — {item.listings >= 30 ? 'alta: entri ed esci facilmente' : item.listings >= 10 ? 'media' : 'bassa: vendere può richiedere tempo o sconti'}
         </Text>
       ) : null}
+      {item.spread ? (
+        <Text style={styles.tfNote}>
+          ⚖️ Spread di stampa: base ~{fmt(item.spread.base)} ↔ {item.spread.premiumName} ~{fmt(item.spread.premium)} (×{item.spread.ratio})
+          {item.spread.trendPct != null
+            ? ` — ${item.spread.trendPct <= 0 ? 'compresso' : 'allargato'} ${Math.abs(item.spread.trendPct)}% in ${item.spread.days}g${item.spread.trendPct <= -10 ? ': la stampa premium è relativamente conveniente' : item.spread.trendPct >= 10 ? ': il premium corre più della base' : ''}`
+            : ' — trend dal prossimo giorno di dati'}
+        </Text>
+      ) : null}
 
       {(() => {
         const sell = toEur(item.prices);

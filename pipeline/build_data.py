@@ -43,6 +43,7 @@ SIGNALS = ROOT / "signals.json"
 PSA10 = ROOT / "psa10.json"                # cache stime PSA 10 (eBay), riuso tra i run
 PULSE_HIST = ROOT / "pulse_hist.json"      # [[iso, marketPulse], ...] polso del mercato nel tempo
 DEALS_HIST = ROOT / "deals_hist.json"      # {ref: [date, ...]} giorni in cui la carta era sotto mercato
+SPREADS_HIST = ROOT / "spreads_hist.json"  # {ref: [[date, ratio], ...]} spread base<->premium nel tempo
 OUTPUT = ROOT / "data.json"
 
 HISTORY_LEN = 1500   # punti di storico tenuti per carta (~31 giorni a 30 min)
@@ -159,7 +160,11 @@ def tcgdex_fetch(card_id: str):
 
 
 def optcg_fetch(code: str):
-    """Immagine + dati carta One Piece da optcgapi.com (gratis, nessuna chiave)."""
+    """Immagine + dati carta One Piece da optcgapi.com (gratis, nessuna chiave).
+
+    La risposta contiene TUTTE le stampe del codice (base/Parallel/Alt-Art...)
+    coi loro market_price: le estraggo tutte ('prints') per lo spread di stampa
+    — stessa chiamata di prima, zero costi in piu'."""
     if not code:
         return None
     try:
@@ -167,10 +172,21 @@ def optcg_fetch(code: str):
     except Exception as exc:  # noqa: BLE001
         print(f"    optcgapi errore per {code}: {exc}")
         return None
-    c = data[0] if isinstance(data, list) and data else (data if isinstance(data, dict) else None)
-    if not c:
+    arr = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])
+    arr = [c for c in arr if c]
+    if not arr:
         return None
-    return {"image": c.get("card_image"), "serial": c.get("card_set_id"), "name": c.get("card_name")}
+    c = arr[0]
+    prints = []
+    for p in arr:
+        try:
+            v = float(str(p.get("market_price") or "").replace("$", ""))
+        except ValueError:
+            continue
+        if v > 0 and p.get("card_name"):
+            prints.append({"name": p["card_name"], "price": v})
+    return {"image": c.get("card_image"), "serial": c.get("card_set_id"),
+            "name": c.get("card_name"), "prints": prints}
 
 
 # ---------------------------------------------------------------------------
@@ -1027,11 +1043,31 @@ def main() -> None:
             listings = op_liq_pre.get(ref)  # liquidita': quanti annunci attivi
 
         # immagine + seriale One Piece da optcgapi (gia' prefetchato)
+        spread = None
         if game == "onepiece":
             oc = op_meta_pre.get(ref)
             if oc:
                 image = oc["image"] or image
                 serial = oc["serial"] or serial
+                # Spread di stampa: base (la piu' economica) vs stampa premium
+                # (la piu' cara) dello STESSO codice. Il rapporto nel tempo dice
+                # se il premium si sta comprimendo (relativamente conveniente).
+                # Guardia: optcgapi a volte infila nel codice una carta di un
+                # ALTRO personaggio (visto: "Buggy (Manga)" dentro OP05-067 di
+                # Zoro) -> tengo solo le stampe che condividono il personaggio.
+                priced = sorted(oc.get("prints") or [], key=lambda p: p["price"])
+                if len(priced) >= 2 and priced[0]["price"] > 0:
+                    key = card_key(priced[0]["name"])
+                    priced = [p for p in priced if key in p["name"].lower()]
+                if len(priced) >= 2 and priced[0]["price"] > 0:
+                    ratio = priced[-1]["price"] / priced[0]["price"]
+                    if ratio >= 1.5:  # sotto x1.5 non e' un vero spread
+                        spread = {
+                            "base": to_eur(priced[0]["price"]),
+                            "premium": to_eur(priced[-1]["price"]),
+                            "premiumName": priced[-1]["name"],
+                            "ratio": round(ratio, 1),
+                        }
 
         # --- aggiorna lo storico (in EUR) ---
         if eur is None:
@@ -1112,6 +1148,7 @@ def main() -> None:
                          "vinted": vinted_url, "auction": auction_url},
             "bestOffer": best_offer,
             "listings": listings,
+            "spread": spread,
             "illustrator": illustrator,
             "range": rng,
         })
@@ -1215,6 +1252,32 @@ def main() -> None:
         if it["ref"] in deals_hist and deals_hist[it["ref"]]:
             it["dealDays"] = len(deals_hist[it["ref"]])
     DEALS_HIST.write_text(json.dumps(deals_hist, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Spread di stampa NEL TEMPO: un punto al giorno del rapporto base<->premium.
+    # Compresso rispetto all'inizio = la stampa premium e' relativamente a sconto.
+    spreads_hist = {}
+    if SPREADS_HIST.exists():
+        try:
+            spreads_hist = json.loads(SPREADS_HIST.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            spreads_hist = {}
+    for it in items:
+        sp = it.get("spread")
+        if not sp:
+            continue
+        series_sp = spreads_hist.get(it["ref"], [])
+        if series_sp and series_sp[-1][0] == today:
+            series_sp[-1] = [today, sp["ratio"]]
+        else:
+            series_sp.append([today, sp["ratio"]])
+        spreads_hist[it["ref"]] = series_sp[-60:]
+        base0 = series_sp[0][1] if series_sp else None
+        if len(series_sp) >= 2 and base0:
+            sp["trendPct"] = round((sp["ratio"] - base0) / base0 * 100, 1)
+        else:
+            sp["trendPct"] = None
+        sp["days"] = len(series_sp)
+    SPREADS_HIST.write_text(json.dumps(spreads_hist, ensure_ascii=False, indent=2), encoding="utf-8")
 
     for n in news:
         t = n["title"].lower()

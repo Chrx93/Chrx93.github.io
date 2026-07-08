@@ -45,6 +45,7 @@ pipeline/signals.json
 pipeline/psa10.json
 pipeline/pulse_hist.json
 pipeline/deals_hist.json
+pipeline/spreads_hist.json
 
 # typescript
 *.tsbuildinfo
