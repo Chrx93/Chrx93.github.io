@@ -565,6 +565,56 @@ function DealsSection({ cards, onPress }) {
   );
 }
 
+// Screener "compra il ribasso, ma disciplinato": iconiche vicine ai MINIMI del
+// loro storico. Anti-rumore: il range deve essere largo >=15%, altrimenti
+// "vicino ai minimi" e' solo uno storico ancora corto.
+function IconicDipSection({ cards, onPress }) {
+  if (!cards || !cards.length) return null;
+  return (
+    <View style={[styles.rampBox, { borderColor: theme.hypeText }]}>
+      <Text style={[styles.rampTitle, { color: theme.hypeText }]}>👑 ICONICHE A SCONTO STORICO</Text>
+      {cards.map(item => (
+        <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
+          {item.image ? <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
+            : <View style={[styles.radarThumb, styles.thumbEmpty]} />}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.radarName} numberOfLines={1}>👑 {item.name}</Text>
+            <Text style={[styles.radarReason, { color: theme.hypeText }]} numberOfLines={1}>
+              al {Math.round(item._pos * 100)}% tra minimo {fmt(item.range.low)} e massimo {fmt(item.range.high)}
+            </Text>
+          </View>
+          <Text style={styles.radarPrice}>{fmt(toEur(item.prices))}</Text>
+        </TouchableOpacity>
+      ))}
+      <Text style={styles.radarNote}>Personaggi con domanda costante, vicini ai minimi dello storico accumulato (cresce coi giorni). Comprare il ribasso è una strategia, non una garanzia.</Text>
+    </View>
+  );
+}
+
+// Grading-arb: le carte col miglior moltiplicatore raw -> PSA 10 stimato.
+function GradingArbSection({ cards, onPress }) {
+  if (!cards || !cards.length) return null;
+  return (
+    <View style={[styles.rampBox, { borderColor: theme.border }]}>
+      <Text style={[styles.rampTitle, { color: theme.text }]}>🏅 GRADING · I MIGLIORI MOLTIPLICATORI</Text>
+      {cards.map(item => (
+        <TouchableOpacity key={item.ref} style={styles.radarRow} onPress={() => onPress(item)} activeOpacity={0.7}>
+          {item.image ? <Image source={{ uri: item.image }} style={styles.radarThumb} resizeMode="contain" />
+            : <View style={[styles.radarThumb, styles.thumbEmpty]} />}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.radarName} numberOfLines={1}>{iconicFor(item.name) ? '👑 ' : ''}{item.name}</Text>
+            <Text style={[styles.radarReason, { color: theme.textDim }]} numberOfLines={1}>
+              raw {fmt(toEur(item.prices))} → PSA 10 ~{fmt(item.psa10.value)} · da {item.psa10.count} annunci
+            </Text>
+          </View>
+          <Text style={[styles.radarPrice, { color: theme.up }]}>×{item._mult.toFixed(1)}</Text>
+        </TouchableOpacity>
+      ))}
+      <Text style={styles.radarNote}>Il moltiplicatore vale SOLO se la tua copia è da gem mint: gradazione ~€20, esito non garantito. Pochi annunci = stima fragile.</Text>
+    </View>
+  );
+}
+
 function CalendarSection({ calendar }) {
   if (!calendar || !calendar.length) return null;
   const dayMs = 86400000;
@@ -846,6 +896,27 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
     .filter(i => i.bestOffer && i.bestOffer.total && toEur(i.prices) && i.bestOffer.total <= toEur(i.prices) * 0.8)
     .sort((a, b) => (a.bestOffer.total / toEur(a.prices)) - (b.bestOffer.total / toEur(b.prices)))
     .slice(0, 5), [data]);
+  // Iconiche vicino ai minimi: range largo >=15% (anti-rumore da storico corto),
+  // senza doppiare le carte già in "DA COMPRARE ORA".
+  const dips = useMemo(() => {
+    const buyNowRefs = new Set(data.buyNow || []);
+    return (data.items || [])
+      .filter(i => {
+        if (!iconicFor(i.name) || buyNowRefs.has(i.ref)) return false;
+        const eu = toEur(i.prices); const r = i.range;
+        if (!eu || !r || !(r.high > r.low) || (r.high - r.low) / r.high < 0.15) return false;
+        return (eu - r.low) / (r.high - r.low) <= 0.25;
+      })
+      .map(i => ({ ...i, _pos: (toEur(i.prices) - i.range.low) / (i.range.high - i.range.low) }))
+      .sort((a, b) => a._pos - b._pos)
+      .slice(0, 5);
+  }, [data]);
+  // Grading-arb: moltiplicatore raw -> PSA10 stimato (solo x2+).
+  const arbs = useMemo(() => (data.items || [])
+    .filter(i => i.psa10 && i.psa10.value && toEur(i.prices) && i.psa10.value / toEur(i.prices) >= 2)
+    .map(i => ({ ...i, _mult: i.psa10.value / toEur(i.prices) }))
+    .sort((a, b) => b._mult - a._mult)
+    .slice(0, 5), [data]);
   const radarCards = useMemo(() => {
     const byRef = {};
     (data.items || []).forEach(i => { byRef[i.ref] = i; });
@@ -885,6 +956,8 @@ function HomeTab({ data, rotation, onPress, refreshing, onRefresh }) {
           <CalendarSection calendar={data.calendar} />
           <DealsSection cards={deals} onPress={onPress} />
           <BuyNowSection cards={buyNowCards} onPress={onPress} />
+          <IconicDipSection cards={dips} onPress={onPress} />
+          <GradingArbSection cards={arbs} onPress={onPress} />
           <RampSection cards={ramp} onPress={onPress} />
           <RadarSection cards={radarCards} onPress={onPress} />
           <Text style={styles.listLabel}>Tutte le carte · variazione 7g</Text>
