@@ -482,6 +482,35 @@ function RecoBanner({ reco, since }) {
   );
 }
 
+// Regole d'uscita da trader (pratiche e dichiarate, NON previsioni):
+// presa-profitto 20%, zona vendita 30%+ se vicino ai massimi o VENDI del radar,
+// trailing -10% dal picco, stop mentale -20%. Commissioni vendita eBay ~13%.
+const SELL_FEES = 0.13;
+function exitAdvice(h, cur, tracked) {
+  if (cur == null || !h.buyPrice) return null;
+  const pl = ((cur - h.buyPrice) / h.buyPrice) * 100;
+  const peak = h.peak && h.peak > cur ? h.peak : null;
+  const offPeak = peak ? ((cur - peak) / peak) * 100 : 0;
+  const teu = tracked ? toEur(tracked.prices) : null;
+  const rng = tracked && tracked.range;
+  const nearHigh = rng && rng.high > rng.low && teu != null
+    ? (teu - rng.low) / (rng.high - rng.low) >= 0.85 : false;
+  const engineSell = !!(tracked && tracked.reco && tracked.reco.action === 'vendi');
+  if (pl >= 30 && (nearHigh || engineSell)) {
+    return { level: 2, color: theme.down, msg: `🔴 ZONA VENDITA: +${pl.toFixed(0)}%${nearHigh ? ' · vicino ai massimi storici' : ''}${engineSell ? ' · segnale VENDI del radar' : ''}` };
+  }
+  if (pl > 5 && offPeak <= -10) {
+    return { level: 1, color: theme.hypeText, msg: `⚠️ −${Math.abs(offPeak).toFixed(0)}% dal picco: valuta di incassare +${pl.toFixed(0)}% prima che rientri` };
+  }
+  if (pl >= 20) {
+    return { level: 1, color: theme.up, msg: `📈 +${pl.toFixed(0)}%: sopra la presa-profitto (20%) — scegli tu il momento` };
+  }
+  if (pl <= -20) {
+    return { level: 0, color: theme.down, msg: `🛑 −${Math.abs(pl).toFixed(0)}%: oltre lo stop del 20% — taglia o accetta l'attesa` };
+  }
+  return null;
+}
+
 function DealsSection({ cards, onPress }) {
   if (!cards || !cards.length) return null;
   return (
@@ -1583,6 +1612,13 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
   ].filter(s => s.value > 0);
   const segTotal = segs.reduce((s, x) => s + x.value, 0) || 1;
 
+  // Quante posizioni hanno un segnale d'uscita attivo (per il riepilogo in alto).
+  const exitCounts = holdings.reduce((acc, h) => {
+    const a = exitAdvice(h, currentOf(h), liveByRef[h.ref]);
+    if (a) { if (a.level === 2) acc.sell += 1; else acc.watch += 1; }
+    return acc;
+  }, { sell: 0, watch: 0 });
+
   if (!holdings.length && !closed.length) {
     return (
       <ScrollView contentContainerStyle={styles.emptyBox}
@@ -1620,6 +1656,11 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
               </View>
             ) : null}
           </View>
+          {(exitCounts.sell + exitCounts.watch) > 0 ? (
+            <Text style={styles.trackLine}>
+              🎯 Piano di uscita: {exitCounts.sell} in zona vendita · {exitCounts.watch} da tenere d'occhio — regole pratiche (presa-profitto 20% · trailing −10% dal picco · stop −20%), non previsioni.
+            </Text>
+          ) : null}
           {segs.length ? (
             <View style={styles.allocBox}>
               <Donut segments={segs} />
@@ -1647,7 +1688,7 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
         const cur = currentOf(h);
         const hpl = cur != null ? (cur - h.buyPrice) * h.qty : null;
         const hpct = (cur != null && h.buyPrice > 0) ? ((cur - h.buyPrice) / h.buyPrice) * 100 : null;
-        const hint = (hpct == null) ? null : hpct >= 20 ? '📈 buon momento per vendere' : hpct <= -15 ? '📉 in perdita' : null;
+        const advice = exitAdvice(h, cur, liveByRef[h.ref]);
         const selling = sellingId === h.id;
         return (
           <View>
@@ -1658,7 +1699,7 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
                 <View style={{ flex: 1, marginRight: 8 }}>
                   <Text style={styles.rowName} numberOfLines={1}>{h.name}{h.qty > 1 ? ` ×${h.qty}` : ''}</Text>
                   <Text style={styles.rowSub} numberOfLines={1}>pagata {fmt(h.buyPrice)} · ora {cur != null ? fmt(cur) : '—'}</Text>
-                  {hint ? <Text style={[styles.pfHint, { color: hpct >= 0 ? theme.up : theme.down }]}>{hint}</Text> : null}
+                  {advice ? <Text style={[styles.pfHint, { color: advice.color }]} numberOfLines={2}>{advice.msg}</Text> : null}
                 </View>
               </TouchableOpacity>
               <View style={{ alignItems: 'flex-end' }}>
@@ -1677,6 +1718,11 @@ function PortfolioTab({ holdings, sales, pfHist, data, onPress, onRemove, onSell
             {selling ? (
               <View style={styles.sellForm}>
                 <Text style={styles.buyFormLabel}>Vendi — prezzo incassato (€){h.qty > 1 ? ` per ${h.qty} pezzi` : ''}</Text>
+                {cur != null ? (
+                  <Text style={styles.rowSub}>
+                    Al prezzo attuale ({fmt(cur)}) l'incasso netto è ~{fmt(Math.round(cur * (1 - SELL_FEES) * 100) / 100)}/pezzo dopo ~13% di commissioni eBay — ragiona sempre sul netto.
+                  </Text>
+                ) : null}
                 <View style={styles.buyFormRow}>
                   <TextInput style={styles.buyInput} keyboardType="decimal-pad" value={sellPrice} onChangeText={setSellPrice} placeholder="€ venduto" placeholderTextColor={theme.textDim} />
                   <TouchableOpacity style={styles.buyConfirm} onPress={() => { const p = parseFloat(String(sellPrice).replace(',', '.')); if (!isNaN(p) && p >= 0) { onSell(h.id, p); setSellingId(null); } }} activeOpacity={0.85}>
@@ -1992,6 +2038,25 @@ export default function App() {
       return trimmed;
     });
   }, [data, portfolio, pfTotal]);
+
+  // Picco per posizione (high watermark): serve al "trailing" del piano di
+  // uscita — se il prezzo ripiega dal massimo visto, meglio saperlo.
+  useEffect(() => {
+    if (!data || !data.items) return;
+    const byRef = {};
+    data.items.forEach(i => { byRef[i.ref] = i; });
+    setPortfolio(prev => {
+      let changed = false;
+      const next = prev.map(h => {
+        const it = byRef[h.ref];
+        const cur = it ? toEur(it.prices) : null;
+        if (cur != null && cur > (h.peak || 0)) { changed = true; return { ...h, peak: cur }; }
+        return h;
+      });
+      if (changed) AsyncStorage.setItem('tcgradar.portfolio', JSON.stringify(next)).catch(() => {});
+      return changed ? next : prev;
+    });
+  }, [data]);
 
   // Notifiche: avvisa quando una carta della watchlist si muove (app aperta/in background).
   useEffect(() => {
